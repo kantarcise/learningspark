@@ -95,9 +95,9 @@ Here is all the code explained in detail.
 
 #### Chapter 2
 
-- We will see our first example where we load some data onto Spark and tried to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/MnmCandies.scala) We will discover about relative paths, user inputs and Dataframe Schemas.
+- We will see our first example where we load some data onto Spark and tried to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandies.scala) We will discover about relative paths, user inputs and Dataframe Schemas.
 
-- Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/MnmCandiesDataset.scala) 
+- Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDataset.scala) 
 
 ## Use as Template
 
