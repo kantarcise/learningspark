@@ -85,11 +85,19 @@ To open the IDE.
 
 Here is all the code explained in detail.
 
-TODO
-
 #### Chapter 0
 
-- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates.scala](link)
+- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates.scala](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/Aggregates.scala)
+
+#### Chapter 1
+
+- This chapter is just a reading assignment. I think it is important to learn the history/roots of tools and also have a high level picture what they might look like, as we try to master them.
+
+#### Chapter 2
+
+- We will see our first example where we load some data onto Spark and tried to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/MnmCandies.scala) We will discover about relative paths, user inputs and Dataframe Schemas.
+
+- Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/MnmCandiesDataset.scala) 
 
 ## Use as Template
 
