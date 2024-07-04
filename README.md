@@ -87,7 +87,7 @@ Here is all the code explained in detail.
 
 #### Chapter 0
 
-- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates.scala](https://github.com/kantarcise/learningspark/blob/main/DiscoverSpark/src/main/scala/Aggregates.scala)
+- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates.scala](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala)
 
 #### Chapter 1
 
