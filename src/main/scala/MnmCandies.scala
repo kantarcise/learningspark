@@ -50,7 +50,7 @@ object MnmCandies {
     // aggregate counts of all colors and groupBy() State and Color
     // orderBy() in descending order
 
-    val countMnMD = mnmDF
+    val countMnMDF = mnmDF
       // select 3 cols - it is still a dataframe
       .select($"State", $"Color", $"Count")
       // make groups to use aggregations
@@ -63,7 +63,7 @@ object MnmCandies {
       .orderBy($"Total".desc)
 
     println("\nMnMs grouped by states and colors, counted and ordered\n")
-    countMnMD.show()
+    countMnMDF.show()
 
     // california MnM s?
     val californiaMnMDF = mnmDF
