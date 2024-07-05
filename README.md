@@ -101,11 +101,15 @@ Here is all the code explained in detail.
 
 #### Chapter 3
 
-- In Chapter 3 we will work with a JSON file about bloggers in Databricks. Let's see who is the most articulate, with [Bloggers.scala](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Bloggers.scala)!
+- In Chapter 3 we will work with a JSON file about bloggers in Databricks. Let's see who is the most articulate, with [Bloggers](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Bloggers.scala)!
 
 - We will also have a Dataset API version, [here](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BloggersDataset.scala). 
 
 - We can discover about making a Dataframe from JUST ROWS - no case classes. We will see different ways of interacting with cols (`expr`, `$`, `col("someColumnName")`) and have a simple example of sorting & concatenating.
+
+- After that, we will discover the about a FireCalls data in CSV format. This will be an opportunity to discover a common typecast between String to Timestamp. Here is our simple appetizer, [FireCalls](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCalls.scala) and [FireCallsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsDataset.scala). In the test of this object, we will see how to mock data with `Some`, explained here: [FireCallsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/FireCallsTest.scala) 
+
+- TODO
 
 ## Use as Template
 
