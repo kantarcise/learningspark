@@ -99,6 +99,14 @@ Here is all the code explained in detail.
 
 - Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDataset.scala) 
 
+#### Chapter 3
+
+- In Chapter 3 we will work with a JSON file about bloggers in Databricks. Let's see who is the most articulate, with [Bloggers.scala](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Bloggers.scala)!
+
+- We will also have a Dataset API version, [here](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BloggersDataset.scala). 
+
+- We can discover about making a Dataframe from JUST ROWS - no case classes. We will see different ways of interacting with cols (`expr`, `$`, `col("someColumnName")`) and have a simple example of sorting & concatenating.
+
 ## Use as Template
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
