@@ -27,7 +27,7 @@ object Aggregates {
     import spark.implicits._
 
     // Make a DataFrame of names and ages
-    val dfPeople = spark.createDataFrame(
+    val peopleDF = spark.createDataFrame(
         Seq(
           ("Brooke", 20),
           ("Brooke", 25),
@@ -63,12 +63,12 @@ object Aggregates {
 
     // We can group our Dataframe
     // by name, and find max age for the groups
-    val maxDF = dfPeople
+    val maxAgeDF = peopleDF
       .groupBy("name")
       .agg(max("age"))
 
     println("Max of ages on people with same name, as a group\n")
-    maxDF
+    maxAgeDF
       .show()
     /*
      +------+--------+
@@ -84,12 +84,12 @@ object Aggregates {
     // Just like max, we can use other functions.
     // Group the same names together,
     // aggregate their ages, and compute an average
-    val avgDF = dfPeople
+    val avgAgeDF = peopleDF
       .groupBy("name")
       .agg(avg("age"))
 
     // Show the results of the final execution
-    avgDF.show()
+    avgAgeDF.show()
     /*
     +------+--------+
     | name|avg(age)|
