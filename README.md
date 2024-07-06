@@ -115,6 +115,13 @@ Here is all the code explained in detail.
 
 - At the end of Chapter 3, we will practice our skills on the IoT Devices data and discover more with [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) as an End to End pipeline. This will teach us about `collect`, `take`, `first`, `.stat.approxQuantile` and different types of combinations for `groupBy - agg - orderBy` and `groupBy - orderBy` on multiple cols. We will test all of our approaches, [here.](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/IotDatasetWorkoutTest.scala)
 
+#### Chapter 4
+
+- In Chapter 4 we will discover about Spark SQL, which is literally SQL stuff. For that, we will use a data about Flight Delays, a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) we will discover more about, views & tables, union Dataframes, instead of using multiple unions, using `when().when().when().when().otherwise()`, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))` Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala)
+
+- On mocked data, you can see our techniques tested in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala)
+
+
 ## Use as Template
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
