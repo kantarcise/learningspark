@@ -1,6 +1,6 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.scalatest.funsuite.AnyFunSuite
 import org.apache.spark.sql.functions._
 
@@ -18,7 +18,7 @@ class FlightDelaysTest extends AnyFunSuite {
   import spark.implicits._
 
   // Define sample data
-  val sampleData = Seq(
+  val sampleData: DataFrame = Seq(
     ("01220625", 333, 602, "ABE", "ATL"),
     ("01220607", 219, 569, "ABE", "ORD"),
     ("02011325", 0, 1511, "PDX", "ORD"),
