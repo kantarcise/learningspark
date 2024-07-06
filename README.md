@@ -103,15 +103,13 @@ Here is all the code explained in detail.
 
 - In Chapter 3 we will work with a JSON file about bloggers in Databricks. Let's see who is the most articulate, with [Bloggers](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Bloggers.scala)!
 
-- We will also have a Dataset API version, [here](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BloggersDataset.scala). 
-
-- We can discover about making a Dataframe from JUST ROWS - no case classes. We will see different ways of interacting with cols (`expr`, `$`, `col("someColumnName")`) and have a simple example of sorting & concatenating.
+- We will also have a Dataset API version, [here](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BloggersDataset.scala). In here, we can discover about making a Dataframe from JUST ROWS - no case classes. We will see different ways of interacting with cols (`expr`, `$`, `col("someColumnName")`) and have a simple example of sorting & concatenating.
 
 - After that, we will discover the about a FireCalls data in CSV format. This will be an opportunity to discover a common typecast between String to Timestamp. Here is our simple appetizer, [FireCalls](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCalls.scala) and [FireCallsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsDataset.scala). In the test of this object, we will see how to mock data with `Some`, explained here: [FireCallsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FireCallsTest.scala) 
 
 - For our FireCalls CSV data, we have some questions that are solved in the book, so we will go over them to understand in [FireCallsSolvedQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsSolvedQuestions.scala) and [FireCallsSolvedQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsSolvedQuestionsDataset.scala). In these, we will see how to save our data as Parquet files & Tables, and some function usage like `distinct()`, `countDistinct()`, `withColumn`, `withColumnRenamed`, `lit()`, `datesub()` and `as()`. 
 
-- TODO
+- Finally, for the FireCalls CSV data, we will solve all the training questions from the book. In [FireCallsTraningQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestions.scala) and [FireCallsTraningQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestionsDataset.scala) we have an end to end pipeline, using `to_timestamp`, `lit()` some columns ourselves, `timestamp - where().where().where()` or `timestamp - between()`, `weekofyear()`,  `saveAsTable()` and parallel write to filesystem.
 
 
 ## Use as Template
