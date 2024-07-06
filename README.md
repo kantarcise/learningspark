@@ -111,7 +111,9 @@ Here is all the code explained in detail.
 
 - Finally, for the FireCalls CSV data, we will solve all the training questions from the book. In [FireCallsTraningQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestions.scala) and [FireCallsTraningQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestionsDataset.scala) we have an end to end pipeline, using `to_timestamp`, `lit()` some columns ourselves, `timestamp - where().where().where()` or `timestamp - between()`, `weekofyear()`,  `saveAsTable()` and parallel writ9e to filesystem.
 
-- Then we will get to the IoT Devices data, as a JSON.
+- Then we will get to the IoT Devices data, as a JSON. We will start with a basic workout on Datasets, discovering the differencee between Lambdas and DSL expressions (Page 170 in the book), with [IoTDatasetFunctionComparison](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IoTDatasetFunctionComparison.scala).
+
+- At the end of Chapter 3, we will practice our skills on the IoT Devices data and discover more with [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) as an End to End pipeline. This will teach us about `collect`, `take`, `first`, `.stat.approxQuantile` and different types of combinations for `groupBy - agg - orderBy` and `groupBy - orderBy` on multiple cols. We will test all of our approaches, [here.](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/IotDatasetWorkoutTest.scala)
 
 ## Use as Template
 

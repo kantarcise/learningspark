@@ -1,17 +1,18 @@
 package learningSpark
 
-case class DeviceIoTData(battery_level: Long,
-                         c02_level: Long,
+case class DeviceIoTData(device_id: Long,
+                         device_name: String,
+                         ip: String,
                          cca2: String,
                          cca3: String,
                          cn: String,
-                         device_id: Long,
-                         device_name: String,
-                         humidity: Long,
-                         ip: String,
                          latitude: Double,
-                         lcd: String,
                          longitude: Double,
                          scale: String,
                          temp: Long,
-                         timestamp: Long)
+                         humidity: Long,
+                         battery_level: Long,
+                         c02_level: Long,
+                         lcd: String,
+                         timestamp: Long
+                        )
