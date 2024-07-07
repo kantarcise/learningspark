@@ -129,6 +129,8 @@ Here is all the code explained in detail.
 
 - The main methods are getting really long at this point. If you want some help decomposing the code, you can see an examplem at [FlightDelaysAdvancedDecomposed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvancedDecomposed.scala) Tests are at [FlightDelaysAdvancedTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysAdvancedTest.scala)
 
+- Finally, we will see a simple example to understand windowing, with [SimpleWindowing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleWindowing.scala)
+
 ## Use as Template
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
