@@ -85,21 +85,21 @@ To open the IDE.
 
 Here is all the code explained in detail.
 
-#### Chapter 0
+#### Chapter 0 - A Fast Start (Not a Part of the Book)
 
-- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates.scala](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala)
+- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala). What is aggregates mean, you ask? Well, continue to find out. 
 
-#### Chapter 1
+#### Chapter 1 - Introduction to Apache Spark: A Unified Analytics Engine
 
 - This chapter is just a reading assignment. I think it is important to learn the history/roots of tools and also have a high level picture what they might look like, as we try to master them.
 
-#### Chapter 2
+#### Chapter 2 - Downloading Apache Spark and Getting Started
 
 - We will see our first example where we load some data onto Spark and tried to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandies.scala) We will discover about relative paths, user inputs and Dataframe Schemas.
 
 - Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDataset.scala) 
 
-#### Chapter 3
+#### Chapter 3 - Apache Spark’s Structured APIs
 
 - In Chapter 3 we will work with a JSON file about bloggers in Databricks. Let's see who is the most articulate, with [Bloggers](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Bloggers.scala)!
 
@@ -115,13 +115,13 @@ Here is all the code explained in detail.
 
 - At the end of Chapter 3, we will practice our skills on the IoT Devices data and discover more with [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) as an End to End pipeline. This will teach us about `collect`, `take`, `first`, `.stat.approxQuantile` and different types of combinations for `groupBy - agg - orderBy` and `groupBy - orderBy` on multiple cols. We will test all of our approaches, [here.](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/IotDatasetWorkoutTest.scala)
 
-#### Chapter 4
+#### Chapter 4 - Spark SQL and DataFrames: Introduction to Built-in Data Sources
 
 - In Chapter 4 we will discover about Spark SQL, which is literally SQL stuff. For that, we will use a data about Flight Delays, a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) we will discover more about, views & tables, union Dataframes, instead of using multiple unions, using `when().when().when().when().otherwise()`, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))` Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala)
 
 - On mocked data, you can see our techniques tested in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala)
 
-#### Chapter 5
+#### Chapter 5 - Spark SQL and DataFrames: Interacting with External Data Sources
 
 - In this chapter, we will again work on Flight Delay data, but we will discover different things! With [FlightDelaysAdvanced](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvanced.scala) we will learn about making Tables - `createOrReplaceTempView`, getting rid of `expr()` and understanding it's use case (expr() function to use SQL syntax anywhere a column would be specified.). 
 
@@ -130,6 +130,11 @@ Here is all the code explained in detail.
 - The main methods are getting really long at this point. If you want some help decomposing the code, you can see an examplem at [FlightDelaysAdvancedDecomposed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvancedDecomposed.scala) Tests are at [FlightDelaysAdvancedTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysAdvancedTest.scala)
 
 - Finally, we will see a simple example to understand windowing, with [SimpleWindowing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleWindowing.scala)
+
+#### Chapter 6 - Spark SQL and Datasets
+
+- In Chapter 6, we will try to understand the dynamics of Memory Management for Datasets and DataFrames. For that, we have some mocked data and we will try to understand the DSL vs Lambda usage, with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala)
+
 
 ## Use as Template
 
