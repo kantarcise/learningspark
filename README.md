@@ -121,6 +121,13 @@ Here is all the code explained in detail.
 
 - On mocked data, you can see our techniques tested in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala)
 
+#### Chapter 5
+
+- In this chapter, we will again work on Flight Delay data, but we will discover different things! With [FlightDelaysAdvanced](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvanced.scala) we will learn about making Tables - `createOrReplaceTempView`, getting rid of `expr()` and understanding it's use case (expr() function to use SQL syntax anywhere a column would be specified.). 
+
+- We will see about casting types, like `.withColumn("delay", $"delay".cast(IntegerType))`, filtering multiple things like `filter($"a" === 1 && $"b" === 2)`, `.startsWith("")`, joins (inner join), `.isin("a", "b", "c")`, window functions. We will see functions like `dense_rank`, `drop - rename - pivot`. A different type cas is also waiting us, strings to time -> `02190925 - 02-19 09:25 am` , `.withColumn("month", $"date".substr(0, 2).cast(IntegerType))`.
+
+- The main methods are getting really long at this point. If you want some help decomposing the code, you can see an examplem at [FlightDelaysAdvancedDecomposed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvancedDecomposed.scala) Tests are at [FlightDelaysAdvancedTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysAdvancedTest.scala)
 
 ## Use as Template
 
