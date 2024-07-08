@@ -75,7 +75,7 @@ Which is simply summarized as:
 ```bash
 ./idea.sh
 ```
-To open the IDE.
+To open the IDE. You can make a [Desktop Shortcut](https://askubuntu.com/a/1145563) and add it to your Favorites.
 
 3) To setup a project from scratch, select `New Project`, select JDK, Scala and SBT versions that we installed, make the package prefix something that you choose.
 
@@ -134,6 +134,10 @@ Here is all the code explained in detail.
 #### Chapter 6 - Spark SQL and Datasets
 
 - In Chapter 6, we will try to understand the dynamics of Memory Management for Datasets and DataFrames. For that, we have some mocked data and we will try to understand the DSL vs Lambda usage, with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala)
+
+- Before closing, we will have a small Dataset Workout on Internet Usage data which is made on fly (in the code), and we will practice what we have learned so far in [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala)
+
+- For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala). 
 
 
 ## Use as Template
