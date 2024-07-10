@@ -1,6 +1,5 @@
 package learningSpark
 
-
 import org.apache.spark.sql.{SparkSession, Dataset}
 import org.apache.spark.sql.functions._
 import scala.util.Random
@@ -55,13 +54,12 @@ object InternetUsage {
     import internetUsageDS.sparkSession.implicits._
 
     println("Excess usage WITHOUT LAMBDAS\n")
-
-    val excessUsageds = internetUsageDS
+    internetUsageDS
       .where($"usage" > 900)
       .orderBy($"usage".desc)
-    excessUsageds.show(5, truncate = false)
+      .show(5, truncate = false)
 
-    println("Excess usage with lambdas\n")
+    println("Excess usage with a method (filterWithUsage)!\n")
     internetUsageDS
       // What is this ? Info down below
       .filter(filterWithUsage(_))
@@ -81,37 +79,40 @@ object InternetUsage {
   def displaySpecialTreatmentCosts(internetUsageDS: Dataset[Usage]): Unit = {
     import internetUsageDS.sparkSession.implicits._
 
-    println("special treatment to most users - with Lambdas\n")
+    println("special treatment to most users - with just map\n")
+    // With just map
     internetUsageDS
       .map(u => if (u.usage > 750) u.usage * .15 else u.usage * .50)
       .show(5, truncate = false)
 
+    println("special treatment to most users - with a method (computeCostUsage)!\n")
     // with function
     internetUsageDS
       .map(u => {computeCostUsage(u.usage)})
       .show(5, false)
 
-    println("special treatment to most users - WITHOUT lambdas\n")
-    internetUsageDS
-      .withColumn("value", when($"usage" > 750, $"usage" * .15).otherwise($"usage" * .50))
-      .select($"value")
-      .show(5, truncate = false)
+    // println("special treatment to most users - WITHOUT lambdas\n")
+    // This is Dataframe API
+    // internetUsageDS
+    //  .withColumn("value", when($"usage" > 750, $"usage" * .15).otherwise($"usage" * .50))
+    //  .select($"value")
+    //  .show(5, truncate = false)
   }
 
   def computeUserCostUsage(internetUsageDS: Dataset[Usage]): Dataset[UsageCost] = {
     import internetUsageDS.sparkSession.implicits._
 
     // Use map() on our original Dataset
-    // internetUsageDS
-    //   .map(u => {computeUserCostUsage(u)})
-    //   .show(5, false)
-
-    // or with API
     internetUsageDS
-      .withColumn("cost",
-        when($"usage" > 750, $"usage" * .15)
-          .otherwise($"usage" * .50))
+      .map(u => {computeUserCostUsage(u)})
       .as[UsageCost]
+
+    // or with DataFrame API
+    // internetUsageDS
+    //   .withColumn("cost",
+    //     when($"usage" > 750, $"usage" * .15)
+    //      .otherwise($"usage" * .50))
+    //   .as[UsageCost]
   }
 
   // Filtering the usage - only excessive users.
