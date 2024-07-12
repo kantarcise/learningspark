@@ -1,22 +1,22 @@
 package learningSpark
 
 import org.apache.spark.sql.{SparkSession, Dataset}
-import org.apache.spark.sql.functions._
+
 import scala.util.Random
 
 object InternetUsage {
   def main(args: Array[String]): Unit = {
 
-    val spark = SparkSession
-      .builder()
-      .appName("Internet Usage")
-      .master("local[*]")
+    val spark: SparkSession = SparkSession
+      .builder
+      .appName(name = "Internet Usage")
+      .master(master = "local[*]")
       .getOrCreate()
 
     spark.sparkContext.setLogLevel("ERROR")
 
     // Generate usage data
-    val internetUsageDS = generateUsageData(spark)
+    val internetUsageDS: Dataset[Usage] = generateUsageData(spark)
 
     // Display generated dataset
     println("\nMade a new dataset with Usage case class!\n")
@@ -29,7 +29,7 @@ object InternetUsage {
     displaySpecialTreatmentCosts(internetUsageDS)
 
     // Compute and display user cost usage dataset
-    val computeUserCostUsageDS = computeUserCostUsage(internetUsageDS)
+    val computeUserCostUsageDS: Dataset[UsageCost] = computeUserCostUsage(internetUsageDS)
 
     println("Compute Usage - whole DF \n")
     computeUserCostUsageDS
@@ -43,8 +43,10 @@ object InternetUsage {
 
   def generateUsageData(spark: SparkSession): Dataset[Usage] = {
     import spark.implicits._
+    // make a seed to be replicable
     val r = new Random(42)
-    val data = (0 to 1000).map { i =>
+
+    val data: IndexedSeq[Usage] = (0 to 1000).map { i =>
       Usage(i, "user-" + r.alphanumeric.take(5).mkString(""), r.nextInt(1000))
     }
     spark.createDataset(data)
@@ -62,7 +64,7 @@ object InternetUsage {
     println("Excess usage with a method (filterWithUsage)!\n")
     internetUsageDS
       // What is this ? Info down below
-      .filter(filterWithUsage(_))
+      .filter(filterWithUsage(_: Usage))
       .orderBy($"usage".desc)
       .show(5, truncate = false)
     /*
@@ -82,13 +84,19 @@ object InternetUsage {
     println("special treatment to most users - with just map\n")
     // With just map
     internetUsageDS
-      .map(u => if (u.usage > 750) u.usage * .15 else u.usage * .50)
+      // we can directly map it to an another Dataset
+      .map((u: Usage) => SpecialPrices(if (u.usage > 750) u.usage * .15 else u.usage * .50))
+      // not needed. Dataset is already in SpecialPrices type
+      // .as[SpecialPrices]
       .show(5, truncate = false)
 
     println("special treatment to most users - with a method (computeCostUsage)!\n")
     // with function
     internetUsageDS
-      .map(u => {computeCostUsage(u.usage)})
+      // we can directly map it to an another Dataset - with a method too.
+      .map((u:Usage) => SpecialPrices({computeCostUsage(u.usage)}))
+      // not needed. Dataset is already in SpecialPrices type
+      // .as[SpecialPrices]
       .show(5, false)
 
     // println("special treatment to most users - WITHOUT lambdas\n")
