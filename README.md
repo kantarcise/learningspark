@@ -143,7 +143,7 @@ Here is all the code explained in detail.
 
 - After all the code we have written, is there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we will discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
 
-
+- Secret - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
 
 ## Use as Template
 
