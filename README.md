@@ -139,6 +139,11 @@ Here is all the code explained in detail.
 
 - For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala). 
 
+#### Chapter 7 - Optimizing and Tuning Spark Applications
+
+- After all the code we have written, is there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we will discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
+
+
 
 ## Use as Template
 
