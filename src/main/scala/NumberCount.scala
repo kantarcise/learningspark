@@ -28,7 +28,7 @@ object NumberCount {
 
     import spark.implicits._
 
-    // Create DataFrame representing the stream
+    // Make a Dataset representing the stream
     // of input lines from connection to localhost:9999
     val lines: Dataset[String] = spark.readStream
       .format("socket")
