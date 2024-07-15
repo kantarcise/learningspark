@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: spark
+      POSTGRES_PASSWORD: spark
+      POSTGRES_DB: sparkdb
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres_network
+
+networks:
+  postgres_network:
+    driver: bridge
