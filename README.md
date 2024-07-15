@@ -10,27 +10,36 @@ You have to wander a lot just to get the ball rolling, especially if you are new
 
 I thought, it shouldn't be this hard.
 
-## Usage
+## Scala ? 🤔 I don't know any Scala 😕
+
+Focus for 90 minutes and finish the [Prelude꞉ A Taste of Scala](https://docs.scala-lang.org/overviews/scala-book/prelude-taste-of-scala.html) here. After that, if you still want to discover more, you can check out [Tour of Scala](https://docs.scala-lang.org/tour/tour-of-scala.html). You can test your understanding [in this website](https://scastie.scala-lang.org/).
+
+## Usage 🔨
 
 You have 3 choices:
 
-### Instuction Route - Instructions
+### Instuction Route - Instructions 🎫 
 
 - You can follow the instructions to make yourself a Spark playground.
 
-### Cherry Pick Route - Code Catalog
+### Cherry Pick Route - Code Catalog 📚
 
-- You can only look for what you are interested in.
+- You can only look for what you are interested in. Dataframe API, Dataset API, SparkStreaming etc.
 
-### Template Route - Use as Template
+### Template Route - Use as Template 💭
 
-- You can simply use all of the code in your projects as a template.
+- You can simply use all of the code in your projects as a template. This may help you by acting like a [catalyst.](https://www.britannica.com/science/catalyst)
 
 Choose as you wish. 
 
-Here are all the details for routes.
+> [!IMPORTANT]
+> Almost all of the code was configured so that it could be run in IDE. If you are working with a cluster manager, you should adjust the code accordingly. If this does not make a lot of sense for you, don't worry and keep reading on!
 
-### Instructions
+---
+
+Here are all the details for routes:
+
+### Instructions 🎫 
  
 This repository is tested on
 
@@ -81,7 +90,7 @@ To open the IDE. You can make a [Desktop Shortcut](https://askubuntu.com/a/11455
 
 4) Now you are ready to try out some code!
 
-### Code Catalog
+### Code Catalog 📚
 
 Here is all the code explained in detail.
 
@@ -147,7 +156,16 @@ Here is all the code explained in detail.
 
 - Secret - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
 
-## Use as Template
+#### Chapter 8 - Structured Streaming
+
+- In Chapter 8, we will see the basics of Spark's Structured streaming. In [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) we will have an apllication up an running, and in [NumberCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NumberCount.scala) we discover the value of `try/catch` blocks in the code, while working with Dataset API. The test [WordCountTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountTest.scala) will give us a simple testing blueprint for streaming applications!
+
+- We can also write a [CustomListener](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/CustomListener.scala) to get more information about our `StreamingQuery`. We also have a method called `printProgress` that prints the `query.lastProgress` in a seperate Thread with defined periods, which might be useful.
+
+- You will most likely work with Apache Kafka in StructuredStreaming, so even though there is not a complete example in the book, we have [WordCountKafka](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala) which will show us the basic `source -> process -> sink` pipeline. To be able to run it, we will use docker, as [explained in the readme.](https://github.com/kantarcise/learningspark/blob/main/docker/readme.md) 
+
+
+### Use as Template 💭
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
 
