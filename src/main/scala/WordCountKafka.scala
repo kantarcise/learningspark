@@ -48,12 +48,12 @@ object WordCountKafka {
       .selectExpr("CAST(value AS STRING) AS key",
         "CAST(concat(value, ':', count) AS STRING) AS value")
       .writeStream
-      // .outputMode("complete")
-      . outputMode("update")
+      .outputMode("complete")
+      // .outputMode("update")
       .format("kafka")
       .option("kafka.bootstrap.servers", "localhost:9092")
       .option("topic", "output_topic")
-      .option("checkpointLocation", "/tmp/spark_checkpoint")
+      .option("checkpointLocation", "/tmp/spark_checkpoint_1")
       .start()
 
     // Call the method to print progress every 10 seconds
