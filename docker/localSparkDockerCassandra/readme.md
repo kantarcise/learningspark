@@ -2,7 +2,7 @@
 
 ## What is going on ?
 
-For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala), we need a Cassandra Instance up an running to test our approach.
+For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToCassandra.scala), we need a Cassandra Instance up an running to test our approach.
 
 Let's use docker-compose.
 
@@ -48,7 +48,7 @@ CREATE TABLE wordcount (
 
 ### 3) Start a Socket Text Stream ✏️
 
-Just like we did in [WordCount](), open a simple socket server to type in words!
+Just like we did in [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala), open a simple socket server to type in words!
 
 ```bash
 nc -lk 9999
@@ -56,7 +56,7 @@ nc -lk 9999
 
 ### 4) Run the Spark Application
 
-Just like in [WordCountKafka](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala) get a jar with `sbt clean package` and submit the application with:
+Just like in [WordCountKafka](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala), get a jar with `sbt clean package` and submit the application with:
 
 Now that we are using a Cassandra connection, we should add the [Spark Cassandra Connector](https://mvnrepository.com/artifact/com.datastax.spark/spark-cassandra-connector_2.12/3.5.0) Dependency for it! Here [is more](https://spark.apache.org/docs/latest/submitting-applications.html#advanced-dependency-management) for the curious minds.
 
