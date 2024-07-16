@@ -168,6 +168,8 @@ Here is all the code explained in detail.
 
 - How about a PostgreSQL sink? In [WordCountToPostgres](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToPostgres.scala) we will have the same example, with a PostgreSQL sink and we will discover how we can use `foreach()` for the streaming query! We will use [CustomForeachWriter](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/CustomForeachWriter.scala) to express the data-writing logic by dividing it into three methods: `open()`, `process()`, and `close()`. For docker setup and running the application, refer to [readme file](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerPostgreSQL/readme.md).
 
+- There are a lot of data transformations we can use while doing structured streaming. In [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) we will see how some of the data transformations process each input record individually without needing any information from previous rows. So the are called **Stateless!** Also, the application has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method! 
+
 
 ### Use as Template 💭
 
