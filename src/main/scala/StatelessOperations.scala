@@ -8,6 +8,10 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 
+// output mode cannot be `complete` - only `append` or `update`
+// Complete mode is not supported because storing the ever-growing result
+// data is usually costly.
+// This is in sharp contrast with stateful transformations.
 object StatelessOperations {
 
   def main(args: Array[String]): Unit = {
@@ -47,6 +51,10 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val queryFirst = selectedColumns
       .writeStream
+      // only two modes possible, append and update
+      // if you try complete, the code will error:
+      // Complete output mode not supported when there are
+      // no streaming aggregations on streaming DataFrames/Datasets
       .outputMode("append")
       .format("console")
       .trigger(Trigger.ProcessingTime("3 seconds"))
@@ -59,6 +67,7 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val querySecond= explodedData
       .writeStream
+      // only two modes possible, append and update
       .outputMode("append")
       .format("console")
       .trigger(Trigger.ProcessingTime("3 seconds"))
@@ -71,6 +80,7 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val queryThird = flatMappedData
       .writeStream
+      // only two modes possible, append and update
       .outputMode("append")
       .format("console")
       .trigger(Trigger.ProcessingTime("3 seconds"))

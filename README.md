@@ -168,7 +168,7 @@ Here is all the code explained in detail.
 
 - How about a PostgreSQL sink? In [WordCountToPostgres](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToPostgres.scala) we will have the same example, with a PostgreSQL sink and we will discover how we can use `foreach()` for the streaming query! We will use [CustomForeachWriter](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/CustomForeachWriter.scala) to express the data-writing logic by dividing it into three methods: `open()`, `process()`, and `close()`. For docker setup and running the application, refer to [readme file](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerPostgreSQL/readme.md).
 
-- There are a lot of data transformations we can use while doing structured streaming. In [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) we will see how some of the data transformations process each input record individually without needing any information from previous rows. So the are called **Stateless!** Also, the application has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method! 
+- There are a lot of data transformations we can use while doing structured streaming. In [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) we will see how some of the data transformations process each input record individually without needing any information from previous rows. So the are called **Stateless!** Also, the application has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method! We will also try to understand `.outputMode("")` and how it works in stateless aggregations. For more information check out [16th and 17th items in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
 
 ### Use as Template 💭
@@ -183,35 +183,54 @@ If you simply want to use this repository as a template, here is the fastest way
 
 ## Extras
 
-- Is there a Function Documentation that we can use?: Solution - [Sure, there it is.](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/functions$.html)
+1) Is there a Function Documentation that we can use?: Solution - [Sure, there it is.](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/functions$.html)
 
-- How can I understand Spark's capability on Column processing ? - Solution: Here is [the link for documentation](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Column.html), This is where the magic happens.
+2) How can I understand Spark's capability on Column processing ? - Solution: Here is [the link for documentation](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Column.html), This is where the magic happens.
 
-- Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for, I think you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
+3) Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for, I think you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
 
-- Is there a better way to mock data? - Solution: Sure, there are [better alternatives](https://www.mockaroo.com/) than manually writing data.
+4) Is there a better way to mock data? - Solution: Sure, there are [better alternatives](https://www.mockaroo.com/) than manually writing data.
 
-- Can we clean up the code written in Dataframe API, using the Dataset API? - Solution: Yes! Depending on your definition of cleaning up, Dataset API can be pretty neat. Take a look at [EXAMPLE HERE]
+5) Can we clean up the code written in Dataframe API, using the Dataset API? - Solution: Yes! Depending on your definition of cleaning up, Dataset API can be pretty neat. Take a look at [EXAMPLE HERE]
 
-- Is there a simple source that explains Repartition & Coalesce in Spark ? - Solution: This is an [attempt.](https://medium.com/@amitjoshi7/repartition-coalesce-in-apache-spark-76eb6203c316#:~:text=Use%20Coalesce%20when%20decreasing%20the%20number%20of%20partitions%20to%20reduce%20computational%20overhead.)
+6) Is there a simple source that explains Repartition & Coalesce in Spark ? - Solution: This is an [attempt.](https://medium.com/@amitjoshi7/repartition-coalesce-in-apache-spark-76eb6203c316#:~:text=Use%20Coalesce%20when%20decreasing%20the%20number%20of%20partitions%20to%20reduce%20computational%20overhead.)
 
-- How about Data Partitioning? - Solution: Here is another [link.](https://medium.com/@dipayandev/everything-you-need-to-understand-data-partitioning-in-spark-487d4be63b9c)
+7) How about Data Partitioning? - Solution: Here is another [link.](https://medium.com/@dipayandev/everything-you-need-to-understand-data-partitioning-in-spark-487d4be63b9c)
 
-- How to submit applications ? - Solution - Official [docs are helpful.](https://spark.apache.org/docs/latest/submitting-applications.html)
+8) How to submit applications ? - Solution - Official [docs are helpful.](https://spark.apache.org/docs/latest/submitting-applications.html)
 
-- How to submit a Spark job, written in Scala - Solution: Although a different deployment, this is a [useful link.](https://guide.ncloud-docs.com/docs/en/hadoop-vpc-16)
+9) How to submit a Spark job, written in Scala - Solution: Although a different deployment, this is a [useful link.](https://guide.ncloud-docs.com/docs/en/hadoop-vpc-16)
 
-- Can I get a Docker compose example - Solution  - Here [is one](https://github.com/bitnami/containers/blob/main/bitnami/spark/docker-compose.yml)
+10) Can I get a Docker compose example - Solution  - Here [is one](https://github.com/bitnami/containers/blob/main/bitnami/spark/docker-compose.yml)
 
-- Deploy mode - Client vs Cluster ? - Solution - An [explaination](https://stackoverflow.com/a/28808269)
+11) Deploy mode - Client vs Cluster ? - Solution - An [explaination](https://stackoverflow.com/a/28808269)
 
-- Can I get an overview about cluster mode ? - Solution - Yes for sure, [here](https://spark.apache.org/docs/latest/cluster-overview.html)
+12) Can I get an overview about cluster mode ? - Solution - Yes for sure, [here](https://spark.apache.org/docs/latest/cluster-overview.html)
 
-- How does `--master` selection work when submitting or writing Spark applications, is there a hierachy? - Solution - Yes there is. Apllication overrides console, console overrides `conf` - [Link from Stack Overflow](https://stackoverflow.com/a/54599477)
+13) How does `--master` selection work when submitting or writing Spark applications, is there a hierachy? - Solution - Yes there is. Apllication overrides console, console overrides `conf` - [Link from Stack Overflow](https://stackoverflow.com/a/54599477)
 
-- What should I do If I wanted to use `sbt assembly` ? - Solution : Just use plugins.sbt to setup for assembly - [PROJECT STRUCTURE](https://stackoverflow.com/a/36186315) - add assembly to plugins.
+14) What should I do If I wanted to use `sbt assembly` ? - Solution : Just use plugins.sbt to setup for assembly - [PROJECT STRUCTURE](https://stackoverflow.com/a/36186315) - add assembly to plugins.
 
-- What if there is a merging error when I try to run `sbt clean assembly`? - Solution: Here is the assembly [merge strategy](https://stackoverflow.com/a/39058507)
+15) What if there is a merging error when I try to run `sbt clean assembly`? - Solution: Here is the assembly [merge strategy](https://stackoverflow.com/a/39058507)
+
+16) There are 3 output modes Structured Streaming Provides (page 212 in the book):
+
+    - **Append Mode**: Only the new rows appended to the result table since the last trigger will be written to the external storage. This is applicable only in queries where existing rows in the result table cannot change (e.g., a map on an input stream).
+
+    - **Complete Mode**: The entire updated result table will be written to external storage.
+
+    - **Update Mode**: Only the rows that were updated in the result table since the last trigger will be changed in the external storage. This mode works for output sinks that can be updated in place, such as a MySQL table.
+
+17) Here are 3 output modes of Structured Streaming, in detail (page 216 in the book):
+
+    - **Append Mode**:  This is the default mode, where only the new rows added to the result table/DataFrame (for example, the counts table) since the last trigger will be output to the sink. Semantically, this mode guarantees that any row that is output is never going to be changed or updated by the query in the future. Hence, append mode is supported by only those queries (e.g., stateless queries) that will never modify previously output data. In contrast, our [word count query](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) can update previously generated counts; therefore, it does not support append mode.
+
+    - **Complete Mode**: In this mode, all the rows of the result table/DataFrame will be output at the end of every trigger. This is supported by queries where the result table is likely to be much smaller than the input data and therefore can feasibly be retained in memory. For example, our word count query supports complete mode because the counts data is likely to be far smaller than the input data.
+
+    - **Update Mode**: In this mode, only the rows of the result table/DataFrame that were updated since the last trigger will be output at the end of every trigger. This is in contrast to append mode, as the output rows may be modified by the query and output again in the future. Most queries support update mode.
+
+- Complete details on the output modes supported by different queries can be found in the latest [Structured Streaming Programming Guide.](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
+
 
 ## Offer
 
