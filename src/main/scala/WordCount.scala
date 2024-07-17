@@ -61,7 +61,13 @@ object WordCount {
     // prints the running counts to the console
     val query: StreamingQuery = wordCounts
       .writeStream
-      .outputMode("complete")
+      // we are doing a stateful operation
+      // meaning the count can / will update a previously generated result
+      // so append mode will not work.
+      // if you try you will get the error:
+      // Append output mode not supported when there are streaming
+      // aggregations on streaming DataFrames/DataSets without watermark
+      .outputMode("append")
       .format("console")
       .start()
 
