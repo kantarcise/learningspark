@@ -172,6 +172,8 @@ Here is all the code explained in detail.
 
 - There are a lot of data transformations we can use while doing structured streaming. In [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) we will see how some of the data transformations process each input record individually without needing any information from previous rows. So the are called **Stateless!** Also, the application has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method! We will also try to understand `.outputMode("")` and how it works in stateless aggregations. For more information check out [16th and 17th items in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
+- Stateful Operations are divided into two groups (Managed and Unmanaged - page 237). First, we try to understand managed stateful operations that does not use **Time** in [ManagedStatefulAggregationsWithoutTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithoutTime.scala) which uses a `MemoryStream` to generate a stream and shows us a lot of different types of aggregations in Structured Streaming. `allTypesOfAggregations(df: Dataframe)` is a great place to discover all kinds of aggregations. 
+
 
 ### Use as Template 💭
 
