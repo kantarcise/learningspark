@@ -67,7 +67,7 @@ object WordCount {
       // if you try you will get the error:
       // Append output mode not supported when there are streaming
       // aggregations on streaming DataFrames/DataSets without watermark
-      .outputMode("append")
+      .outputMode("complete")
       .format("console")
       .start()
 
