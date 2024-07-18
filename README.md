@@ -174,6 +174,8 @@ Here is all the code explained in detail.
 
 - Stateful Operations are divided into two groups (Managed and Unmanaged - page 237). First, we try to understand managed stateful operations that does not use **Time** in [ManagedStatefulAggregationsWithoutTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithoutTime.scala) which uses a `MemoryStream` to generate a stream and shows us a lot of different types of aggregations in Structured Streaming. `allTypesOfAggregations(df: Dataframe)` is a great place to discover all kinds of aggregations. 
 
+- Second, we will see stateful operations which **do** depend on time, with a tumbling and sliding window in [ManagedStatefulAggregationsWithTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithTime.scala). Again, we are using `MemoryStream` to simulate a real stream, and we are working with case classes [SimpleSensorWithTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleSensorWithTime.scala) and [SimpleSensorWithTimestamp](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleSensorWithTimestamp.scala). We do a simple timestamp conversion too; with `map()` we convert a type of Dataset into a different Dataset! 
+
 
 ### Use as Template 💭
 
