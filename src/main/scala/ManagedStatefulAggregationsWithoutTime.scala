@@ -13,11 +13,12 @@ import scala.concurrent.duration.FiniteDuration
 // import org.apache.spark.sql.expressions.scalalang.typed
 
 
-/*
+/**
 There are some Stateful Aggregations which are done without timing.
 This is an example application to demonstrate.
  */
 object ManagedStatefulAggregationsWithoutTime {
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
@@ -103,8 +104,9 @@ object ManagedStatefulAggregationsWithoutTime {
     Await.result(addDataFuture, Duration.Inf)
   }
 
-  /*
+  /**
    Add generated data on time interval, to an existing MemoryStream.
+   This simulates a real streaming scenario where data arrives continuously.
    */
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[DeviceIoTData],
                                         interval: FiniteDuration): Future[Unit] = Future {
@@ -132,7 +134,7 @@ object ManagedStatefulAggregationsWithoutTime {
     }
   }
 
-  /*
+  /**
   Here is some types of built in aggregations
   To discover more:
   https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/functions$.html
