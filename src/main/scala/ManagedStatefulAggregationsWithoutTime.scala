@@ -1,17 +1,19 @@
 package learningSpark
 
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Encoder, Encoders, SparkSession, TypedColumn}
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.Trigger
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
+import org.apache.spark.sql.expressions.Aggregator
+
 
 // there was an option to typed aggregations, but now deprecated.
 // import org.apache.spark.sql.expressions.scalalang.typed
-
 
 /**
 There are some Stateful Aggregations which are done without timing.
@@ -23,7 +25,7 @@ object ManagedStatefulAggregationsWithoutTime {
 
     val spark = SparkSession
       .builder()
-      .appName("StatefulOperations")
+      .appName("Stateful Operations Without Time")
       // if you want to run it in IDE
       .master("local[*]")
       .getOrCreate()
@@ -31,6 +33,70 @@ object ManagedStatefulAggregationsWithoutTime {
     import spark.implicits._
 
     spark.sparkContext.setLogLevel("ERROR")
+
+    // Create a custom aggregator for finding the minimum temperature
+    // An Aggregator is a typed class that performs aggregation operations.
+    val minTemperatureAggregator: TypedColumn[DeviceIoTData, Double] = new
+
+      // 3 parameters,
+      // DeviceIoTData: The input type.
+      // Double: The intermediate type used during the aggregation.
+      // Double: The final output type of the aggregation, which is also
+      // a Double representing the minimum temperature.
+        Aggregator[DeviceIoTData, Double, Double] {
+
+      // Initial value for the aggregation
+      //  This method defines the initial value of the
+      //  aggregation, also known as the "zero value."
+      def zero: Double = Double.MaxValue
+
+      // This method updates the intermediate aggregation
+      // value with a new element from the dataset.
+      // Update the intermediate value with a new sensor reading
+      def reduce(b: Double, a: DeviceIoTData): Double = math.min(b, a.temp)
+
+      // Combine two intermediate values
+      // Computes the minimum of the two intermediate values (b1 and b2).
+      // This is useful in distributed processing where
+      // partial results need to be merged.
+      def merge(b1: Double, b2: Double): Double = math.min(b1, b2)
+
+      // Return the final aggregated result
+      // There's no additional processing needed here since the
+      // intermediate value is already the minimum temperature.
+      def finish(reduction: Double): Double = reduction
+
+      // Specifies the encoder for the intermediate value type
+      def bufferEncoder: Encoder[Double] = Encoders.scalaDouble
+
+      // Specifies the encoder for the output value type
+      def outputEncoder: Encoder[Double] = Encoders.scalaDouble
+
+    }.toColumn.name("MinimumTemperature")
+
+    // Custom aggregator for counting elements
+    val countAggregator: TypedColumn[DeviceIoTData, Long] = new
+        Aggregator[DeviceIoTData, Long, Long] {
+      // Initial value for the aggregation
+      def zero: Long = 0L
+
+      // Update the intermediate value with a new sensor reading
+      def reduce(b: Long, a: DeviceIoTData): Long = b + 1
+
+      // Combine two intermediate values
+      def merge(b1: Long, b2: Long): Long = b1 + b2
+
+      // Return the final aggregated result
+      def finish(reduction: Long): Long = reduction
+
+      // Specifies the encoder for the intermediate value type
+      def bufferEncoder: Encoder[Long] = Encoders.scalaLong
+
+      // Specifies the encoder for the output value type
+      def outputEncoder: Encoder[Long] = Encoders.scalaLong
+
+      // TODO: Is giving a name for column bad when Streaming ?
+    }.toColumn.name("RunningCount")
 
     // let's make a memory stream of sensor data
     // make a memory stream to test the Stateless Operations
@@ -47,23 +113,32 @@ object ManagedStatefulAggregationsWithoutTime {
     // we cannot use sensorStream.count()
     // because for streaming DataFrames/Datasets
     // aggregates have to be continuously updated
-    // THIS IS DATAFRAME API!
-    // it will increase one by one
-    val runningCount: DataFrame = sensorStream
+    // THIS IS DATAFRAME API! - it will increase one by one
+    val runningCountDF: DataFrame = sensorStream
       .groupBy()
       .count()
+
+    // Here is the Dataset API !
+    val runningCount: Dataset[(Int, Long)] = sensorStream
+      // Group all data into a single group
+      .groupByKey(_ => 1)
+      // Use the custom aggregator
+      .agg(countAggregator)
 
     // and there are Grouped aggregations
     // let's have a running count based on sensor countries!
     val runningCountOfCountries = sensorStream
       .groupByKey(sensor => sensor.cca3)
+      // this is from Dataset API - on a KeyValueGroupedDataset
       .count()
 
     // here is another grouped aggregation
     // let's see the minimum temperature for different countries
     val minTemperatureByCountry = sensorStream
       .groupByKey(s => s.cca3)
-      .agg(min($"temp").as[Long])
+      .agg(minTemperatureAggregator)
+      // The line down below uses,
+      // .agg(min($"temp").as[Long])
       // careful! if you use like down below, you will get a Dataframe
       // .agg(min($"temperature").as("min_temperature"))
 
@@ -77,6 +152,7 @@ object ManagedStatefulAggregationsWithoutTime {
       // .outputMode("append")
       .outputMode("complete")
       .format("console")
+      .option("truncate" , false)
       .trigger(Trigger.ProcessingTime("1 seconds"))
       .start()
 
@@ -84,6 +160,7 @@ object ManagedStatefulAggregationsWithoutTime {
       .writeStream
       .outputMode("complete")
       .format("console")
+      .option("truncate" , false)
       // if we do not configure it
       // default trigger is just micro batches
       // .trigger(Trigger.ProcessingTime("1 seconds"))
@@ -93,6 +170,7 @@ object ManagedStatefulAggregationsWithoutTime {
       .writeStream
       .outputMode("complete")
       .format("console")
+      .option("truncate" , false)
       .start()
 
     query.awaitTermination()
