@@ -11,7 +11,6 @@ import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
 import org.apache.spark.sql.expressions.Aggregator
 
-
 // there was an option to typed aggregations, but now deprecated.
 // import org.apache.spark.sql.expressions.scalalang.typed
 
@@ -100,7 +99,8 @@ object ManagedStatefulAggregationsWithoutTime {
 
     // let's make a memory stream of sensor data
     // make a memory stream to test the Stateless Operations
-    val memoryStream: MemoryStream[DeviceIoTData] = new MemoryStream[DeviceIoTData](id = 1, spark.sqlContext)
+    val memoryStream: MemoryStream[DeviceIoTData] = new
+        MemoryStream[DeviceIoTData](id = 1, spark.sqlContext)
 
     // Add sample data every 5 seconds - one by one!
     val addDataFuture = addDataPeriodicallyToMemoryStream(memoryStream, 5.seconds)
@@ -147,8 +147,9 @@ object ManagedStatefulAggregationsWithoutTime {
 
     val query = runningCount
       .writeStream
-      // Append output mode not supported when there are streaming
-      // aggregations on streaming DataFrames/DataSets without watermark;
+      // Append output mode not supported when there
+      // are streaming aggregations on streaming
+      // DataFrames/DataSets without watermark;
       // .outputMode("append")
       .outputMode("complete")
       .format("console")
