@@ -9,7 +9,7 @@ import org.apache.spark.sql.streaming._
 class CustomListener extends StreamingQueryListener {
   override def onQueryStarted(event: QueryStartedEvent): Unit = {
     println("Query started: " + event.id)
-    println("Query: " + event.name)
+    // println("Query: " + event.name)
 
   }
 
