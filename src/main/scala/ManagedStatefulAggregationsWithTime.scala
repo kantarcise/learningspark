@@ -69,14 +69,16 @@ object ManagedStatefulAggregationsWithTime {
 
     // Perform aggregation, tumblingWindow
     // Our window will be {2016-03-20 05:20:00, 2016-03-20 05:25:00}
-    val aggregatedStreamTumbling : DataFrame= sensorStreamWithTimestamp
+    // As a result of this streaming Dataframe, we can clearly see
+    // the sensor 3 is not acting normally!
+    val aggregatedStreamTumbling : DataFrame = sensorStreamWithTimestamp
       // five-minute windows as a dynamically computed grouping column.
       .groupBy(window($"eventTime", "5 minute"), $"device_id")
       .count()
 
     // perform aggregation, sliding window
-    // Our window will be {2016-03-20 05:16:00, 2016-03-20 05:21:00}
-    // to {2016-03-20 05:24:00, 2016-03-20 05:29:00} - 1 minute sliding
+    // Our window will be {2016-03-20 05:18:00, 2016-03-20 05:23:00}
+    // to {2016-03-20 05:24:00, 2016-03-20 05:29:00} - 3 minute sliding
     // some events will be in multiple groups!
     val aggregatedStreamSliding : DataFrame = sensorStreamWithTimestamp
       // compute counts corresponding to 5-minute
@@ -85,7 +87,7 @@ object ManagedStatefulAggregationsWithTime {
         timeColumn =  $"eventTime",
         windowDuration =  "5 minute",
         slideDuration =  "3 minute"), $"device_id")
-      .count
+      .count()
 
     // Start the streaming query and print to console
     val query = aggregatedStreamTumbling
@@ -103,8 +105,8 @@ object ManagedStatefulAggregationsWithTime {
       .option("truncate", false)
       .start()
 
-    // In final batch, we will see the that
-    // sensor 3 is acting unnatural
+    // In final batch, we will see in the Tumbling Windows that
+    // sensor 3 is acting unnatural :)
     query.awaitTermination()
     querySecond.awaitTermination()
 
