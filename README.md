@@ -198,7 +198,9 @@ Here is all the code explained in detail.
 
     - We will start with a simple example with `mapGroupsWithState()` to illustrate the four key steps to modeling custom state data and defining custom operations on it. In [UnmanagedStatefulOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) we will update the state ourselves (with the help of `updateUserStatus()` which follows the `arbitraryStateUpdateFunction()` signature (page 254)), and test out approach in [UnmanagedStatefulOperationsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStatefulOperationsTest.scala). 
     
-    - We will also discuss the concept of timeouts and how you can use them to expire state that has not been updated for a while.
+    - We move onto timeouts, and how we can use them to expire state that has not been updated for a while. First [UnmanagedStateProcessingTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) will show us how we can use ProcessingTime for out timeouts, in a similar structure with `UnmanagedStatefulOperations`. Because we are using the `case classes` with same name (`UserAction`, `UserStatus`), we will see how we can scope them into our object. Overall, this type of timeouts are easy to undertand, but there are a lot of downsides for using them. Check out [25th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras) for more information.
+
+    - 
 
     - `flatMapGroupsWithState()`, gives us even more flexibility.
 
@@ -294,6 +296,23 @@ If you simply want to use this repository as a template, here is the fastest way
     - **Watermark and Event Time Constraint is a Must**: Unlike with inner joins, the watermark delay and event-time constraints are not optional for outer joins. This is because for generating the NULL results, the engine must know when an event is not going to match with anything else in the future. For correct outer join results and state cleanup, the watermarking and event-time constraints must be specified.
 
     - **There will be delays!** Consequently, the outer NULL results will be generated with a delay as the engine has to wait for a while to ensure that there neither were nor would be any matches. This delay is the maximum buffering time (with respect to event time) calculated by the engine for each event as discussed in the previous section (in our example, 25 minutes hours for impressions and 10 minutes for clicks).
+
+24) Notes about `mapGroupsWithState()` (page 256):
+
+    - **You might want to reorder**: When the function is called, there is no well-defined order for the input records in the new data iterator (e.g., newActions). If you need to update the state with the input records in a specific order (e.g., in the order the actions were performed), then you have to explicitly reorder them (e.g., based on the event timestamp or some other ordering ID). In fact, if there is a possibility that actions may be read out of order from the source, then you have to consider the possibility that a future micro-batch may receive data that should be processed before the data in the current batch. In that case, you have to buffer the records as part of the state.
+
+    - **You cannot update/remove state for a ghost user**: In a micro-batch, the function is called on a key once only if the micro-batch has data for that key. For example, if a user becomes inactive and provides no new actions for a long time, then by default, the function will not be called for a long time. If you want to update or remove state based on a user’s inactivity over an extended period you have to use **timeouts**, which we will discuss in the next section.
+
+    - **Cannot append to files**: The output of `mapGroupsWithState()` is assumed by the incremental processing engine to be continuously updated key/value records, similar to the output of aggregations. This limits what operations are supported in the query after mapGroupsWithState(), and what sinks are supported. For example, appending the output into files is not supported. If you want to apply arbitrary stateful operations with greater flexibility, then you have to use `flatMapGroupsWithState()`. We will discuss that after timeouts.
+
+
+25) Here are a few points to note about **Processing Time Timeouts** (page 258):
+
+    -  The timeout set by the last call to the function is automatically cancelled when the function is called again, either for the new received data or for the timeout. Hence, whenever the function is called, the timeout duration or timestamp needs to be *explicitly set* to enable the timeout.
+
+    - **Imprecise, as you would guess**: Since the timeouts are processed during the micro-batches, the timing of their execution is imprecise and depends heavily on the trigger interval and micro-batch processing times. Therefore, it is not advised to use timeouts for precise timing control.
+
+    - **I too like to live dangerously**: While processing-time timeouts are simple to reason about, they are not robust to slowdowns and downtimes. If the streaming query suffers a downtime of **more than one hour**, then after restart, all the **keys in the state will be timed out** because more than one hour has passed since each key received data. Similar wide-scale timeouts can occur if the query processes data slower than it is arriving at the source (e.g., if data is arriving and getting buffered in Kafka). For example, if the timeout is five minutes, then a sudden drop in processing rate (or spike in data arrival rate) that causes a five-minute lag could produce spurious timeouts. To avoid such issues we can use an event-time timeout.
 
 ## Offer
 
