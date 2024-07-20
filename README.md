@@ -188,7 +188,9 @@ Here is all the code explained in detail.
 
     - Our approach is clearly not suitable when both sources of data are changing rapidly. For that we need stream–stream joins, and we see our first example in [StreamStreamJoins](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStreamJoins.scala) In this application, we will explore what types of joins (inner, outer, etc.) are supported, and how to use watermarks to limit the state stored for stateful joins. We will test out `leftouter` joining with [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala)
 
-    - 
+    - Streaming deduplication:
+
+    - We can deduplicate records in data streams using a unique identifier in the events. This is exactly same as deduplication on static using a unique identifier column. In [StreamingDeduplication](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamingDeduplication.scala) we will see how a `guid` can be dropped when it's repeated in the upcoming batches, for a streaming Dataframe. There is also deduplication using both the `guid` and the `eventTime` columns with a watermark which bounds the amount of the state the query has to maintain. For more information, check out the [related part in Structed Streaming Guide](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#streaming-deduplication). 
 
 
 ### Use as Template 💭
