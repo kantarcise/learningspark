@@ -186,7 +186,7 @@ Here is all the code explained in detail.
 
     - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Watermarks.scala) we will join a static Dataset with a streaming one and see the results! We will do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation).We can also discover how to test such application, in [StreamStaticJoinsDataframeTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStaticJoinsDataframeTest.scala)
 
-    - We will explore what types of joins (inner, outer, etc.) are supported, and how to use watermarks to limit the state stored for stateful joins.
+    - Our approach is clearly not suitable when both sources of data are changing rapidly. For that we need stream–stream joins, and we see our first example in [StreamStreamJoins](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStreamJoins.scala) In this application, we will explore what types of joins (inner, outer, etc.) are supported, and how to use watermarks to limit the state stored for stateful joins. We will test out `leftouter` joining with [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala)
 
     - 
 
@@ -271,6 +271,17 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **You Gotta Restart If file changes 🎈**: If the underlying data in the data source on which the static DataFrame was defined changes, whether those changes are seen by the streaming query depends on the specific behavior of the data source. For example, if the static DataFrame was defined on files, then changes to those files (e.g., appends) will not be picked up until the streaming query is restarted.
 
+22) A few key points to remember about **inner joins**: 
+
+    - For inner joins, specifying watermarking and event-time constraints are both optional. In other words, at the risk of potentially unbounded state, you may choose not to specify them. Only when both are specified will you get state cleanup.
+
+    - Similar to the guarantees provided by watermarking on aggregations, a watermark delay of two hours guarantees that the engine will never drop or not match any data that is less than two hours delayed, but data delayed by more than two hours may or may not get processed.
+
+23) However, there are a few additional points to note about **outer joins**:
+
+    - **Watermark and Event Time Constraint is a Must**: Unlike with inner joins, the watermark delay and event-time constraints are not optional for outer joins. This is because for generating the NULL results, the engine must know when an event is not going to match with anything else in the future. For correct outer join results and state cleanup, the watermarking and event-time constraints must be specified.
+
+    - **There will be delays!** Consequently, the outer NULL results will be generated with a delay as the engine has to wait for a while to ensure that there neither were nor would be any matches. This delay is the maximum buffering time (with respect to event time) calculated by the engine for each event as discussed in the previous section (in our example, 25 minutes hours for impressions and 10 minutes for clicks).
 
 ## Offer
 
