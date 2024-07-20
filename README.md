@@ -172,7 +172,9 @@ Here is all the code explained in detail.
 
 - There are a lot of data transformations we can use while doing structured streaming. In [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) we will see how some of the data transformations process each input record individually without needing any information from previous rows. So the are called **Stateless!** Also, the application has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method! We will also try to understand `.outputMode("")` and how it works in stateless aggregations. For more information check out [16th and 17th items in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
-- Stateful Operations are divided into two groups (Managed and Unmanaged - page 237). Managed Stateful Operations are divided into three -> Streaming aggregations, Stream–stream joins, Streaming deduplication. We will start with Streaming aggregations:
+- Stateful Operations are divided into two groups (Managed and Unmanaged - page 237). 
+
+- **Managed Stateful Operations** are divided into three -> Streaming aggregations, Stream–stream joins, Streaming deduplication. We will start with Streaming aggregations:
 
     - Streaming Aggretations:
 
@@ -191,6 +193,14 @@ Here is all the code explained in detail.
     - Streaming deduplication:
 
     - We can deduplicate records in data streams using a unique identifier in the events. This is exactly same as deduplication on static using a unique identifier column. In [StreamingDeduplication](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamingDeduplication.scala) we will see how a `guid` can be dropped when it's repeated in the upcoming batches, for a streaming Dataframe. There is also deduplication using both the `guid` and the `eventTime` columns with a watermark which bounds the amount of the state the query has to maintain. For more information, check out the [related part in Structed Streaming Guide](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#streaming-deduplication). 
+
+- **Unmanaged stateful operations** are where we define our own custom state cleanup logic.
+
+    - We will start with a simple example with `mapGroupsWithState()` to illustrate the four key steps to modeling custom state data and defining custom operations on it. In [UnmanagedStatefulOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) we will update the state ourselves (with the help of `updateUserStatus()` which follows the `arbitraryStateUpdateFunction()` signature (page 254)), and test out approach in [UnmanagedStatefulOperationsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStatefulOperationsTest.scala). 
+    
+    - We will also discuss the concept of timeouts and how you can use them to expire state that has not been updated for a while.
+
+    - `flatMapGroupsWithState()`, gives us even more flexibility.
 
 
 ### Use as Template 💭
