@@ -200,7 +200,7 @@ Here is all the code explained in detail.
     
     - We move onto timeouts, and how we can use them to expire state that has not been updated for a while. First [UnmanagedStateProcessingTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) will show us how we can use ProcessingTime for out timeouts, in a similar structure with `UnmanagedStatefulOperations`. Because we are using the `case classes` with same name (`UserAction`, `UserStatus`), we will see how we can scope them into our object. Overall, this type of timeouts are easy to undertand, but there are a lot of downsides for using them. Check out [25th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras) for more information.
 
-    - 
+    - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
     - `flatMapGroupsWithState()`, gives us even more flexibility.
 
@@ -313,6 +313,13 @@ If you simply want to use this repository as a template, here is the fastest way
     - **Imprecise, as you would guess**: Since the timeouts are processed during the micro-batches, the timing of their execution is imprecise and depends heavily on the trigger interval and micro-batch processing times. Therefore, it is not advised to use timeouts for precise timing control.
 
     - **I too like to live dangerously**: While processing-time timeouts are simple to reason about, they are not robust to slowdowns and downtimes. If the streaming query suffers a downtime of **more than one hour**, then after restart, all the **keys in the state will be timed out** because more than one hour has passed since each key received data. Similar wide-scale timeouts can occur if the query processes data slower than it is arriving at the source (e.g., if data is arriving and getting buffered in Kafka). For example, if the timeout is five minutes, then a sudden drop in processing rate (or spike in data arrival rate) that causes a five-minute lag could produce spurious timeouts. To avoid such issues we can use an event-time timeout.
+
+26) Here are a few points to note about event-time timeouts (page 260):
+
+    - **Why `GroupState.setTimeoutTimestamp()` ?**: Unlike in the previous example with processing-time timeouts, we have used `GroupState.setTimeoutTimestamp()` instead of `GroupState.setTimeoutDuration()`. This is because with processing-time timeouts the duration is sufficient to calculate the exact future timestamp (i.e., current system time + specified duration) when the timeout would occur, but this is not the case for event-time timeouts. Different applications may want to use different strategies to calculate the threshold timestamp. In this example we simply calculate it based on the current watermark, but a different application may instead choose to calculate a key’s timeout timestamp based on the maximum event-time timestamp seen for that key (tracked and saved as part of the state).
+
+    - **Timeout Should Be Set Relative**: The timeout timestamp must be set to a value larger than the current watermark. This is because the timeout is expected to happen when the timestamp crosses the watermark, so it’s illogical to set the timestamp to a value already larger than the current watermark. (In our example, we did set the timeout timestamp as relative to the current watermark plus 1 hour (3600000 ms))
+
 
 ## Offer
 
