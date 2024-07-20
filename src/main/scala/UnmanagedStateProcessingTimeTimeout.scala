@@ -66,7 +66,7 @@ object UnmanagedStateProcessingTimeTimeout {
 
     val spark = SparkSession
       .builder
-      .appName("Unmanaged Stateful Operations")
+      .appName("Unmanaged State Processing Time Timeouts")
       .master("local[*]")
       .getOrCreate()
 
