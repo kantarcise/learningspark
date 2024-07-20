@@ -26,7 +26,7 @@ object StreamStaticJoinsDataframe {
 
     import spark.implicits._
 
-    spark.sparkContext.setLogLevel("ERROR")
+    spark.sparkContext.setLogLevel("WARN")
 
     val impressionsDF = readStaticDataFrame(spark)
 
@@ -107,17 +107,18 @@ object StreamStaticJoinsDataframe {
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[Click],
                                         interval: FiniteDuration): Future[Unit] = Future {
 
+
     val sampleData: Seq[Click] = Seq(
-      Click("eebc1f79-03df-4b17-8124-f4875a0e1f65", Timestamp.valueOf("2024-07-09 12:35:56.789"), "USA"),
-      Click("yrhh4w5j-6d1b-48b1-9a92-1f2a334b8a2c", Timestamp.valueOf("2024-07-09 12:35:55.789"), "USA"),
-      Click("f9eayav9-4d5b-4d3c-8f8f-df2a77e7e3f1", Timestamp.valueOf("2024-07-09 12:35:54.789"), "ARG"),
-      Click("38x6zbhc-6e7b-4e1b-9a1e-2f7a334c5a2b", Timestamp.valueOf("2024-07-09 12:35:53.789"), "BLR"),
-      Click("d7a1b2c3-4e5f-6a7b-8c8d-9f0e7e6a2c4d", Timestamp.valueOf("2024-07-09 12:35:52.789"), "BRA"),
-      Click("azywy8h9-6d7e-8f9a-1b0c-2d3e4f5a6b7c", Timestamp.valueOf("2024-07-09 12:35:51.789"), "LBN"),
-      Click("6561z26w-8c9d-0e1a-2b3c-4d5e6f7a8b9c", Timestamp.valueOf("2024-07-09 12:35:50.789"), "BRA"),
-      Click("8d0yq0vm-2e3f-4a5b-6c7d-8e9f0a1b2c3d", Timestamp.valueOf("2024-07-09 12:35:49.789"), "BRA"),
-      Click("c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", Timestamp.valueOf("2024-07-09 12:35:48.789"), "USA"),
-      Click("zjleics9-1c2d-3e4f-5a6b-7c8d9e0f1a2b", Timestamp.valueOf("2024-07-09 12:35:47.789"), "TUN")
+      Click("eebc1f79-03df-4b17-8124-f4875a0e1f65", Timestamp.valueOf("2024-07-09 12:35:00"), "USA"),
+      Click("yrhh4w5j-6d1b-48b1-9a92-1f2a334b8a2c", Timestamp.valueOf("2024-07-09 12:37:00"), "USA"),
+      Click("f9eayav9-4d5b-4d3c-8f8f-df2a77e7e3f1", Timestamp.valueOf("2024-07-09 12:39:00"), "ARG"),
+      Click("38x6zbhc-6e7b-4e1b-9a1e-2f7a334c5a2b", Timestamp.valueOf("2024-07-09 12:41:00"), "BLR"),
+      Click("d7a1b2c3-4e5f-6a7b-8c8d-9f0e7e6a2c4d", Timestamp.valueOf("2024-07-09 12:43:00"), "BRA"),
+      Click("azywy8h9-6d7e-8f9a-1b0c-2d3e4f5a6b7c", Timestamp.valueOf("2024-07-09 12:45:00"), "LBN"),
+      Click("6561z26w-8c9d-0e1a-2b3c-4d5e6f7a8b9c", Timestamp.valueOf("2024-07-09 12:47:00"), "BRA"),
+      Click("8d0yq0vm-2e3f-4a5b-6c7d-8e9f0a1b2c3d", Timestamp.valueOf("2024-07-09 12:49:00"), "BRA"),
+      Click("c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", Timestamp.valueOf("2024-07-09 12:51:00"), "USA"),
+      Click("zjleics9-1c2d-3e4f-5a6b-7c8d9e0f1a2b", Timestamp.valueOf("2024-07-09 12:53:00"), "TUN")
     )
 
     sampleData.foreach { record =>
