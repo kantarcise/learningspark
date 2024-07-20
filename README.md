@@ -182,6 +182,15 @@ Here is all the code explained in detail.
 
     - ***Third*** we will discover how we can prevent unbounded state, with [Watermarks](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Watermarks.scala)! We will see how using a watermark effects the streaming Dataframe, with `numRowsDroppedByWatermark`.  We also have an example, [WatermarksWithSocket](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WatermarksWithSocket.scala) where our incoming data is from a socket - we use `.format("socket")` to make a streaming Dataframe! You can also play around with that!
 
+    - Streaming Joins:
+
+    - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Watermarks.scala) we will join a static Dataset with a streaming one and see the results! We will do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation).We can also discover how to test such application, in [StreamStaticJoinsDataframeTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStaticJoinsDataframeTest.scala)
+
+    - We will explore what types of joins (inner, outer, etc.) are supported, and how to use watermarks to limit the state stored for stateful joins.
+
+    - 
+
+
 ### Use as Template 💭
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
@@ -198,7 +207,7 @@ If you simply want to use this repository as a template, here is the fastest way
 
 2) How can I understand Spark's capability on Column processing ? - Solution: Here is [the link for documentation](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Column.html), This is where the magic happens.
 
-3) Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for, I think you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
+3) Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for , I think you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
 
 4) Is there a better way to mock data? - Solution: Sure, there are [better alternatives](https://www.mockaroo.com/) than manually writing data.
 
@@ -241,6 +250,26 @@ If you simply want to use this repository as a template, here is the fastest way
     - **Update Mode**: In this mode, only the rows of the result table/DataFrame that were updated since the last trigger will be output at the end of every trigger. This is in contrast to append mode, as the output rows may be modified by the query and output again in the future. Most queries support update mode.
 
 - Complete details on the output modes supported by different queries can be found in the latest [Structured Streaming Programming Guide.](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
+
+18) **Semantic Guarantees with Watermark**: A watermark of 10 minutes guarantees that the engine will never drop any data that is delayed by less than 10 minutes compared to the latest event time seen in the input data. However, the guarantee is strict only in one direction. Data delayed by more than 10 minutes is not guaranteed to be dropped—that is, it may get aggregated.
+
+19) Unlike streaming aggregations not involving time, aggregations with time windows can use **all three output modes** (page 245 in the book):
+
+    - **Update mode**: In this mode, every micro-batch will output only the rows where the aggregate got updated. This mode can be used with all types of aggregations. Specifically for time window aggregations, watermarking will ensure that the state will get cleaned up regularly. **This is the most useful and efficient mode** to run queries with streaming aggregations. However, you cannot use this mode to write aggregates to append-only streaming sinks, such as any file-based formats like Parquet and ORC (unless you use ***Delta Lake***, which we will discuss in the next chapter). ✨
+    
+    - **Complete mode**:  In this mode, every micro-batch will output all the updated aggregates, irrespective of their age or whether they contain changes. While this mode can be used on all types of aggregations, for time window aggregations, **using complete mode means state will not be cleaned up even if a watermark is specified.** 🐍 Outputting all aggregates requires all past state, and hence aggregation data must be preserved even if a watermark has been defined. Use this mode on time window aggregations with caution, as this can lead to an indefinite increase in state size and memory usage. 
+
+    - **Append mode**:  This mode can be used only with aggregations on event-time windows and with watermarking enabled. Recall that append mode *does not allow previously output results to change*. For any aggregation without watermarks, every aggregate may be updated with any future data, and hence these cannot be output in append mode. Only when watermarking is enabled on aggregations on event-time windows does the query know when an aggregate is not going to update any further. Hence, instead of outputting the updated rows, append mode outputs each key and its final aggregate value only when the watermark ensures that the aggregate is not going to be updated again. **The advantage of this mode** is that it allows you to write aggregates to **append-only streaming sinks** (e.g., files). ⛵ The disadvantage is that the output will be delayed by the watermark duration—the query has to wait for the trailing watermark to exceed the time window of a key before its aggregate can be finalized.
+
+20) What is the difference between `.format("csv").load(filePath)` and `.csv(filePath)` ? 🤔 - Both methods achieve the same result but in slightly different ways. `.format("csv").load(filePath)` uses the `DataFrameReader` API with more explicit control over the data source format. It allows for more customization and can be more flexible in certain contexts. `.csv(filePath)` is a shorthand provided by the `DataFrameReader` API specifically for reading CSV files. It is more concise and generally preferred for simplicity.
+
+21) Notes about Stream - Static Joins:
+
+    - **Stateless 🐘**: Stream–static joins are stateless operations, and therefore do not require any kind of watermarking.
+
+    - **Cache It! 🐱**: The static DataFrame is read repeatedly while joining with the streaming data of every micro-batch, so you can cache the static DataFrame to speed up the reads.
+
+    - **You Gotta Restart If file changes 🎈**: If the underlying data in the data source on which the static DataFrame was defined changes, whether those changes are seen by the streaming query depends on the specific behavior of the data source. For example, if the static DataFrame was defined on files, then changes to those files (e.g., appends) will not be picked up until the streaming query is restarted.
 
 
 ## Offer
