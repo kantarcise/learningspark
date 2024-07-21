@@ -202,11 +202,54 @@ Here is all the code explained in detail.
 
     - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
-    - `flatMapGroupsWithState()`, gives us even more flexibility.
+    - `flatMapGroupsWithState()`, gives us even more flexibility than `mapGroupsWithState()`. In [UnmanagedStateWithFlatMapGroupsWithState](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateWithFlatMapGroupsWithState.scala) we will discover how we can use `flatMapGroupsWithState()` in a similar fashion with the example applications we did before! We will make use of `org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode}`, especially `OutputMode`.
 
 
 #### Chapter 9 - Building Reliable Data Lakes with Apache Spark
 
+- Expressing the processing logic only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can query the processed data and get insights from it. The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline.
+
+- Here is the short history:
+
+    - **Ideal Storage**: An ideal Storage solution should be scalable and performent, supports ACID transactions, supports diverse data formats, supports diverse workloads and should be open.
+
+    - **Databases?**: Databases was the most reliable solution for decades, with their strict schema and SQL queries. SQL workloads are divided into 2, **Online transaction processing (OLTP) workloads** (Like bank account transactions, high-concurrency, low-latency, simple queries) and **Online analytical processing (OLAP)** (like periodic reporting, complex queries (aggregates and joins), require high-throughput scans over many records).
+
+    - **Spark Designed for ?**: Spark is primarily designed for **OLAP**.
+
+    - **Limitations of Databases**: Growth in data size (advent of big data, global trend to measure and collect everything), Growth in the diversity of analytics (a need for deeper insights, ML - DL).
+
+    - **Issues with Databases**: Databases are extremely expensive to scale out and Databases do not support non–SQL based analytics very well.
+
+    - **Data Lakes**:  In contrast to most databases, a data lake is a distributed storage solution that runs on commodity hardware and easily scales out horizontally. The data lake architecture, unlike that of databases, decouples the distributed storage system from the distributed compute system. This allows each system to scale out as needed by the workload. Furthermore, the data is saved as files with open formats, such that any processing engine can read and write them using standard APIs.
+
+    - **How to build one?**:  Organizations build their data lakes by independently choosing the following: **Storage system** (HDFS on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
+
+    - **The advantage of Data Lakes?**: The flexibility (the ability to choose the storage system, open data format, and processing engine that are best suited to the workload at hand) is the biggest advantage of data lakes over databases.
+
+    - **Spark is great with Datalakes, why?**: Spark Support for diverse workloads, support for diverse file formats, support for diverse filesystems.
+
+    - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the lack of transactional guarantees: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
+
+    - **Is there a better way?**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
+
+    - **Lakehouses: The Next Step**: **Combines the best** elements **of data lakes** and **data warehouses** for OLAP workloads. 
+
+        - **Transaction support**: Similar to Databases, ACID guarantees in concurrent workloads.
+
+        - **Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
+
+        - **Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access all types of data needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
+
+        - **Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
+        
+        - **Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and slowly changing dimension (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
+
+        - **Data governance**: Lakehouses provide the tools with which you can reason about data integrity and audit all the data changes for policy compliance.
+
+    - **Current selection of Lakehouses?**: Currently, there are a few open source systems, such as **Apache Hudi**, **Apache Iceberg**, and **Delta Lake**, that can be used to build lakehouses with these properties (more information page 272). 
+
+- We focus on **Delta Lake**! It is hosted by the Linux Foundation, built by the original creators of Apache Spark. It is called Delta Lake because of its analogy to streaming. Streams flow into the sea to create deltas—this is where all of the sediments accumulate, and thus where the valuable crops are grown. Jules S. Damji (one of our coauthors) came up with this!
 
 
 ### Use as Template 💭
@@ -318,7 +361,7 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **I too like to live dangerously**: While processing-time timeouts are simple to reason about, they are not robust to slowdowns and downtimes. If the streaming query suffers a downtime of **more than one hour**, then after restart, all the **keys in the state will be timed out** because more than one hour has passed since each key received data. Similar wide-scale timeouts can occur if the query processes data slower than it is arriving at the source (e.g., if data is arriving and getting buffered in Kafka). For example, if the timeout is five minutes, then a sudden drop in processing rate (or spike in data arrival rate) that causes a five-minute lag could produce spurious timeouts. To avoid such issues we can use an event-time timeout.
 
-26) Here are a few points to note about event-time timeouts (page 260):
+26) Here are a few points to note about **Event Time Timeouts** (page 260):
 
     - **Why `GroupState.setTimeoutTimestamp()` ?**: Unlike in the previous example with processing-time timeouts, we have used `GroupState.setTimeoutTimestamp()` instead of `GroupState.setTimeoutDuration()`. This is because with processing-time timeouts the duration is sufficient to calculate the exact future timestamp (i.e., current system time + specified duration) when the timeout would occur, but this is not the case for event-time timeouts. Different applications may want to use different strategies to calculate the threshold timestamp. In this example we simply calculate it based on the current watermark, but a different application may instead choose to calculate a key’s timeout timestamp based on the maximum event-time timestamp seen for that key (tracked and saved as part of the state).
 
@@ -328,20 +371,50 @@ If you simply want to use this repository as a template, here is the fastest way
 27) You can generate things other than fixed-duration timeouts. For example, you can implement an approximately periodic task (say, every hour) on the state by saving the last task execution timestamp in the state and using that to set the processing-time timeout duration, as shown in this code snippet:
 
 ```scala
+// In Scala
 timeoutDurationMs = lastTaskTimstampMs + periodIntervalMs -
-groupState.getCurrentProcessingTimeMs()
+    groupState.getCurrentProcessingTimeMs()
 ```
+
 28) Generalization with `flatMapGroupsWithState()`. There are two key limitations with `mapGroupsWithState()` that may limit the flexibility that we want to implement more complex use cases (e.g., chained sessionizations):
 
-    - **One Record At A Time**: Every time `mapGroupsWithState()` is called, you have to return one and only one record. For some applications, in some triggers, you may not want to output any‐ thing at all.
+    - **One Record At A Time 😕**: Every time `mapGroupsWithState()` is called, you have to return one and only one record. For some applications, in some triggers, you may not want to output anything at all.
 
-    - **Engine Assumptions**: With `mapGroupsWithState()`, due to the lack of more information about the opaque state update function, the engine assumes that generated records are updated key/value data pairs. Accordingly, it reasons about downstream operations and allows or disallows some of them. For example, the DataFrame generated using `mapGroupsWithState()` cannot be written out in append mode to files. However, some applications may want to generate records that can be considered as appends.
+    - **Engine Assumptions 😕**: With `mapGroupsWithState()`, due to the lack of more information about the opaque state update function, the engine assumes that generated records are updated key/value data pairs. Accordingly, it reasons about downstream operations and allows or disallows some of them. For example, the DataFrame generated using `mapGroupsWithState()` cannot be written out in append mode to files. However, some applications may want to generate records that can be considered as appends.
     
     - `flatMapGroupsWithState()` overcomes these limitations, at the cost of slightly more complex syntax. It has two differences from `mapGroupsWithState()`:
 
-    - **An Iterator Instead of Object**: The return type is an iterator, instead of a single object. This allows the function to return any number of records, or, if needed, no records at all.
+    - **An Iterator Instead of Object 🌠**: The return type is an iterator, instead of a single object. This allows the function to return any number of records, or, if needed, no records at all.
 
-    - **We have an output mode**: It takes another parameter, called the operator output mode (not to be confused with the query output modes we discussed earlier in the chapter), that defines whether the output records are new records that can be appended (`OutputMode.Append`) or updated key/value records (`OutputMode.Update`).
+    - **We have an output mode 🍓**: It takes another parameter, called the operator output mode (not to be confused with the query output modes we discussed earlier in the chapter), that defines whether the output records are new records that can be appended (`OutputMode.Append`) or updated key/value records (`OutputMode.Update`).
+
+29) **Performance Tuning** in Structured Streaming:
+
+    - Unlike batch jobs that may process gigabytes to terabytes of data, micro-batch jobs usually process **much smaller volumes** of data. Hence, a Spark cluster running streaming queries usually needs to be tuned slightly differently. Here are a few considerations to keep in mind:
+
+        -  **Cluster resource provisioning 🔎**:  Since Spark clusters running streaming queries are going to run 24/7, it is important to provision resources appropriately. Underprovisoning the resources can cause the streaming queries to fall behind (with micro-batches taking longer and longer), while overprovisioning (e.g., allocated but unused cores) can cause unnecessary costs. Furthermore, allocation should be done based on the nature of the streaming queries: **stateless queries usually need more cores, and stateful queries usually need more memory**.
+
+        - **Number of partitions for shuffles** : For Structured Streaming queries, the number of shuffle partitions usually needs to be set **much lower** than for most batch queries—dividing the computation too much increases overheads and reduces throughput. Furthermore, shuffles due to stateful operations have significantly higher task overheads due to checkpointing. Hence, for **streaming queries with stateful operations** and trigger intervals of a few seconds to minutes, it is recommended to tune the **number of shuffle partitions** from the default value of **200** to at most **two to three times the number of allocated cores.**
+
+        - **Setting source rate limits for stability 🪟**: After the allocated resources and configurations have been optimized for a query’s expected input data rates, it’s possible that sudden surges in data rates can generate unexpectedly large jobs and subsequent instability. Besides the costly approach of overprovisioning, you can safeguard against instability using source rate limits. Setting limits in supported sources (e.g., Kafka and files) prevents a query from consuming too much data in a single micro-batch. The surge data will stay buffered in the source, and the query will eventually catch up. However, note the following:
+            - • Setting the limit too low can cause the query to underutilize allocated resources and fall behind the input rate.
+            - • Limits do not effectively guard against sustained increases in input rate. While stability is maintained, the volume of buffered, unprocessed data will grow indefinitely at the source and so will the end-to-end latencies.
+
+        - **Multiple streaming queries in the same Spark application**: Running multiple streaming queries in the same SparkContext or SparkSession can lead to fine-grained resource sharing. However:
+            - • Executing each query continuously uses resources in the Spark driver (i.e., the JVM where it is running). This limits the number of queries that the driver can execute simultaneously. Hitting those limits can either bottleneck the task scheduling (i.e., underutilizing the executors) or exceed memory limits.
+            - • You can ensure fairer resource allocation between queries in the same context by setting them to run in separate scheduler pools. Set the SparkContext’s thread-local property `spark.scheduler.pool` to a different string value for each stream:
+
+```scala
+// In Scala
+
+// Run streaming query1 in scheduler pool1
+spark.sparkContext.setLocalProperty("spark.scheduler.pool", "pool1")
+df.writeStream.queryName("query1").format("parquet").start(path1)
+
+// Run streaming query2 in scheduler pool2
+spark.sparkContext.setLocalProperty("spark.scheduler.pool", "pool2")
+df.writeStream.queryName("query2").format("parquet").start(path2)
+```
 
 ## Offer
 
