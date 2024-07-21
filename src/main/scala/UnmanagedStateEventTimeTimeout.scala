@@ -27,7 +27,8 @@ object UnmanagedStateEventTimeTimeout {
   // let's scope the case classes we will use to this object
 
   // Represents a user action
-  case class UserAction(userId: String, action: String, eventTimestamp: Timestamp)
+  case class UserAction(userId: String, action: String,
+                        eventTimestamp: Timestamp)
 
   // Represents the status of a user
   case class UserStatus(userId: String, var active: Boolean) {
@@ -82,7 +83,7 @@ object UnmanagedStateEventTimeTimeout {
       .groupByKey(userAction => userAction.userId)
       .mapGroupsWithState(
         GroupStateTimeout.EventTimeTimeout)(
-        updateUserStatusWithProcessingTimeTimeout _)
+        updateUserStatusWithEventTimeTimeout _)
 
     // Start the streaming query and print to console
     val query = latestStatuses
@@ -99,9 +100,32 @@ object UnmanagedStateEventTimeTimeout {
 
   }
 
-  def updateUserStatusWithProcessingTimeTimeout(userId: String,
-                                                newActions: Iterator[UserAction],
-                                                state: GroupState[UserStatus]): UserStatus = {
+
+  /**
+   * Updates the user status based on new actions
+   * and manages state with event time timeouts.
+   *
+   * This function is called for each unique user ID in
+   * the micro-batch’s data. It updates the user status based
+   * on the new actions received and sets an event time timeout to manage state.
+   *
+   * If the function is called due to a timeout, it marks
+   * the user as inactive and removes the state.
+   *
+   * Otherwise, it updates the user's status based on the
+   * new actions and sets the timeout timestamp
+   * to the current watermark + 1 hour.
+   *
+   * @param userId The unique identifier for the user.
+   * @param newActions An iterator of new actions for the
+   *                   user in the current micro-batch.
+   * @param state The state corresponding to the user, which
+   *              includes their status and timeout information.
+   * @return The updated user status.
+   */
+  def updateUserStatusWithEventTimeTimeout(userId: String,
+                                           newActions: Iterator[UserAction],
+                                           state: GroupState[UserStatus]): UserStatus = {
     if (!state.hasTimedOut) { // Was not called due to timeout
       val userStatus = state.getOption.getOrElse(UserStatus(userId, false))
       newActions.foreach { action => userStatus.updateWith(action) }
@@ -118,10 +142,27 @@ object UnmanagedStateEventTimeTimeout {
   }
 
   /**
-   * Add such sampleData to a memoryStream so that Event Time Timeouts gets to work!
-   * @param memoryStream
-   * @param interval
-   * @return
+   * Adds sample data to a memory stream at regular
+   * intervals to simulate a stream of user actions.
+   *
+   * This method adds predefined user actions to the
+   * given MemoryStream at the specified interval.
+   *
+   * The sample data is designed to demonstrate the
+   * concept of event-time timeouts.
+   *
+   * Specifically:
+   * - User 2 moves initially but has no further actions, causing
+   *      it to be dropped due to inactivity.
+   * - User 5 moves at the end, which causes previous
+   *      users to be dropped due to inactivity.
+   *
+   * @param memoryStream The MemoryStream to which
+   *                     the sample data will be added.
+   * @param interval The interval between each
+   *                 data addition to the MemoryStream.
+   * @return A Future[Unit] that completes once all the
+   *         data has been added to the MemoryStream.
    */
   def addDataPeriodicallyToUserActionMemoryStream(memoryStream: MemoryStream[UserAction],
                                                   interval: FiniteDuration): Future[Unit]  = Future {

@@ -200,9 +200,13 @@ Here is all the code explained in detail.
     
     - We move onto timeouts, and how we can use them to expire state that has not been updated for a while. First [UnmanagedStateProcessingTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) will show us how we can use ProcessingTime for out timeouts, in a similar structure with `UnmanagedStatefulOperations`. Because we are using the `case classes` with same name (`UserAction`, `UserStatus`), we will see how we can scope them into our object. Overall, this type of timeouts are easy to undertand, but there are a lot of downsides for using them. Check out [25th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras) for more information.
 
-    - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
+    - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
     - `flatMapGroupsWithState()`, gives us even more flexibility.
+
+
+#### Chapter 9 - Building Reliable Data Lakes with Apache Spark
+
 
 
 ### Use as Template 💭
@@ -320,6 +324,24 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **Timeout Should Be Set Relative**: The timeout timestamp must be set to a value larger than the current watermark. This is because the timeout is expected to happen when the timestamp crosses the watermark, so it’s illogical to set the timestamp to a value already larger than the current watermark. (In our example, we did set the timeout timestamp as relative to the current watermark plus 1 hour (3600000 ms))
 
+
+27) You can generate things other than fixed-duration timeouts. For example, you can implement an approximately periodic task (say, every hour) on the state by saving the last task execution timestamp in the state and using that to set the processing-time timeout duration, as shown in this code snippet:
+
+```scala
+timeoutDurationMs = lastTaskTimstampMs + periodIntervalMs -
+groupState.getCurrentProcessingTimeMs()
+```
+28) Generalization with `flatMapGroupsWithState()`. There are two key limitations with `mapGroupsWithState()` that may limit the flexibility that we want to implement more complex use cases (e.g., chained sessionizations):
+
+    - **One Record At A Time**: Every time `mapGroupsWithState()` is called, you have to return one and only one record. For some applications, in some triggers, you may not want to output any‐ thing at all.
+
+    - **Engine Assumptions**: With `mapGroupsWithState()`, due to the lack of more information about the opaque state update function, the engine assumes that generated records are updated key/value data pairs. Accordingly, it reasons about downstream operations and allows or disallows some of them. For example, the DataFrame generated using `mapGroupsWithState()` cannot be written out in append mode to files. However, some applications may want to generate records that can be considered as appends.
+    
+    - `flatMapGroupsWithState()` overcomes these limitations, at the cost of slightly more complex syntax. It has two differences from `mapGroupsWithState()`:
+
+    - **An Iterator Instead of Object**: The return type is an iterator, instead of a single object. This allows the function to return any number of records, or, if needed, no records at all.
+
+    - **We have an output mode**: It takes another parameter, called the operator output mode (not to be confused with the query output modes we discussed earlier in the chapter), that defines whether the output records are new records that can be appended (`OutputMode.Append`) or updated key/value records (`OutputMode.Update`).
 
 ## Offer
 
