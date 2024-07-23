@@ -4,9 +4,9 @@ All the exercises from the book "[Learning Spark](https://pages.databricks.com/r
 
 ## Why ?
 
-There are a lot of sources on Spark, like [LearningApacheSpark](https://github.com/runawayhorse001/LearningApacheSpark), [learning-spark](https://github.com/databricks/learning-spark) from Databricks and the [updated version](https://github.com/databricks/LearningSparkV2/tree/master). Sadly, they are old and not recently updated. 
+There are a lot of sources on Spark, like [LearningApacheSpark](https://github.com/runawayhorse001/LearningApacheSpark) or [learning-spark](https://github.com/databricks/learning-spark) from Databricks and it's [second version](https://github.com/databricks/LearningSparkV2/tree/master). Sadly, they are not recently updated. 
 
-You have to wander a lot just to get the ball rolling, especially if you are new to the environment.
+You have to wander a lot, just to get the ball rolling, especially if you are new to the environment.
 
 I thought, it shouldn't be this hard.
 
@@ -18,7 +18,7 @@ Focus for 90 minutes and finish the [Prelude꞉ A Taste of Scala](https://docs.s
 
 You have 3 choices:
 
-### Instuction Route - Instructions 🎫 
+### Instruction Route - Instructions 🎫 
 
 - You can follow the instructions to make yourself a Spark playground.
 
@@ -57,7 +57,7 @@ Here are all the steps. If you get stuck, you can refer back to the video.
 
 Prerequisites:
 
-- Install Java 11 and add it to path. Wait, what was [JDK, JRE, JVM again ??](https://www.geeksforgeeks.org/differences-jdk-jre-jvm/)
+- Install Java 11 and [add it to path.](https://tecadmin.net/adding-directory-to-path-variable-in-linux/) Wait, what was [JDK, JRE, JVM again ??](https://www.geeksforgeeks.org/differences-jdk-jre-jvm/)
 
 - Install Scala 2.18.12 from the source and add it to path. Why [Scala ?](https://www.projectpro.io/article/why-learn-scala-programming-for-apache-spark/198)
 
@@ -79,14 +79,14 @@ Download Intellij IDEA and follow the `readme` inside compressed file:
 
 Which is simply summarized as: 
 
-- To start the application, open a console, cd into "{installation home}/bin" and type:
+- To start the application, open a console, cd into "{your installation home}/bin" and type:
 
 ```bash
 ./idea.sh
 ```
 To open the IDE. You can make a [Desktop Shortcut](https://askubuntu.com/a/1145563) and add it to your Favorites.
 
-3) To setup a project from scratch, select `New Project`, select JDK, Scala and SBT versions that we installed, make the package prefix something that you choose.
+3) To setup a project from scratch, select `New Project`, select JDK, Scala and SBT versions that we installed, and [choose a package prefix](https://blog.jetbrains.com/scala/2020/11/26/enhanced-package-prefixes/) you prefer.
 
 4) Now you are ready to try out some code!
 
@@ -96,7 +96,7 @@ Here is all the code explained in detail.
 
 #### Chapter 0 - A Fast Start (Not a Part of the Book)
 
-- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala). What is aggregates mean, you ask? Well, continue to find out. 
+- If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala). What does aggregates mean, you ask? Well, continue to find out. 😌
 
 #### Chapter 1 - Introduction to Apache Spark: A Unified Analytics Engine
 
@@ -118,7 +118,7 @@ Here is all the code explained in detail.
 
 - For our FireCalls CSV data, we have some questions that are solved in the book, so we will go over them to understand in [FireCallsSolvedQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsSolvedQuestions.scala) and [FireCallsSolvedQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsSolvedQuestionsDataset.scala). In these, we will see how to save our data as Parquet files & Tables, and some function usage like `distinct()`, `countDistinct()`, `withColumn`, `withColumnRenamed`, `lit()`, `datesub()` and `as()`. 
 
-- Finally, for the FireCalls CSV data, we will solve all the training questions from the book. In [FireCallsTraningQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestions.scala) and [FireCallsTraningQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTraningQuestionsDataset.scala) we have an end to end pipeline, using `to_timestamp`, `lit()` some columns ourselves, `timestamp - where().where().where()` or `timestamp - between()`, `weekofyear()`,  `saveAsTable()` and parallel writ9e to filesystem.
+- Finally, for the FireCalls CSV data, we will solve all the training questions from the book. In [FireCallsTrainingQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTrainingQuestions.scala) and [FireCallsTrainingQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTrainingQuestionsDataset.scala) we have an end to end pipeline, using `to_timestamp`, `lit()` some columns ourselves, `timestamp - where().where().where()` or `timestamp - between()`, `weekofyear()`,  `saveAsTable()` and parallel writ9e to filesystem.
 
 - Then we will get to the IoT Devices data, as a JSON. We will start with a basic workout on Datasets, discovering the differencee between Lambdas and DSL expressions (Page 170 in the book), with [IoTDatasetFunctionComparison](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IoTDatasetFunctionComparison.scala).
 
