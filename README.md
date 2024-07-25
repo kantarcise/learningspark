@@ -215,7 +215,7 @@ Here is all the code explained in detail.
 
     - **Databases?**: Databases was the most reliable solution for decades, with their strict schema and SQL queries. SQL workloads are divided into 2, **Online transaction processing (OLTP) workloads** (Like bank account transactions, high-concurrency, low-latency, simple queries) and **Online analytical processing (OLAP)** (like periodic reporting, complex queries (aggregates and joins), require high-throughput scans over many records).
 
-    - **Spark Designed for ?**: Spark is primarily designed for **OLAP**.
+    - **Spark Designed for ? 🤔**: Spark is primarily designed for **OLAP**.
 
     - **Limitations of Databases**: Growth in data size (advent of big data, global trend to measure and collect everything), Growth in the diversity of analytics (a need for deeper insights, ML - DL).
 
@@ -223,7 +223,7 @@ Here is all the code explained in detail.
 
     - **Data Lakes**:  In contrast to most databases, a data lake is a distributed storage solution that runs on commodity hardware and easily scales out horizontally. The data lake architecture, unlike that of databases, decouples the distributed storage system from the distributed compute system. This allows each system to scale out as needed by the workload. Furthermore, the data is saved as files with open formats, such that any processing engine can read and write them using standard APIs.
 
-    - **How to build one?**:  Organizations build their data lakes by independently choosing the following: **Storage system** (HDFS on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
+    - **How to build as Datalake?**:  Organizations build their data lakes by independently choosing the following: **Storage system** ([HDFS](https://www.databricks.com/glossary/hadoop-distributed-file-system-hdfs) on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
 
     - **The advantage of Data Lakes?**: The flexibility (the ability to choose the storage system, open data format, and processing engine that are best suited to the workload at hand) is the biggest advantage of data lakes over databases.
 
@@ -231,25 +231,38 @@ Here is all the code explained in detail.
 
     - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the lack of transactional guarantees: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
 
-    - **Is there a better way?**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
+    - **Is there a better way? 🤔**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
 
-    - **Lakehouses: The Next Step**: **Combines the best** elements **of data lakes** and **data warehouses** for OLAP workloads. 
+    - **Lakehouses: The Next Step 🎉**: **Combines the best** elements **of data lakes** and **data warehouses** for OLAP workloads. 
 
-        - **Transaction support**: Similar to Databases, ACID guarantees in concurrent workloads.
+        - **1️⃣ Transaction support**: Similar to Databases, **ACID** guarantees in concurrent workloads.
 
-        - **Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
+        - **2️⃣ Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
 
-        - **Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access all types of data needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
+        - **3️⃣ Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access **all types of data** needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
 
-        - **Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
+        - **4️⃣ Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
         
-        - **Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and slowly changing dimension (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
+        - **5️⃣ Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and *slowly changing dimension* (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
 
-        - **Data governance**: Lakehouses provide the tools with which you can reason about data integrity and audit all the data changes for policy compliance.
+        - **6️⃣ Data governance**: Lakehouses provide the tools with which you can reason about **data integrity** and audit all the data changes for policy compliance.
 
     - **Current selection of Lakehouses?**: Currently, there are a few open source systems, such as **Apache Hudi**, **Apache Iceberg**, and **Delta Lake**, that can be used to build lakehouses with these properties (more information page 272). 
 
 - We focus on **Delta Lake**! It is hosted by the Linux Foundation, built by the original creators of Apache Spark. It is called Delta Lake because of its analogy to streaming. Streams flow into the sea to create deltas—this is where all of the sediments accumulate, and thus where the valuable crops are grown. Jules S. Damji (one of our coauthors) came up with this!
+
+- To build a lakehouse, we need to configure Apache Spark to link to the Delta Lake Library. We can either provide the package with cli as we are using `spark-shell` or submitting an application like `--packages io.delta:delta-spark_2.12:jar:3.2.0` or we can add the dependency in our `build.sbt` file, like `libraryDependencies += "io.delta" %% "delta-spark" % "3.2.0"`
+
+> [!IMPORTANT]
+> Please note that the Delta Lake on Spark Maven artifact has been renamed from `delta-core` (before 3.0) to `delta-spark` (3.0 and above). Because we are using Spark 3.5.0, we will use `delta-spark` 🥰 
+
+- In [LoansStaticToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticToDeltaLake.scala) we will see a simple example of how we can load a static data into Delta Lake and query from the view we've made.
+
+- As with static DataFrames, we can easily modify our existing Structured Streaming jobs to write to and read from a Delta Lake table by setting the format to **"delta"**. [LoansStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStreamingToDeltaLake.scala) will help us understand making a streaming Dataframe and writing the data into Delta Lake. We will use two different `MemoryStream[LoanStatus]` and write into the same table. After the write process, we will read the data back and see it in the console! Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we will test the ACID guarantees Delta Lake provides, with a small scale.
+
+- In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we pretty much can do it all (static - static & stream - stream & stream)!
+
+- [DeltaLakeEnforceAndEvolveSchema]() will demonstrate the Delta Lake's ability to enforce or merge a schema when we are working with a Dataframe.
 
 
 ### Use as Template 💭
@@ -415,6 +428,8 @@ df.writeStream.queryName("query1").format("parquet").start(path1)
 spark.sparkContext.setLocalProperty("spark.scheduler.pool", "pool2")
 df.writeStream.queryName("query2").format("parquet").start(path2)
 ```
+
+30) **Delta Lake Enforce / Merge:** The Delta Lake format records the schema as table-level metadata. Hence, all writes to a Delta Lake table can verify whether the data being written has a schema compatible with that of the table. If it is not compatible, Spark will throw an error before any data is written and committed to the table, thus preventing such accidental data corruption.
 
 ## Offer
 
