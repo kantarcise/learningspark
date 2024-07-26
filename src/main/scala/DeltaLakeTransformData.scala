@@ -152,6 +152,9 @@ object DeltaLakeTransformData {
    *
    * This merging operation is based on MERGE SQL command.
    *
+   * For more information:
+   * https://docs.delta.io/latest/concurrency-control.html
+   *
    * @param spark: the spark session
    * @param deltaPath : path for Delta Table
    * @param deltaTable: The table itself
