@@ -262,7 +262,11 @@ Here is all the code explained in detail.
 
 - In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we pretty much can do it all (static - static & stream - stream & stream)!
 
-- [DeltaLakeEnforceAndEvolveSchema]() will demonstrate the Delta Lake's ability to enforce or merge a schema when we are working with a Dataframe.
+- [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to enforce or merge a schema when we are working with a Dataframe.
+
+- [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data.
+
+- [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is from outside of the book, just to demonstrate all the cool things that we can do!
 
 
 ### Use as Template 💭
@@ -430,6 +434,29 @@ df.writeStream.queryName("query2").format("parquet").start(path2)
 ```
 
 30) **Delta Lake Enforce / Merge:** The Delta Lake format records the schema as table-level metadata. Hence, all writes to a Delta Lake table can verify whether the data being written has a schema compatible with that of the table. If it is not compatible, Spark will throw an error before any data is written and committed to the table, thus preventing such accidental data corruption.
+
+
+31) **Delta Lake Extended Merge Syntax:** A common use case when managing data is fixing errors in the data. Suppose, upon reviewing some data (that we work on, about Loans), we realized that all of the loans assigned to `addr_state = 'OR'` should have been assigned to `addr_state = 'WA'`. If the loan table were a Parquet table, then to do such an update we would need to:
+
+    - Copy all non effected rows into new table.
+
+    - Copy all effected into a Dataframe and perform modification.
+
+    - Insert changed Dataframe's rows into new table.
+
+    - Remove old table, rename new table to old table.
+
+Delta lake is great and simple for this!
+
+There are even more complex use cases, like CDC with deletes and SCD tables, that are made simple with the extended merge syntax. Refer to the [documentation](https://docs.delta.io/latest/delta-update.html#upsert-into-a-table-using-merge) for more details and examples.
+
+32) **Querying Previous Snapshots in DeltaLake:** We can query previous versioned snapshots of a Delta Table. This is useful in a variety of situations, such as: 
+    
+    - Reproducing machine learning experiments and reports by rerunning the job on a specific table version 
+    
+    - Comparing the data changes between different versions for auditing 
+    
+    - Rolling back incorrect changes by reading a previous snapshot as a DataFrame and overwriting the table with it.
 
 ## Offer
 
