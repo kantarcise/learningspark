@@ -279,6 +279,8 @@ Here is all the code explained in detail.
 
 - [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
 
+- When we use RMSE for evaluating the performance of a model, we need a baseline. A simple baseline example is given in [AirbnbBaselineModel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala)
+
 
 ### Use as Template 💭
 
@@ -523,10 +525,31 @@ In Spark PCA is RDD based so it is part of `spark.mllib`!
     - **Pipeline**: Organizes a series of transformers and estimators into a single model. While pipelines themselves are estimators, the output of `pipeline.fit()` returns a `PipelineModel`, a transformer.
 
 
-41) **Interpreting the value of RMSE.:** So how do we know if 220.6 is a good value for the RMSE? There are various ways to interpret this value, one of which is to build a simple baseline model and compute its RMSE to compare against. A common baseline model for regression tasks is to compute the average value of the label on the training set ȳ (pronounced y-bar), then predict ȳ for every record in the test data set and compute the resulting RMSE (example code is available in the book’s GitHub repo).
+41) **One Hot Encoding with ``SparseVector``**: Most machine learning models in MLlib expect numerical values as input, represented as vectors. To convert categorical values into numeric values, we can use a technique called one-hot encoding (OHE). Suppose we have a column called Animal and we have three types of animals: Dog, Cat, and Fish. We can’t pass the string types into our ML model directly, so we need to assign a numeric mapping, such as this:
+    
+    - Animal = {"Dog", "Cat", "Fish"}
+    
+    - "Dog" = 1, "Cat" = 2, "Fish" = 3
+
+However, using this approach we’ve introduced some spurious relationships into our data set that weren’t there before. For example, why did we assign Cat twice the value of Dog? The numeric values we use should not introduce any relationships into our data set. Instead, we want to create a separate column for every distinct value in our Animal column:
+    
+    - "Dog" = [ 1, 0, 0]
+    
+    - "Cat" = [ 0, 1, 0]
+    
+    - "Fish" = [0, 0, 1]
+
+If the animal is a dog, it has a one in the first column and zeros elsewhere. If it is a cat, it has a one in the second column and zeros elsewhere.
+
+If we had a zoo of 300 animals, would OHE massively increase consumption of memory/compute resources? Not with Spark! Spark internally uses a `SparseVector` when
+the majority of the entries are 0, as is often the case after OHE, so it does not waste space storing 0 values.
+
+There are a few ways to one-hot encode your data with Spark. A common approach is to use the `StringIndexer` and `OneHotEncoder`.
+
+42) **Interpreting the value of RMSE.:** So how do we know if 220.6 is a good value for the RMSE? There are various ways to interpret this value, one of which is to build a simple baseline model and compute its RMSE to compare against. A common baseline model for regression tasks is to compute the average value of the label on the training set ȳ (pronounced y-bar), then predict ȳ for every record in the test data set and compute the resulting RMSE (example code is available in the book’s GitHub repo).
 
 
-42) **Why is our first model not performing well?**  Our $R^2$ is positive, but it’s very close to 0. One of the reasons why our model is not performing too well is because our label, price, appears to be log-normally distributed. If a distribution is log-normal, it means that if we take the logarithm of the value, the result looks like a normal distribution. Price is often log-normally distributed. If you think about rental prices in San Francisco, most cost around $200 per night, but there are some that rent for thousands of dollars a night!
+43) **Why is our first model not performing well?**  Our $R^2$ is positive, but it’s very close to 0. One of the reasons why our model is not performing too well is because our label, price, appears to be log-normally distributed. If a distribution is log-normal, it means that if we take the logarithm of the value, the result looks like a normal distribution. Price is often log-normally distributed. If you think about rental prices in San Francisco, most cost around $200 per night, but there are some that rent for thousands of dollars a night!
 
 
 
