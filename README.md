@@ -205,7 +205,7 @@ Here is all the code explained in detail.
     - `flatMapGroupsWithState()`, gives us even more flexibility than `mapGroupsWithState()`. In [UnmanagedStateWithFlatMapGroupsWithState](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateWithFlatMapGroupsWithState.scala) we will discover how we can use `flatMapGroupsWithState()` in a similar fashion with the example applications we did before! We will make use of `org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode}`, especially `OutputMode`.
 
 
-#### Chapter 9 - Building Reliable Data Lakes with Apache Spark
+#### Chapter 9 - Building Reliable Data Lakes with Apache Spark 🐢 
 
 - Expressing the processing logic only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can query the processed data and get insights from it. The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline.
 
@@ -267,6 +267,17 @@ Here is all the code explained in detail.
 - [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data.
 
 - [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is from outside of the book, just to demonstrate all the cool things that we can do!
+
+
+#### Chapter 10 - Machine Learning with MLlib 🎩
+
+- To get to work for understanding Machine Learning in Spark, we encounter the first step of ML systems, which is Data Ingestion and Exploration. We have a data called [sf-airbnb-clean.parquet](https://github.com/kantarcise/learningspark/blob/main/data/sf-airbnb-clean.parquet) and this data is slightly preprocessed to remove outliers (e.g., Airbnbs posted for $0/night), converted all integers to doubles, and selected an informative subset of the more than one hundred fields. Further, for any missing numerical values in our data columns, we have imputed the median value and added an indicator column (the column name followed by `_na`, such as `bedrooms_na`). This way the ML model or human analyst can interpret any value in that column as an imputed value, not a true value. We take a peek at this data in [AirbnbExplorePreprocessedData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbExplorePreprocessedData.scala), feel free to work on it as you please.
+
+- If you wanted to understand how data cleansing is made and want to see an example, you can check out [AirbnbDataCleansing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbDataCleansing.scala)
+
+- We will start our journey of setting up Machine Learning Pipelines with a small step, in [AirbnbPricePredictionSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionSimple.scala) we will see how we can setup an incredibly simple `LinearRegression` pipeline. We will make a train/test split from our cleansed data and train a model after. We will see how we can use `VectorAssembler()` to put features into vectors with `prepareFeatures()`.
+
+- [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
 
 
 ### Use as Template 💭
@@ -457,6 +468,67 @@ There are even more complex use cases, like CDC with deletes and SCD tables, tha
     - Comparing the data changes between different versions for auditing 
     
     - Rolling back incorrect changes by reading a previous snapshot as a DataFrame and overwriting the table with it.
+
+33) **What did we learn about DeltaLake? 🤔:** Databases have solved data problems for a long time, but they fail to fulfill the diverse requirements of modern use cases and workloads. Data lakes were built to alleviate some of the limitations of databases, and Apache Spark is one of the best tools to build them with. However, data lakes still lack some of the key features provided by databases (e.g., ACID guarantees). Lakehouses are the next generation of data solutions, which aim to provide the best features of databases and data lakes and meet all the requirements of diverse use cases and workloads.
+
+Lakehouses (Deltalake in our case) provide:
+
+    - Transactional guarantees and schema management, like databases
+
+    - Scalability and openness, like data lakes
+
+    - Support for concurrent batch and streaming workloads with ACID guarantees
+
+    - Support for transformation of existing data using update, delete, and merge operations that ensure ACID guarantees
+
+    - Support for versioning, auditing of operation history, and querying of previous versions
+
+
+34) **Machine Learning with MLlib**:  Up until this point, we have focused on data engineering workloads with Apache Spark. Data engineering is often a precursory step to preparing your data for machine learning (ML) tasks. Chances are that whether we realize it or not, every day we come into contact with ML models for purposes such as online shopping recommendations and advertisements, fraud detection, classification, image recognition, pattern matching, and more. 
+
+Building a model that performs well can make or break companies.
+
+35) **What is Machine Learning, exactly?**: Machine learning is a process for extracting patterns from your data, using statistics, linear algebra, and numerical optimization. There are a few types of machine learning, including *supervised*, *semi supervised*, *unsupervised*, and *reinforcement learning*.
+
+In supervised learning, the training data is labeled and the goal is to predict the output for an unlabeled input. The output can be discrete or continuous, which brings us two types, **classification** and **regression**. Classification example, is this picture of a dog or a cat? Regression example: predicting ice cream sales based on temperature.
+
+36) **What is avaliable to us in Mllib? 🐱**
+
+| Method | Typical Usage |
+| ---- | ----- |  
+| Linear regression | Regression |
+| Logistic regression | Classification (although it has regression in it's name) |
+| Decision Trees | Both |
+| Gradient Boosted Trees | Both |
+| Random Forests | Both |
+| Naive Bayes | Classification |
+| Support Vector Machines | Classification  |
+
+To learn more, check out [Machine Learning Guide](https://spark.apache.org/docs/latest/ml-guide.html) from Spark. 
+
+37) **Unsupervised Learning? What is unsupervised about it?**: Obtaining the labeled data required by supervised machine learning can be very expensive and/or infeasible. This is where unsupervised machine learning comes into play. Instead of predicting a label, unsupervised ML helps you to better understand the structure of your data. Unsupervised machine learning can be used for outlier detection or as a preprocessing step for supervised machine learning—for example, to reduce the dimensionality. Some unsupervised machine learning algorithms in MLlib include k-means, Latent Dirichlet Allocation (LDA), and Gaussian mixture models.
+
+38) **PCA**: Here is [the video](https://www.youtube.com/watch?v=FgakZw6K1QQ) for more information. Which variable is the most valuable to clustering the data? When we get 4 variables we can no longer graph it to see resemblence between instances. For each variable we can acualte the averages, and shith the data so that this center is the origin in the graph (this did not change relative distances). We are looking for a line that crosses origin which seperates the the data best. We find the line with sum of squared distances to this candidate line, minimized. Depending on the slope of your axis, you can measure how data is spread out. (0.25, mostly spread on Math (x axis) a little spread out on Chemistry (y axis)).
+
+In Spark PCA is RDD based so it is part of `spark.mllib`!
+
+39) **`spark.ml`, `spark.mllib` ? Why is there 2 libraries?** `spark.mllib` is the original machine learning API, based on the RDD API (which has been in  maintenance mode since Spark 2.0), while spark.ml is the newer API, based on DataFrames. 
+
+40) **Designing Machine Learning Pipelines:** Pipelines is a way to organize a series of operations to apply to our data! In `MLlib`, the Pipeline API provides a high-level API built on top of DataFrames to organize our machine learning workflow. Here are some common terminology:
+
+    - **Transformer**: (Dataframe -> Dataframe) Accepts a DataFrame as input, and returns a new DataFrame with one or more columns appended to it. Transformers do not learn any parameters from your data and simply apply ***rule-based transformations*** to either ***prepare data for model training*** or ***generate predictions*** using a trained MLlib model. They have a `.transform()` method.
+
+    - **Estimator**: Learns (or “fits”) parameters from your DataFrame via a `.fit()` method and returns a `Model`, which is a transformer.
+
+    - **Pipeline**: Organizes a series of transformers and estimators into a single model. While pipelines themselves are estimators, the output of `pipeline.fit()` returns a `PipelineModel`, a transformer.
+
+
+41) **Interpreting the value of RMSE.:** So how do we know if 220.6 is a good value for the RMSE? There are various ways to interpret this value, one of which is to build a simple baseline model and compute its RMSE to compare against. A common baseline model for regression tasks is to compute the average value of the label on the training set ȳ (pronounced y-bar), then predict ȳ for every record in the test data set and compute the resulting RMSE (example code is available in the book’s GitHub repo).
+
+
+42) **Why is our first model not performing well?**  Our $R^2$ is positive, but it’s very close to 0. One of the reasons why our model is not performing too well is because our label, price, appears to be log-normally distributed. If a distribution is log-normal, it means that if we take the logarithm of the value, the result looks like a normal distribution. Price is often log-normally distributed. If you think about rental prices in San Francisco, most cost around $200 per night, but there are some that rent for thousands of dollars a night!
+
+
 
 ## Offer
 
