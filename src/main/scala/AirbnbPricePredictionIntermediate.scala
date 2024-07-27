@@ -64,7 +64,7 @@ object AirbnbPricePredictionIntermediate {
                     ): (DataFrame, DataFrame) = {
     val Array(trainDF, testDF) = df.randomSplit(Array(.8, .2), seed=42)
     println(
-      f"""There are ${trainDF.count} rows in the training set,
+      f"""\nThere are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
     (testDF, trainDF)
   }
@@ -90,6 +90,16 @@ object AirbnbPricePredictionIntermediate {
    *        containing the label (target variable).
    * - `setHandleInvalid("skip")`: Configures how to handle invalid
    *        data (e.g., missing values) by skipping those rows.
+   *
+   * The downside of RFormula automatically combining the StringIndexer
+   * and OneHotEncoder is that one-hot encoding is not required or
+   * recommended for all algorithms.
+   *
+   * For example, tree-based algorithms can handle categorical
+   * variables directly if you just use the StringIndexer for the
+   * categorical features. You do not need to onehot encode categorical
+   * features for tree-based methods, and it will often make your
+   * tree-based models worse.
    */
   def rFormula(): Unit = {
 
@@ -104,6 +114,8 @@ object AirbnbPricePredictionIntermediate {
    * Evaluate Root Mean Square Error
    *
    * You always have to use RMSE against a baseline.
+   *
+   * CHeck out page 302 for more information.
    *
    * @param predDF DataFrame containing the predictions.
    */
@@ -127,6 +139,8 @@ object AirbnbPricePredictionIntermediate {
    * necessarily need to define a baseline
    * model to compare against.
    *
+   * CHeck out page 304 for more information.
+   *
    * @param predDF DataFrame containing the predictions.
    */
   def evaluateModelR2(predDF: DataFrame): Unit = {
@@ -143,68 +157,107 @@ object AirbnbPricePredictionIntermediate {
    * Demonstrates a linear regression model with one-hot
    * encoding for categorical features.
    *
-   * @param testDF  Testing DataFrame.
+   * @param testDF  Test DataFrame.
    * @param trainDF Training DataFrame.
+   * @return The trained PipelineModel.
    */
   def modelWithOneHotEncoding(testDF: DataFrame,
                               trainDF: DataFrame): PipelineModel = {
+    // Extract the names of categorical columns
+    // from the training DataFrame
     val categoricalCols = trainDF
       .dtypes
+      // all the Strings
       .filter(_._2 == "StringType")
+      // names only
       .map(_._1)
 
+    // Make output column names for
+    // the StringIndexer transformation
     val indexOutputCols = categoricalCols
       .map(_ + "Index")
 
+    // Make output column names for
+    // the OneHotEncoder transformation
     val oheOutputCols = categoricalCols
       .map(_ + "OHE")
 
+    // Initialize StringIndexer to convert
+    // categorical string columns to indexed numeric columns
     val stringIndexer = new StringIndexer()
       .setInputCols(categoricalCols)
       .setOutputCols(indexOutputCols)
       .setHandleInvalid("skip")
 
+    // Initialize OneHotEncoder to convert indexed
+    // numeric columns to one-hot encoded vectors
     val oheEncoder = new OneHotEncoder()
       .setInputCols(indexOutputCols)
       .setOutputCols(oheOutputCols)
 
+    // Extract the names of numeric columns from the
+    // training DataFrame, excluding the label column "price"
     val numericCols = trainDF
       .dtypes
-      .filter{ case (field, dataType) =>
-      dataType == "DoubleType" && field != "price"}
+      .filter { case (field, dataType) =>
+        dataType == "DoubleType" && field != "price"
+      }
+      // only names
       .map(_._1)
 
+    // Combine the one-hot encoded columns
+    // and numeric columns for the feature vector
     val assemblerInputs = oheOutputCols ++ numericCols
 
+    // Initialize VectorAssembler to combine
+    // feature columns into a single feature vector
     val vecAssembler = new VectorAssembler()
       .setInputCols(assemblerInputs)
       .setOutputCol("features")
 
+    // Initialize LinearRegression model
     val lr = new LinearRegression()
       .setLabelCol("price")
       .setFeaturesCol("features")
 
+    // Make a pipeline with these stages:
+    //    StringIndexer, OneHotEncoder,
+    //    VectorAssembler, and LinearRegression
     val pipeline = new Pipeline()
       .setStages(Array(stringIndexer, oheEncoder, vecAssembler, lr))
-    // Or use RFormula
-    // val pipeline = new Pipeline().setStages(Array(rFormula, lr))
 
-    val pipelineModel = pipeline
-      .fit(trainDF)
+    // Fit the pipeline model on the training DataFrame
+    val pipelineModel = pipeline.fit(trainDF)
 
-    val predDF = pipelineModel
-      .transform(testDF)
+    // Transform the test DataFrame using
+    // the trained pipeline model to make predictions
+    val predDF = pipelineModel.transform(testDF)
 
+    println("Here are the results on the Test data!\n")
+    println("Features is a sparse vector!\n")
+    // Show the first 5 rows of the features, actual price, and predicted price
     predDF
       .select("features", "price", "prediction")
       .show(5)
 
-    evaluateModelRMSE(predDF)
-    evaluateModelR2(predDF)
-    println("*-"*80)
+    println("Here is the schema for it!\n")
+    predDF
+      .select("features", "price", "prediction")
+      .printSchema()
 
+    // Evaluate the model using RMSE (Root Mean Square Error)
+    evaluateModelRMSE(predDF)
+
+    // Evaluate the model using R2 (Coefficient of Determination)
+    evaluateModelR2(predDF)
+
+    // Print a separator for clarity
+    println("*-" * 80)
+
+    // Return the trained pipeline model
     pipelineModel
   }
+
 
   /**
    * Builds a linear regression model to predict the
@@ -217,33 +270,60 @@ object AirbnbPricePredictionIntermediate {
   def betterModelWithLogScale(testDF: DataFrame,
                               trainDF: DataFrame): PipelineModel = {
 
+    // Apply logarithm transformation to
+    // the "price" column in the test and train DataFrames
     val logTrainDF = trainDF.withColumn("log_price", log(col("price")))
     val logTestDF = testDF.withColumn("log_price", log(col("price")))
 
+    // Define an RFormula to specify the
+    // model formula and input/output column names
     val rFormula = new RFormula()
+      // Predict log_price using all other features except price
       .setFormula("log_price ~ . - price")
+      // Define the name of the features column
       .setFeaturesCol("features")
+      // Define the name of the label column
       .setLabelCol("log_price")
+      // Skip rows with invalid values
       .setHandleInvalid("skip")
 
+    // Initialize a LinearRegression model to
+    // predict the log of the price
     val lr = new LinearRegression()
-      .setLabelCol("log_price")
-      .setPredictionCol("log_pred")
+      .setLabelCol("log_price") // Set the label column to log_price
+      .setPredictionCol("log_pred") // Set the prediction column name to log_pred
 
-    val pipeline = new Pipeline().setStages(Array(rFormula, lr))
-    val pipelineModel = pipeline.fit(logTrainDF)
-    val predDF = pipelineModel.transform(logTestDF)
+    // Make a pipeline with stages:
+    //    RFormula and LinearRegression
+    val pipeline = new Pipeline()
+      .setStages(Array(rFormula, lr))
 
-    // In order to interpret our RMSE, we need to convert
-    // our predictions back from logarithmic scale.
+    // Fit the pipeline model on the training DataFrame
+    val pipelineModel = pipeline
+      .fit(logTrainDF)
 
+    // Transform the test DataFrame using the
+    // trained pipeline model to make predictions
+    val predDF = pipelineModel
+      .transform(logTestDF)
+
+    // Convert the predictions back
+    // from logarithmic scale to original scale
     val expDF = predDF
       .withColumn("prediction", exp(col("log_pred")))
 
+    // Evaluate the model using
+    // RMSE (Root Mean Square Error) on the original scale
     evaluateModelRMSE(expDF)
+
+    // Evaluate the model using
+    // R2 (Coefficient of Determination) on the original scale
     evaluateModelR2(expDF)
 
-    println("*-"*80)
+    // Print a separator for clarity
+    println("*-" * 80)
+
+    // Return the trained pipeline model
     pipelineModel
   }
 
