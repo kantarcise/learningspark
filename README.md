@@ -273,14 +273,20 @@ Here is all the code explained in detail.
 
 - To get to work for understanding Machine Learning in Spark, we encounter the first step of ML systems, which is Data Ingestion and Exploration. We have a data called [sf-airbnb-clean.parquet](https://github.com/kantarcise/learningspark/blob/main/data/sf-airbnb-clean.parquet) and this data is slightly preprocessed to remove outliers (e.g., Airbnbs posted for $0/night), converted all integers to doubles, and selected an informative subset of the more than one hundred fields. Further, for any missing numerical values in our data columns, we have imputed the median value and added an indicator column (the column name followed by `_na`, such as `bedrooms_na`). This way the ML model or human analyst can interpret any value in that column as an imputed value, not a true value. We take a peek at this data in [AirbnbExplorePreprocessedData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbExplorePreprocessedData.scala), feel free to work on it as you please.
 
-- If you wanted to understand how data cleansing is made and want to see an example, you can check out [AirbnbDataCleansing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbDataCleansing.scala)
+- If you wanted to understand how data cleansing is made and want to see an example, you can check out [AirbnbDataCleansing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbDataCleansing.scala).
 
-- We will start our journey of setting up Machine Learning Pipelines with a small step, in [AirbnbPricePredictionSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionSimple.scala) we will see how we can setup an incredibly simple `LinearRegression` pipeline. We will make a train/test split from our cleansed data and train a model after. We will see how we can use `VectorAssembler()` to put features into vectors with `prepareFeatures()`.
+- We will start our journey of setting up Machine Learning Pipelines with a small step, in [AirbnbPricePredictionSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionSimple.scala) we will see how we can setup an incredibly simple `LinearRegression` pipeline. We will make a train/test split from our cleansed data and train a model after. We will see how we can use `VectorAssembler()` to put features into vectors, with `prepareFeatures()`.
 
 - [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
 
-- When we use RMSE for evaluating the performance of a model, we need a baseline. A simple baseline example is given in [AirbnbBaselineModel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala)
+- When we use RMSE for evaluating the performance of a model, we need a baseline. A simple baseline example is given in [AirbnbBaselineModel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala).
 
+- We worked with the a parametric model, *Linear Regression*. We could do some more hyperparameter tuning with the linear regression model, but we're going to try tree based methods and see if our performance improves. We used `OHE` for categorical Feautures in `LinearRegression`. However, for decision trees, and in particular, ***random forests***, we should not `OHE` our variables. [AirbnbPricePredictDecisionTree](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) is the example where we attempt to use `DecisionTreeRegressor`.
+
+
+- To understand the basics of *Hyperparameter Tuning*, we will discover about tree based models in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala). This still needs work.
+
+- 
 
 ### Use as Template 💭
 
@@ -520,9 +526,9 @@ In Spark PCA is RDD based so it is part of `spark.mllib`!
 
     - **Transformer**: (Dataframe -> Dataframe) Accepts a DataFrame as input, and returns a new DataFrame with one or more columns appended to it. Transformers do not learn any parameters from your data and simply apply ***rule-based transformations*** to either ***prepare data for model training*** or ***generate predictions*** using a trained MLlib model. They have a `.transform()` method.
 
-    - **Estimator**: Learns (or “fits”) parameters from your DataFrame via a `.fit()` method and returns a `Model`, which is a transformer.
+    - **Estimator**: Learns (or “fits”) parameters from your DataFrame via a `.fit()` method and returns a `Model`, which is a transformer. `LinearRegression` is an Estimator, some other examples of estimators include `Imputer`, `DecisionTreeClassifier`, and `RandomForestRegressor`. `lr.fit()` returns a `LinearRegressionModel` (lrModel), which is a transformer. In other words, the output of an estimator’s `fit()` method is a transformer.
 
-    - **Pipeline**: Organizes a series of transformers and estimators into a single model. While pipelines themselves are estimators, the output of `pipeline.fit()` returns a `PipelineModel`, a transformer.
+    - **Pipeline**: Organizes a series of transformers and estimators into a single model. While pipelines themselves are estimators, the output of `pipeline.fit()` returns a `PipelineModel`, a transformer. Again, In Spark, `Pipelines` are **estimators**, whereas `PipelineModels` (fitted Pipelines) are **transformers**.
 
 
 41) **One Hot Encoding with ``SparseVector``**: Most machine learning models in MLlib expect numerical values as input, represented as vectors. To convert categorical values into numeric values, we can use a technique called one-hot encoding (OHE). Suppose we have a column called Animal and we have three types of animals: Dog, Cat, and Fish. We can’t pass the string types into our ML model directly, so we need to assign a numeric mapping, such as this:
@@ -551,7 +557,31 @@ There are a few ways to one-hot encode your data with Spark. A common approach i
 
 43) **Why is our first model not performing well?**  Our $R^2$ is positive, but it’s very close to 0. One of the reasons why our model is not performing too well is because our label, price, appears to be log-normally distributed. If a distribution is log-normal, it means that if we take the logarithm of the value, the result looks like a normal distribution. Price is often log-normally distributed. If you think about rental prices in San Francisco, most cost around $200 per night, but there are some that rent for thousands of dollars a night!
 
+44) **Is there Warm Start in Spark ML?**: After you've saved a model to disk, and loaded it in another Spark application, you can apply it to new data points. However, you can’t use the weights from this model as initialization parameters for training a new model (as opposed to starting with random weights), as Spark has no concept of “warm starts.” If your data set changes slightly, you’ll have to retrain the entire linear regression model from scratch. 
 
+45) **Decision Tree Hyperparameters?**: The depth of a decision tree is the longest path from the root node to any given leaf node. Trees that are very deep are prone to **overfitting**, or memorizing noise in your training data set, but trees that are too shallow will underfit to your data set (i.e., could have picked up more signal from the data).
+
+46) **The Idea Behind Random Forests?** Ensembles work by taking a democratic approach. Imagine there are many M&Ms in a jar. You ask one hundred people to guess the number of M&Ms, and then take the average of all the guesses. The average is probably closer to the true value than most of the individual guesses. That same concept applies to machine learning models. If you build many models and combine/average their predictions, they will be more robust than those produced by any individual model. Random forests are an ensemble of decision trees. For more details, check out page 314 in the book.
+
+47) **Choosing the Best Hyperparameters??**:  So how do we determine what the optimal number of trees in our random forest or the max depth of those trees should be? This process is called hyperparameter tuning. 
+
+As an example, here are the steps to perform a hyperparameter search in Spark:
+
+    1. Define the estimator you want to evaluate.
+
+    2. Specify which hyperparameters you want to vary, as well as their respective values, using the ParamGridBuilder.
+
+    3. Define an evaluator to specify which metric to use to compare the various models.
+
+    4. Use the CrossValidator to perform cross-validation, evaluating each of the various models.
+
+48) **Random Forests - Random feature selection by columns**: The main drawback with bagging is that the trees are all highly correlated, and thus learn similar patterns in your data. To mitigate this problem, each time you want to make a split you only consider a random subset of the columns (1/3 of the features for `RandomForestRegressor` and $(#features)^0.5$ for `RandomForestClassifier`). Due to this randomness you introduce, you typically want each tree to be quite shallow. You might be thinking: each of these trees will perform worse than any single decision tree, so how could this approach possibly be better? It turns out that **each of the trees learns something different about your data set**, and combining this collection of “weak” learners into an ensemble makes the forest much more robust than a single decision tree.
+
+49) **Random Forests For Classification/Regression**:  If we build a random forest for classification, it passes the test point through each of the trees in the forest and takes a majority vote among the predictions of the individual trees. (By contrast, in regression, the random forest simply averages those predictions.) Even though each of these trees is less performant than any individual decision tree, the collection (or ensemble) actually provides a more robust model. Random forests truly demonstrate the power of distributed machine learning with Spark, as each tree can be built independently of the other trees (e.g., we do not need to build tree 3 before we build tree 10). Furthermore, within each level of the tree, you can parallelize the work to find the optimal splits.
+
+50) **Optimizing Pipelines**: The value of parallelism should be chosen carefully to maximize parallelism without exceeding cluster resources, and larger values may not always lead to improved performance. Generally speaking, a value up to 10 should be sufficient for most clusters.
+
+51) **Cross Validator Inside Pipeline or Vice Versa ??**:  There’s another trick we can use to speed up model training: putting the cross-validator inside the pipeline (e.g., `Pipeline(stages=[..., cv])`) instead of putting the pipeline inside the cross-validator (e.g., `CrossValidator(estimator=pipeline, ...)`). Every time the cross-validator evaluates the pipeline, it runs through every step of the pipeline for each model, even if some of the steps don’t change, such as the StringIndexer. By reevaluating every step in the pipeline, we are learning the same StringIndexer mapping over and over again, even though it’s not changing. If instead we put our cross-validator inside our pipeline, then we won’t be reevaluating the StringIndexer (or any other estimator) each time we try a different model.
 
 ## Offer
 
