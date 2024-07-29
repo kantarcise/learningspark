@@ -33,6 +33,7 @@ object AirbnbDataCleansing {
     println(rawDF.columns.mkString("Array(", ", ", ")"))
 
     // Select and show base columns
+    println("Arguably, most important columns selected:\n")
     val baseDF = selectBaseColumns(rawDF)
     baseDF.cache().count()
     baseDF.show()
@@ -40,7 +41,7 @@ object AirbnbDataCleansing {
     // Fix price column
     val fixedPriceDF = fixPriceColumn(baseDF)
 
-    println("Here is the Dataframe with price in DoubleType \n:")
+    println("Here is the Dataframe with price in DoubleType: \n")
     fixedPriceDF.show()
 
     println("Here is the summary for it:\n")
@@ -53,10 +54,14 @@ object AirbnbDataCleansing {
     val doublesDF = convertIntegerToDouble(noNullsDF, baseDF)
 
     // Impute missing values
+    // https://spark.apache.org/docs/latest/api/scala/org/apache/spark/ml/feature/Imputer.html
     val imputedDF = imputeMissingValues(doublesDF)
 
     // Filter data with extreme values
     val cleanDF = filterExtremeValues(imputedDF)
+
+    println("Here is our cleansed dataframe: \n")
+    cleanDF.show(truncate = false)
 
     // Save the cleansed data
     val outputPath = "/tmp/sf-airbnb/sf-airbnb-clean.parquet"
@@ -184,6 +189,9 @@ object AirbnbDataCleansing {
    * After we are imputing the median value, we add
    * an indicator column.
    *
+   * na - not available
+   * https://www.statmethods.net/data-input/missingdata.html
+   *
    * This way the ML model or human analyst can interpret
    * any value in that column as an imputed value, not a true value.
    *
@@ -206,7 +214,9 @@ object AirbnbDataCleansing {
 
     var tempDF = df
     for (c <- imputeCols) {
-      tempDF = tempDF.withColumn(c + "_na", when(col(c).isNull, 1.0).otherwise(0.0))
+      tempDF = tempDF.withColumn(c + "_na",
+        when(col(c).isNull, 1.0)
+          .otherwise(0.0))
     }
 
     println("\nHere is a Imputed Dataframe :\n")
