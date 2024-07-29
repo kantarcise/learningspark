@@ -13,8 +13,6 @@ import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGri
  * Demonstrates using Random Forests for
  * predicting Airbnb prices.
  *
- * TODO: needs polishing work.
- *
  */
 object AirbnbPricePredictionRandomForests {
 
@@ -42,19 +40,19 @@ object AirbnbPricePredictionRandomForests {
     val (stringIndexer, vecAssembler, rf,
       pipelineWithRandomForest, paramGrid, evaluator) = prepareStages(trainDF)
 
-    // val (pipelineModel, cv, cvModel) = buildAndTrainModel(trainDF)
-    // val pipelineModel = buildAndTrainModel(trainDF)
+    val crossValidatorModelSlow = buildAndTrainModelSlow(trainDF,
+      pipelineWithRandomForest, evaluator, paramGrid)
 
-    val pipelineFast = buildAndTrainModelFast(trainDF, stringIndexer, vecAssembler,
+    val pipelineFast = buildAndTrainModelFast(trainDF,
+      stringIndexer, vecAssembler,
       rf, evaluator, paramGrid)
 
-    val pipelineSlow = buildAndTrainModelSlow(trainDF, pipelineWithRandomForest,
-      evaluator, paramGrid)
+    visualizeModel(crossValidatorModelSlow)
+    visualizePipelineModel(pipelineFast)
 
-    visualizeModel(pipelineSlow)
-    // visualizePipelineModel(pipelineModel)
+    val predDF = applyPipelineModel(pipelineFast, testDF)
 
-    val predDF = applyModel(pipelineFast, testDF)
+    println("Here are some metrics on our predictions!\n")
     evaluateModel(predDF)
 
     spark.stop()
@@ -75,11 +73,17 @@ object AirbnbPricePredictionRandomForests {
     (testDF, trainDF)
   }
 
-
   /**
-   * TODO
+   * These stages are common in our models.
+   *
+   * It can be thought as preprocessing steps.
+   *
+   * @param trainDF : Dataframe to work on
+   * @return
    */
-  def prepareStages(trainDF: DataFrame)= {
+  def prepareStages(trainDF: DataFrame): (StringIndexer,
+    VectorAssembler, RandomForestRegressor,
+    Pipeline, Array[ParamMap], RegressionEvaluator) = {
 
     val (categoricalCols, numericCols) =
       getCategoricalAndNumericCols(trainDF)
@@ -118,141 +122,15 @@ object AirbnbPricePredictionRandomForests {
   }
 
   /**
-   * Build and train the Random Forest model using Cross-Validation.
+   * We also have the option to choose the whole pipeline as the
+   * CrossValidaton Estimator, but this will be slower.
    *
-   * @param trainDF Training DataFrame.
-   * @return A tuple containing the trained PipelineModel and CrossValidatorModel.
+   * @param trainDF: Dataframe to work on
+   * @param pipelineWithRandomForest: Pipeline with rf last stage
+   * @param evaluator: Evaluator
+   * @param paramGrid: for Cross Validation
+   * @return
    */
-  def buildAndTrainModel(trainDF: DataFrame
-                        // ): (PipelineModel, CrossValidator, CrossValidatorModel) = {
-                        ): (PipelineModel) = {
-
-    val (categoricalCols, numericCols) = getCategoricalAndNumericCols(trainDF)
-
-    val indexOutputCols = categoricalCols
-      .map(_ + "Index")
-
-    val stringIndexer = makeStringIndexer(categoricalCols, indexOutputCols)
-
-    val assemblerInputs = indexOutputCols ++ numericCols
-    val vecAssembler = makeVectorAssembler(assemblerInputs)
-
-    val rf = makeRandomForestRegressor()
-
-    // make the classic pipeline!
-    val pipelineWithRandomForest = new Pipeline()
-      .setStages(Array(stringIndexer, vecAssembler, rf))
-
-    // grid search
-    // There are a lot of hyperparameters we could tune, and it
-    // would take a long time to manually configure.
-    val paramGrid = new ParamGridBuilder()
-      .addGrid(rf.maxDepth, Array(2, 4, 6))
-      .addGrid(rf.numTrees, Array(10, 100))
-      // we can also search for
-      // minInfoGain, minInstancesPerNode,
-      // featureSubsetStrategy.. etc.
-      .build()
-
-    val evaluator = new RegressionEvaluator()
-      .setLabelCol("price")
-      .setPredictionCol("prediction")
-      .setMetricName("rmse")
-
-    //  Cross Validation
-    // We are also going to use 3-fold cross validation
-    // to identify the optimal maxDepth.
-
-    // We pass in the `estimator` (pipeline), `evaluator`, and
-    // `estimatorParamMaps` to `CrossValidator` so that it knows:
-    //    - Which model to use
-    //    - How to evaluate the model
-    //    - What hyperparameters to set for the model
-    //
-    // We can also set the number of folds we want to split
-    // our data into (3), as well as setting a seed so
-    // we all have the same split in the data
-    val cv = new CrossValidator()
-      .setEstimator(pipelineWithRandomForest)
-      .setEvaluator(evaluator)
-      .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(3)
-      .setSeed(42)
-      .setParallelism(4)
-
-    // these kick of spark jobs
-    // we just trained 19 models
-    // (6 hyperparameter configurations x 3-fold cross-validation)
-    // 1 for the optimal hyperparameter selection.
-    val cvModelSlow = cv.fit(trainDF)
-
-    // OR - AN OPTIMIZED APPROACH
-
-    // Should we put the pipeline in the cross
-    // validator, or the cross validator in the pipeline?
-    // https://kb.databricks.com/machine-learning/speed-up-cross-validation
-    val cvWithRandomForest = new CrossValidator()
-      .setEstimator(rf)
-      .setEvaluator(evaluator)
-      .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(3)
-      .setParallelism(4)
-      .setSeed(42)
-
-    // TODO : why cant I use cvWithRandomForest here ?
-    // val cvModelFast = cvWithRandomForest.fit(trainDF)
-
-    val pipelineWithCrossValidator = new Pipeline()
-      .setStages(Array(stringIndexer, vecAssembler, cvWithRandomForest))
-
-    // this will also kick of a spark job
-    val pipelineModel = pipelineWithCrossValidator.fit(trainDF)
-
-    // (cvModel.bestModel.asInstanceOf[PipelineModel], cv, cvModel)
-    // (pipelineModel, cvWithRandomForest, cvModelFast)
-    pipelineModel
-  }
-
-
-  /**
-   * Using the CrossValidator inside pipeline trick,
-   * increase the speed of training
-   *
-   * @param trainDF
-   */
-  def buildAndTrainModelFast(trainDF: DataFrame,
-                             stringIndexer: StringIndexer,
-                             vecAssembler: VectorAssembler,
-                             rf: RandomForestRegressor,
-                             evaluator: RegressionEvaluator,
-                             paramGrid: Array[ParamMap]): PipelineModel = {
-    // TODO
-    // Should we put the pipeline in the cross
-    // validator, or the cross validator in the pipeline?
-    // https://kb.databricks.com/machine-learning/speed-up-cross-validation
-    val cvWithRandomForest = new CrossValidator()
-      .setEstimator(rf)
-      .setEvaluator(evaluator)
-      .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(3)
-      .setParallelism(4)
-      .setSeed(42)
-
-    // TODO : why cant I use cvWithRandomForest here ?
-    // val cvModelFast = cvWithRandomForest.fit(trainDF)
-
-    val pipelineWithCrossValidator = new Pipeline()
-      .setStages(Array(stringIndexer, vecAssembler, cvWithRandomForest))
-
-    // this will also kick of a spark job
-    val pipelineModel = pipelineWithCrossValidator.fit(trainDF)
-
-    // (cvModel.bestModel.asInstanceOf[PipelineModel], cv, cvModel)
-    // (pipelineModel, cvWithRandomForest, cvModelFast)
-    pipelineModel
-  }
-
-
   def buildAndTrainModelSlow(trainDF: DataFrame,
                              pipelineWithRandomForest: Pipeline,
                              evaluator: RegressionEvaluator,
@@ -268,8 +146,8 @@ object AirbnbPricePredictionRandomForests {
     //    - What hyperparameters to set for the model
     //
     // We can also set the number of folds we want to split
-    // our data into (3), as well as setting a seed so
-    // we all have the same split in the data
+    //    our data into (3), as well as setting a seed so
+    //        we all have the same split in the data
     val cv = new CrossValidator()
       .setEstimator(pipelineWithRandomForest)
       .setEvaluator(evaluator)
@@ -278,14 +156,50 @@ object AirbnbPricePredictionRandomForests {
       .setSeed(42)
       .setParallelism(4)
 
-    // these kick of spark jobs
+    // this will kick off spark jobs
     // we just trained 19 models
     // (6 hyperparameter configurations x 3-fold cross-validation)
     // 1 for the optimal hyperparameter selection.
-    val cvModelSlow = cv.fit(trainDF)
+    val cvModelSlow = cv
+      .fit(trainDF)
 
-    // TODO: print out the hyperparameters
     cvModelSlow
+  }
+
+  /**
+   * Using the CrossValidator inside pipeline trick,
+   * This increases the speed of training.
+   *
+   * For more information, check out page 320.
+   *
+   * @param trainDF: Dataframe to work on
+   */
+  def buildAndTrainModelFast(trainDF: DataFrame,
+                             stringIndexer: StringIndexer,
+                             vecAssembler: VectorAssembler,
+                             rf: RandomForestRegressor,
+                             evaluator: RegressionEvaluator,
+                             paramGrid: Array[ParamMap]): PipelineModel = {
+
+    // Should we put the pipeline in the cross
+    // validator, or the cross validator in the pipeline?
+    // https://kb.databricks.com/machine-learning/speed-up-cross-validation
+    val cvWithRandomForest = new CrossValidator()
+      .setEstimator(rf)
+      .setEvaluator(evaluator)
+      .setEstimatorParamMaps(paramGrid)
+      .setNumFolds(3)
+      .setParallelism(4)
+      .setSeed(42)
+
+    val pipelineWithCrossValidator = new Pipeline()
+      .setStages(Array(stringIndexer, vecAssembler, cvWithRandomForest))
+
+    // this will kick off a spark job
+    val pipelineModel = pipelineWithCrossValidator
+      .fit(trainDF)
+
+    pipelineModel
   }
 
 
@@ -300,6 +214,8 @@ object AirbnbPricePredictionRandomForests {
     // The best model from our CrossValidator
     // (the one with the lowest RMSE) had
     // maxDepth=6 and numTrees=100.
+    print("\nBest model from Cross Validation \n")
+
     cvModel
       .getEstimatorParamMaps
       .zip(cvModel.avgMetrics)
@@ -314,7 +230,8 @@ object AirbnbPricePredictionRandomForests {
    * @param pipelineModel Trained PipelineModel.
    */
   def visualizePipelineModel(pipelineModel: PipelineModel): Unit = {
-    println("Pipeline Model Stages and Parameters:\n")
+
+    println("\nPipeline Model Stages and Parameters:\n")
 
     // Iterate through each stage in the pipeline
     pipelineModel.stages.zipWithIndex.foreach { case (stage, index) =>
@@ -337,21 +254,24 @@ object AirbnbPricePredictionRandomForests {
         }
       case _ =>
         println("\nThe last stage is not a RandomForestRegressionModel. " +
-          "No feature importances to display.")
+          "No feature importances to display.\n")
     }
   }
 
   /**
-   * Apply the trained model to the test DataFrame.
+   * Apply the trained pipeline model to the test DataFrame.
    *
    * @param pipelineModel Trained PipelineModel.
    * @param testDF Testing DataFrame.
    * @return DataFrame with predictions.
    */
-  def applyModel(pipelineModel: PipelineModel,
+  def applyPipelineModel(pipelineModel: PipelineModel,
                  testDF: DataFrame): DataFrame = {
 
-    val predDF = pipelineModel.transform(testDF)
+    val predDF = pipelineModel
+      .transform(testDF)
+
+    println("\nHere are some of the predictions: \n")
     predDF
       .select("features", "price", "prediction")
       .orderBy(desc("price"))
