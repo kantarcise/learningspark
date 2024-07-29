@@ -43,6 +43,8 @@ object AirbnbBaselineModel {
       .select(avg("price")).first().getDouble(0)
 
     // Add a column to the test data with the average price prediction
+    // If this were a classification problem, we might want
+    // to predict the most prevalent class as our baseline model.
     val predDF = testDF
       .withColumn("avgPrediction", lit(avgPrice))
 
