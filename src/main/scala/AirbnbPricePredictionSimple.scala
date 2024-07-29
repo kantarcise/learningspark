@@ -92,6 +92,8 @@ object AirbnbPricePredictionSimple {
       .transform(trainDF)
 
     // let's see the effect! we now have a features column!
+    println("With a VectorAssembler, now we have a features column" +
+      "which is a Vector type!\n")
     vecTrainDF
       .select("bedrooms", "features", "price")
       .show(10)
@@ -99,6 +101,7 @@ object AirbnbPricePredictionSimple {
     // see the schema
     // it will have:
     // |-- features: vector (nullable = true)
+    println("You can see it in the schema too!\n")
     vecTrainDF.printSchema()
 
     // return the VectorAssembler and the
@@ -115,7 +118,8 @@ object AirbnbPricePredictionSimple {
    * in a DataFrame and returns a Model.
    *
    * Estimators learn parameters from your data, have
-   * an estimator_name.fit() method, and are eagerly evaluated (i.e., kick off Spark jobs),
+   * an estimator_name.fit() method, and are eagerly
+   * evaluated (i.e., kick off Spark jobs),
    * whereas transformers are lazily evaluated.
    *
    * Some other examples of estimators include
@@ -130,6 +134,11 @@ object AirbnbPricePredictionSimple {
     val lr = new LinearRegression()
       .setFeaturesCol("features")
       .setLabelCol("price")
+      // Set regParam to a non-zero value to
+      // avoid overfitting & instability
+      // if we dont, we will get the warning:
+      // regParam is zero, which might cause numerical instability and overfitting.
+      .setRegParam(0.001)
 
     val lrModel = lr
       .fit(dfWithVector)
@@ -139,8 +148,8 @@ object AirbnbPricePredictionSimple {
     val m = lrModel.coefficients(0)
     val b = lrModel.intercept
     println(
-      f"""The formula for the linear regression line is
-         | 'price = $m%1.2f*bedrooms + $b%1.2f'\n""".stripMargin)
+      f""" The formula for the linear regression line is
+         |  'price = $m%1.2f*bedrooms + $b%1.2f'\n""".stripMargin)
 
     // return the estimator and the model
     (lr, lrModel)
@@ -168,9 +177,11 @@ object AirbnbPricePredictionSimple {
                         vecAssembler: VectorAssembler,
                         lr: LinearRegression) = {
 
+    // we can make a pipeline!
     val pipeline = new Pipeline()
       .setStages(Array(vecAssembler, lr))
 
+    // and fit the pipeline itself!
     val pipelineModel = pipeline
       .fit(trainDF)
 
@@ -186,9 +197,14 @@ object AirbnbPricePredictionSimple {
    */
   def applyTestDataToPipeline(testDF: DataFrame,
                               pipelineModel: PipelineModel): Unit = {
+
+    println("After we train the pipeline on train data, we " +
+      "can use it for inference! \n")
+    //
     val predDF = pipelineModel
       .transform(testDF)
 
+    println("Here are the result predictions from our pipeline model!\n")
     predDF
       .select("bedrooms", "features", "price", "prediction")
       .show(10)
