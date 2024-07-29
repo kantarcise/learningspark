@@ -38,6 +38,8 @@ object AirbnbPricePredictDecisionTree {
     visualizeDecisionTree(spark, pipelineModel)
 
     val predDF = applyModel(pipelineModel, testDF)
+
+    println("Here are some metrics about the model:\n")
     evaluateModel(predDF)
 
     spark.stop()
@@ -51,7 +53,8 @@ object AirbnbPricePredictDecisionTree {
    */
   def trainTestSplit(df: DataFrame
                     ): (DataFrame, DataFrame) = {
-    val Array(trainDF, testDF) = df.randomSplit(Array(.8, .2), seed=42)
+    val Array(trainDF, testDF) = df
+      .randomSplit(Array(.8, .2), seed=42)
     println(
       f"""\nThere are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
@@ -133,7 +136,9 @@ object AirbnbPricePredictDecisionTree {
   def visualizeDecisionTree(spark: SparkSession,
                             pipelineModel: PipelineModel): Unit = {
     // now we can Visualize the Decision Tree
-    val dtModel = pipelineModel.stages.last
+    val dtModel = pipelineModel
+      .stages
+      .last
       .asInstanceOf[org.apache.spark.ml.regression.DecisionTreeRegressionModel]
 
     // feature importance scores
@@ -160,6 +165,7 @@ object AirbnbPricePredictDecisionTree {
       .createDataFrame(featureImp)
       .toDF(columns: _*)
 
+    println("\n Here are all features, ordered by importance:\n")
     featureImpDF
       .orderBy(col("Importance").desc)
       .show()
@@ -184,10 +190,12 @@ object AirbnbPricePredictDecisionTree {
     val predDF = pipelineModel
       .transform(testDF)
 
+    println("Here are some predictions made!\n")
     predDF
       .select("features", "price", "prediction")
       .orderBy(desc("price"))
       .show(truncate = false)
+
     predDF
   }
 
