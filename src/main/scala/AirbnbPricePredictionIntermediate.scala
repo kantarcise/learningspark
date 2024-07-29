@@ -219,6 +219,7 @@ object AirbnbPricePredictionIntermediate {
     val lr = new LinearRegression()
       .setLabelCol("price")
       .setFeaturesCol("features")
+      .setRegParam(0.001)
 
     // Make a pipeline with these stages:
     //    StringIndexer, OneHotEncoder,
@@ -233,19 +234,20 @@ object AirbnbPricePredictionIntermediate {
     // the trained pipeline model to make predictions
     val predDF = pipelineModel.transform(testDF)
 
-    println("Here are the results on the Test data!\n")
+    println("Here are the results on the Test data!")
     println("Features is a sparse vector!\n")
     // Show the first 5 rows of the features, actual price, and predicted price
     predDF
       .select("features", "price", "prediction")
       .show(5)
 
-    println("Here is the schema for it!\n")
+    println("Here is the schema for it! (double check that it's a vector)\n")
     predDF
       .select("features", "price", "prediction")
       .printSchema()
 
     // Evaluate the model using RMSE (Root Mean Square Error)
+    println("Metrics of the model without log scale prediction.\n")
     evaluateModelRMSE(predDF)
 
     // Evaluate the model using R2 (Coefficient of Determination)
@@ -292,6 +294,7 @@ object AirbnbPricePredictionIntermediate {
     val lr = new LinearRegression()
       .setLabelCol("log_price") // Set the label column to log_price
       .setPredictionCol("log_pred") // Set the prediction column name to log_pred
+      .setRegParam(0.001)
 
     // Make a pipeline with stages:
     //    RFormula and LinearRegression
@@ -311,6 +314,9 @@ object AirbnbPricePredictionIntermediate {
     // from logarithmic scale to original scale
     val expDF = predDF
       .withColumn("prediction", exp(col("log_pred")))
+
+    println("\nMetrics of the model with log scale prediction.")
+    println("If our approach is correct, these should be better!\n")
 
     // Evaluate the model using
     // RMSE (Root Mean Square Error) on the original scale
