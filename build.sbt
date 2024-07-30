@@ -41,6 +41,10 @@ libraryDependencies += "org.apache.spark" %% "spark-mllib" % "3.5.0"
 // https://mvnrepository.com/artifact/org.mlflow/mlflow-client
 libraryDependencies += "org.mlflow" % "mlflow-client" % "2.15.0"
 
+// For Chapter 11 - Xgboost
+// https://mvnrepository.com/artifact/ml.dmlc/xgboost4j-spark
+libraryDependencies += "ml.dmlc" %% "xgboost4j-spark" % "2.1.0"
+
 // set main class for assembly jar
 // This is needed if you are using the assembly plugin.
 // What is sbt assembly ? - https://github.com/sbt/sbt-assembly
