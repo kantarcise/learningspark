@@ -295,6 +295,10 @@ Here is all the code explained in detail.
 
 - With [MlflowWithContext](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowWithContext.scala) we can log tags, metrics and artifacts with using the `ActiveRun` only! Also, we will keep using the same experiment and submit new runs as we rerun the application!
 
+- An extra example that is not in the book but in the [dbc, Chapter 11](https://github.com/databricks/LearningSparkV2/tree/master/notebooks) (To open the dbc, make a Databricks Community Edition Account and import the dbc into your workspace.) shows us how we can use `XGBoost` with Spark! In [AirbnbPricePredictionXGBoost](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoost.scala) we will simply make a pipeline with `XGBoostRegressor` from `import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor`. We need an addition in our `build.sbt` for this external library!
+
+- Also, why not use a `CrossValidator` to find a better performing model? [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model! 
+
 - Model Deployment Options with MLlib
 
 - 
