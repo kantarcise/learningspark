@@ -33,6 +33,14 @@ libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.7.1"
 // https://mvnrepository.com/artifact/io.delta/delta-spark
 libraryDependencies += "io.delta" %% "delta-spark" % "3.2.0"
 
+// For Chapter 10!
+// https://mvnrepository.com/artifact/org.apache.spark/spark-mllib
+libraryDependencies += "org.apache.spark" %% "spark-mllib" % "3.5.0"
+
+// For Chapter 11!
+// https://mvnrepository.com/artifact/org.mlflow/mlflow-client
+libraryDependencies += "org.mlflow" % "mlflow-client" % "2.15.0"
+
 // set main class for assembly jar
 // This is needed if you are using the assembly plugin.
 // What is sbt assembly ? - https://github.com/sbt/sbt-assembly
