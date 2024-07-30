@@ -277,14 +277,25 @@ Here is all the code explained in detail.
 
 - We will start our journey of setting up Machine Learning Pipelines with a small step, in [AirbnbPricePredictionSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionSimple.scala) we will see how we can setup an incredibly simple `LinearRegression` pipeline. We will make a train/test split from our cleansed data and train a model after. We will see how we can use `VectorAssembler()` to put features into vectors, with `prepareFeatures()`.
 
-- [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
+- [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, using `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
 
 - When we use RMSE for evaluating the performance of a model, we need a baseline. A simple baseline example is given in [AirbnbBaselineModel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala).
 
-- We worked with the a parametric model, *Linear Regression*. We could do some more hyperparameter tuning with the linear regression model, but we're going to try tree based methods and see if our performance improves. We used `OHE` for categorical Feautures in `LinearRegression`. However, for decision trees, and in particular, ***random forests***, we should not `OHE` our variables. [AirbnbPricePredictDecisionTree](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) is the example where we attempt to use `DecisionTreeRegressor`.
+- So far we've worked with, *Linear Regression*. We could do some more hyperparameter tuning with the linear regression model, but we're going to try tree based methods and see if our performance improves. We used `OHE` for categorical features in `LinearRegression`. However, for decision trees, and in particular, ***random forests***, we should not `OHE` our variables. [AirbnbPricePredictDecisionTree](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) is the example where we attempt to use `DecisionTreeRegressor`.
 
+- To understand the basics of *Hyperparameter Tuning*, we will discover more about tree based models in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala). In which we will use a `CrossValidator` and `ParamGridBuilder`. We will also see how we can do some simple visualization for CrossValidatorModels as well as PipelineModels in `visualizeModel()` and `visualizePipelineModel()`.
 
-- To understand the basics of *Hyperparameter Tuning*, we will discover about tree based models in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala). This still needs work.
+#### Chapter 11 - Managing, Deploying, and Scaling Machine Learning Pipelines with Apache Spark 🎷
+
+- In the previous chapter, we learned to build ML pipelines with MLlib. This chapter focuses on managing and deploying models. We'll learn to use MLflow to track, reproduce, and deploy MLlib models, understand the challenges and trade-offs of different deployment strategies, and design scalable ML solutions.
+
+- To be able to run the following applications, you can use a docker container! 🐤 For details and step by step tutorial, see [the readme](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerMlflow/readme.md)
+
+- With [MlflowSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowSimple.scala) we will discover how we can use MLFlow to track and monitor our deployments for our ML Applications in Spark.
+
+- With [MlflowWithContext](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowWithContext.scala) we can log tags, metrics and artifacts with using the `ActiveRun` only! Also, we will keep using the same experiment and submit new runs as we rerun the application!
+
+- Model Deployment Options with MLlib
 
 - 
 
