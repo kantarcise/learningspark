@@ -349,6 +349,8 @@ object AirbnbPricePredictionIntermediate {
       .overwrite()
       .save(pipelinePath)
 
+    println(s"Model saved to $pipelinePath.")
+
     // Load the saved model
     val savedPipelineModel = PipelineModel.load(pipelinePath)
     // Demonstrate that the model has been
