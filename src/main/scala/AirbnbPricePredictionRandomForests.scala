@@ -50,6 +50,8 @@ object AirbnbPricePredictionRandomForests {
     visualizeModel(crossValidatorModelSlow)
     visualizePipelineModel(pipelineFast)
 
+    saveAndLoadModels(pipelineFast)
+
     val predDF = applyPipelineModel(pipelineFast, testDF)
 
     println("Here are some metrics on our predictions!\n")
@@ -300,6 +302,31 @@ object AirbnbPricePredictionRandomForests {
     println(s"RMSE is $rmse")
     println(s"R2 is $r2")
     println("*-"*80)
+  }
+
+  /**
+   * Saves the trained model to disk and loads it back.
+   *
+   * In the event that our cluster goes down, we don’t have
+   * to recompute the model
+   *
+   * @param model Trained PipelineModel.
+   */
+  def saveAndLoadModels(model: PipelineModel): Unit = {
+    val pipelinePath = "/tmp/random-forest-pipeline-model"
+
+    model
+      .write
+      .overwrite()
+      .save(pipelinePath)
+
+    println(s"Model saved to $pipelinePath.")
+
+    // Load the saved model
+    val savedPipelineModel = PipelineModel.load(pipelinePath)
+    // Demonstrate that the model has been
+    // loaded correctly
+    println("Model loaded successfully from disk.")
   }
 
   /**
