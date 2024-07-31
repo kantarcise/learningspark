@@ -43,9 +43,15 @@ object AirbnbPricePredictionXGBoost {
       .withColumn("label", log(col("price"))).randomSplit(Array(0.8, 0.2), seed = 42)
 
     // Identify categorical columns
-    val categoricalCols = trainDF.dtypes.collect {
-      case (field, dataType) if dataType == "StringType" => field
-    }
+    // val categoricalCols = trainDF.dtypes.collect {
+    //   case (field, dataType) if dataType == "StringType" => field
+    // }
+    // or
+    val categoricalCols = trainDF
+      .dtypes
+      .filter(_._2 == "StringType")
+      .map(_._1)
+
     val indexOutputCols = categoricalCols.map(_ + "Index")
 
     // StringIndexer for categorical columns
@@ -55,9 +61,16 @@ object AirbnbPricePredictionXGBoost {
       .setHandleInvalid("skip")
 
     // Identify numeric columns
-    val numericCols = trainDF.dtypes.collect {
-      case (field, dataType) if dataType == "DoubleType" && field != "price" && field != "label" => field
-    }
+    // val numericCols = trainDF.dtypes.collect {
+    //   case (field, dataType) if dataType == "DoubleType" && field != "price" && field != "label" => field
+    // }
+
+    // or
+    val numericCols = trainDF
+      .dtypes
+      .filter{ case (field, dataType) => dataType == "DoubleType" && field != "price" && field != "label"}
+      .map(_._1)
+
     val assemblerInputs = indexOutputCols ++ numericCols
 
     // VectorAssembler to create feature vectors
@@ -77,6 +90,17 @@ object AirbnbPricePredictionXGBoost {
       "random_state" -> 42,
       "missing" -> 0
     )
+
+    // another set!
+    // with these parameters
+    // RMSE is 204.44626294666136
+    // R2 is 0.27864764900598715
+    val paramMapSecond = List(
+      "num_round" -> 100,
+      "eta" -> 0.1,
+      "max_leaf_nodes" -> 50,
+      "seed" -> 42,
+      "missing" -> 0).toMap
 
     // another set of parameters to try!
     // with these parameters:
@@ -98,6 +122,12 @@ object AirbnbPricePredictionXGBoost {
     // Build pipeline
     val pipeline = new Pipeline()
       .setStages(Array(stringIndexer, vecAssembler, xgboost))
+
+    // you can also add it to an existing pipeline
+    // val pipeline = new Pipeline()
+    //   .setStages(Array(stringIndexer, vecAssembler))
+    // val xgboostEstimator = new XGBoostRegressor(xgbParam)
+    // val xgboostPipeline = new Pipeline().setStages(pipeline.getStages ++ Array(xgboostEstimator))
 
     val pipelineModel: PipelineModel = pipeline
       .fit(trainDF)
@@ -121,6 +151,20 @@ object AirbnbPricePredictionXGBoost {
 
     println(s"RMSE is $rmse")
     println(s"R2 is $r2")
+
+    // We can also export our XGBoost model to use
+    // in Python for fast inference on small datasets.
+    // save the model
+    val nativeModelPath = "/tmp/xgboost_native_model"
+
+    val xgboostModel = pipelineModel
+      .stages
+      .last
+      .asInstanceOf[XGBoostRegressionModel]
+
+    xgboostModel
+      .nativeBooster
+      .saveModel(nativeModelPath)
 
     // Stop Spark session
     spark.stop()
