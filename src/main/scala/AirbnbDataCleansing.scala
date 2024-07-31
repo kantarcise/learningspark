@@ -253,6 +253,6 @@ object AirbnbDataCleansing {
   def saveCleanedData(df: DataFrame,
                       path: String): Unit = {
     df.write.mode("overwrite").parquet(path)
-    println(s"Saved the model to $path")
+    println(s"Saved the cleaned data to $path")
   }
 }
