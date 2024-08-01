@@ -7,6 +7,9 @@ import org.apache.spark.sql.streaming.StreamingQuery
 /**
  * Let's use a model that we trained in a
  * Spark streaming application!
+ *
+ * Run the AirbnbPricePredictionRandomForests before this one!
+ * To train and save the model that will be used here.
  */
 object AirbnbPricePredictionStreaming {
 
