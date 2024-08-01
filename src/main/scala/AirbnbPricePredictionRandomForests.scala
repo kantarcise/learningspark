@@ -12,7 +12,6 @@ import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGri
 /**
  * Demonstrates using Random Forests for
  * predicting Airbnb prices.
- *
  */
 object AirbnbPricePredictionRandomForests {
 
