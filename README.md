@@ -164,6 +164,8 @@ Here is all the code explained in detail.
 
 - You will most likely work with Apache Kafka in StructuredStreaming, so even though there is not a complete example in the book, we have [WordCountKafka](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala) which will show us the basic `source -> process -> sink` pipeline. To be able to run it, we will use docker, as [explained in the readme.](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerKafka/readme.md)
 
+- **You found a gift!**: Using the same docker containers, if you want to understand how you can communicate a streaming Dataframe between spark applications, you can check out [NestKafkaProducer](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NestKafkaProducer.scala) and [NestLogsConsumer](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NestLogsConsumer.scala). After that, If you are really curious, you can check out [SensorProducer](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SensorProducer.scala) and [SensorConsumer](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SensorConsumer.scala) to stream multiple Dataframes with Kafka and consume them in another Spark application just to join them! 
+
 - What if we wanted to read and/or write to storage systems that do not have built-in support in Structured Streaming? In [WordCountToCassandra](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToCassandra.scala) we will see how we can write the result of a streaming query to a Cassandra Instance. Again, we will use docker-compose for it, and the details are in the [readme file](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerCassandra/readme.md). This example will help us understand the two operations that allow us to write the output of a streaming query to arbitrary storage systems: `foreachBatch()` and `foreach()`. This was the example of `foreachBatch()`.
 
 - What is another cool thing we can do with `foreachBatch()`? In [WordCountToFile](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountKafka.scala) we weill see how we can use `foreachBatch()` to save streaming Datasets into files. This is also a great example to understand `coalesce(1)`, we use it to gather all the words and counts into single Dataset! We test our approach in [WordCountToFileTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountToFileTest.scala)
@@ -186,7 +188,7 @@ Here is all the code explained in detail.
 
     - Streaming Joins:
 
-    - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Watermarks.scala) we will join a static Dataset with a streaming one and see the results! We will do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation).We can also discover how to test such application, in [StreamStaticJoinsDataframeTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStaticJoinsDataframeTest.scala)
+    - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataset.scala) we will join a static Dataset with a streaming one and see the results! We will do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation).We can also discover how to test such application, in [StreamStaticJoinsDataframeTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStaticJoinsDataframeTest.scala)
 
     - Our approach is clearly not suitable when both sources of data are changing rapidly. For that we need stream–stream joins, and we see our first example in [StreamStreamJoins](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStreamJoins.scala) In this application, we will explore what types of joins (inner, outer, etc.) are supported, and how to use watermarks to limit the state stored for stateful joins. We will test out `leftouter` joining with [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala)
 
@@ -299,11 +301,59 @@ Here is all the code explained in detail.
 
 - Also, why not use a `CrossValidator` to find a better performing model? [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model! 
 
-- Model Deployment Options with MLlib
+- **Model Deployment Options with MLlib**: Deploying machine learning models means something different for every organization and use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate which mode of model deployment is suitable for the task at hand—be it batch, streaming, real-time 
 
-- 
+|                         | Throughput | Latency Usage               | Example application       | 
+|-------------------------|------------|-----------------------------|---------------------------| 
+| Batch                   | High       | High (hours to days)        | Customer churn prediction | 
+| Streaming               | Medium     | Medium (seconds to minutes) | Dynamic pricing           |
+| Real Time               | Low        | Low (milliseconds)          | Online ad bidding         | 
 
-### Use as Template 💭
+- Maybe we can add the image here!
+
+- **Batch**: We have already seen this in Chapter 10! Batch deployments represent the majority of use cases for deploying machine learning models, and this is arguably the easiest option to implement. You will run a regular job to generate predictions, and save the results to a table, database, data lake, etc. for downstream consumption. 3 important questions:
+
+    - **How frequently will you generate predictions?**: There is a trade-off between latency and throughput. You will get higher throughput batching many predictions together, but then the time it takes to receive any individual predictions will be much longer, delaying your ability to  act on these predictions.
+
+    - **How often will you retrain the model?**: Unlike libraries like sklearn or TensorFlow, MLlib does not support online updates or warm starts. If you’d like to retrain your model to incorporate the latest data, you’ll have to retrain the entire model from scratch, rather than getting to leverage the existing parameters. In terms of the frequency of retraining, some people will set up a regular job to retrain the model (e.g., once a month), while others will actively monitor the model drift to identify when they need to retrain.
+
+    - **How will you version the model?**: You can use the MLflow Model Registry to keep track of the models you are using and control how they are transitioned to/from staging, production, and archived
+
+- **Streaming**: Instead of waiting for an hourly or nightly job to process your data and generate predictions, Structured Streaming can continuously perform inference on incoming data. While this approach is more costly than a batch solution as you have to continually pay for compute time (and get lower throughput), you get the added benefit of generating predictions more frequently so you can act on them sooner. Streaming solutions in general are more complicated to maintain and monitor than batch solutions, but they offer lower latency.
+
+- In [AirbnbPricePredictionStreaming](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionStreaming.scala) we will simulate a streaming data streaming in a directory of Parquet files. We will use a model that we saved in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) and see how our model performs in a Streaming Application!
+
+- **Near Real-Time**: If your use case requires predictions on the order of hundreds of milliseconds to seconds, you could build a prediction server that uses MLlib to generate the predictions. While this is not an ideal use case for Spark because you are processing very small  amounts of data, you’ll get lower latency than with streaming or batch solutions.
+
+- **Real Time**: There are some domains where real-time inference is required, including fraud detection, ad recommendation, and the like. While making predictions with a small number of records may achieve the low latency required for real-time inference, you will need to contend with load balancing (handling many concurrent requests) as well as geolocation in latency-critical tasks.
+
+- There are a few open source libraries, such as MLeap and ONNX, that can help you automatically export a supported subset of the MLlib models to remove their dependency on Spark.
+
+- [ONNX](https://onnx.ai/) and [SynapseML](https://microsoft.github.io/SynapseML/) is good resources to read about here.
+
+- Instead of exporting MLlib models, there are other third-party libraries that integrate with Spark that are convenient to deploy in real-time scenarios, such as XGBoost and H2O.ai’s Sparkling Water (whose name is derived from a combination of H2O and Spark)
+
+- Although XGBoost is not technically part of MLlib, the [XGBoost4J-Spark library](https://xgboost.readthedocs.io/en/latest/jvm/xgboost4j_spark_tutorial.html) allows you to integrate distributed XGBoost into your MLlib pipelines. A benefit of XGBoost is the ease of deployment: after you train your MLlib pipeline, you can extract the XGBoost model and save it as a non-Spark model for serving in Python.
+
+- **How can we leverage Spark for non-MLlib models?**: A common use case is to build a scikit-learn or TensorFlow model on a single machine, perhaps on a subset of your data, but perform distributed inference on the entire data set using Spark.
+
+TIP: If the workers cached the model weights after loading it for the first time, subsequent calls of the same UDF with the same model loading will become significantly faster. For more information, check page 337.
+
+- **Distributed Hyperparameter Tuning**: Even if you do not intend to do distributed inference or do not need MLlib’s distributed training capabilities, you can still leverage Spark for distributed hyperparameter tuning. `joblib` and `Hyperopt`, check out page 338.
+
+- TODO: As an extra, we implemented an example [TaxiFarePredictionXGBoostGPU]() inspired from [gpu-accelerated-xgboost](https://www.nvidia.com/en-us/ai-data-science/spark-ebook/tutorial-gpu-accelerated-xgboost/). 
+
+#### Chapter 12 - Epilogue: Apache Spark 3.0
+
+- At the time of the writing of the book, Spark 3.0 was new. The bug fixes and feature enhancements are numerous, so for brevity, we will highlight just a selection of the notable changes and features pertaining to Spark components.
+
+- `Dynamic Partition Pruning` - page 343. `Adaptive Query Execution` - page 345. `SQL Join Hints` - page 348. `Catalog Plugin API and DataSourceV2` - page 349. `Structured Streaming` - page 352. `PySpark, Pandas UDFs, and Pandas Function APIs` - page 354. `DataFrame and SQL Explain Commands` - page 358.
+
+- **Really simply, what is AQE?**: Adaptive Query Execution (AQE) is query re-optimization that occurs during query execution based on runtime statistics. AQE in Spark 3.0 includes 3 main features: Dynamically coalescing shuffle partitions, Dynamically switching join strategies, Dynamically optimizing skew joins.
+
+- TODO: To see how `Dataframe.explain()` method works from Spark 3.0 onwards, you can check out [DataframeExplainModes](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DataframeExplainModes.scala).
+
+- ### Use as Template 💭
 
 If you simply want to use this repository as a template, here is the fastest way to do so.
 
