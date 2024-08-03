@@ -1,37 +1,37 @@
 package learningSpark
 
-import org.apache.spark.sql.{Dataset, SaveMode, SparkSession, functions => F}
+import org.apache.spark.sql.{Dataset, Encoder, SaveMode, SparkSession, functions => F}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
 import java.text.SimpleDateFormat
 import java.sql.Timestamp
 
-// a lot of intermediate case classes
-case class NoMedicalFire(IncidentNumber: Option[Int],
-                         AvailableDtTm: Option[String],
-                         CallType: Option[String])
-
-case class CallTypes(CallType: Option[String])
-
-case class FireCallTransformed(ResponseDelayedinMins: Double)
-
-case class OnlyTimestamps(IncidentDate: Option[Timestamp],
-                          OnWatchDate: Option[Timestamp],
-                          AvailableDtTS: Option[Timestamp])
-
-case class TypesAndCountsOfCalls(CallType: String, count: Long)
-
-// Define a case class to hold the aggregation results
-case class AggregationResults(totalAlarms: Long,
-                              averageDelayInMins: Double,
-                              minimumDelayInMins: Double,
-                              maximumDelayInMins: Double
-                             )
-
-
 // same exercises, using Dataset API
 object FireCallsSolvedQuestionsDataset {
+
+  // a lot of intermediate case classes
+  case class NoMedicalFire(IncidentNumber: Option[Int],
+                           AvailableDtTm: Option[String],
+                           CallType: Option[String])
+
+  case class CallTypes(CallType: Option[String])
+
+  case class FireCallTransformed(ResponseDelayedinMins: Double)
+
+  case class OnlyTimestamps(IncidentDate: Option[Timestamp],
+                            OnWatchDate: Option[Timestamp],
+                            AvailableDtTS: Option[Timestamp])
+
+  case class TypesAndCountsOfCalls(CallType: String, count: Long)
+
+  // Define a case class to hold the aggregation results
+  case class AggregationResults(totalAlarms: Long,
+                                averageDelayInMins: Double,
+                                minimumDelayInMins: Double,
+                                maximumDelayInMins: Double
+                               )
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
@@ -50,44 +50,10 @@ object FireCallsSolvedQuestionsDataset {
       s"$projectDir/data/sf-fire-calls.csv"
     }
 
-    // Define Schema
-    val fireSchema = StructType(
-      Array(
-        StructField("CallNumber", IntegerType, nullable = true),
-        StructField("UnitID", StringType, nullable = true),
-        StructField("IncidentNumber", IntegerType, nullable = true),
-        StructField("CallType", StringType, nullable = true),
-        StructField("CallDate", StringType, nullable = true),
-        StructField("WatchDate", StringType, nullable = true),
-        StructField("CallFinalDisposition", StringType, nullable = true),
-        StructField("AvailableDtTm", StringType, nullable = true),
-        StructField("Address", StringType, nullable = true),
-        StructField("City", StringType, nullable = true),
-        StructField("Zipcode", IntegerType, nullable = true),
-        StructField("Battalion", StringType, nullable = true),
-        StructField("StationArea", StringType, nullable = true),
-        StructField("Box", StringType, nullable = true),
-        StructField("OriginalPriority", StringType, nullable = true),
-        StructField("Priority", StringType, nullable = true),
-        StructField("FinalPriority", IntegerType, nullable = true),
-        StructField("ALSUnit", BooleanType, nullable = true),
-        StructField("CallTypeGroup", StringType, nullable = true),
-        StructField("NumAlarms", IntegerType, nullable = true),
-        StructField("UnitType", StringType, nullable = true),
-        StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
-        StructField("FirePreventionDistrict", StringType, nullable = true),
-        StructField("SupervisorDistrict", StringType, nullable = true),
-        StructField("Neighborhood", StringType, nullable = true),
-        StructField("Location", StringType, nullable = true),
-        StructField("RowID", StringType, nullable = true),
-        StructField("Delay", DoubleType, nullable = true)
-      )
-    )
-
     val fireCallsDS = spark
       .read
       .option("header", "true")
-      .schema(fireSchema)
+      .schema(implicitly[Encoder[FireCallInstance]].schema)
       .csv(fireCallsPath)
       .as[FireCallInstance]
 
@@ -112,7 +78,7 @@ object FireCallsSolvedQuestionsDataset {
       .saveAsTable(parquetTable)
 
     // And read it back!
-    val readBackDS = spark
+    val readBackDS: Dataset[FireCallInstance] = spark
       .table(parquetTable)
       .as[FireCallInstance]
 
@@ -143,13 +109,6 @@ object FireCallsSolvedQuestionsDataset {
 
     println(s"Distinct CallTypes: $distinctCallTypes\n")
 
-    // this was dataframe API
-    // val newFireDS = fireCallsDS
-      // Dont use Dataframe API!
-      // .withColumnRenamed("Delay", "ResponseDelayedinMins")
-      // .filter($"ResponseDelayedinMins" > 5)
-      // .select("ResponseDelayedinMins")
-
     println("distinct CallTypes without null\n")
 
     fireCallsDS
@@ -161,92 +120,43 @@ object FireCallsSolvedQuestionsDataset {
     val newFireDS = fireCallsDS
       // rename the col by mapping!
       // Handle Option and provide default value - because we have Option[Double] in Delay!
-      .map(call => FireCallTransformed(call.Delay.getOrElse(0.0)))
+      .map(call => FireCallTransformed(call.Delay.getOrElse(.0)))
       .filter(firecall => firecall.ResponseDelayedinMins > 5.0)
 
     println("ResponseDelayedinMins \n")
-    newFireDS.show(truncate = false)
-
-    // this was dataframe API
-    // val fireTsDS = fireCallsDS
-    //   .withColumnRenamed("Delay", "ResponseDelayedinMins")
-    //   .withColumn("IncidentDate", to_timestamp($"CallDate", "MM/dd/yyyy"))
-    //   .withColumn("OnWatchDate", to_timestamp($"WatchDate", "MM/dd/yyyy"))
-    //   .withColumn("AvailableDtTS", to_timestamp($"AvailableDtTm", "MM/dd/yyyy hh:mm:ss a"))
-    //   // Careful - This will error!
-    //   // .drop("CallDate", "WatchDate", "AvailableDtTm")
-    //   .drop($"CallDate", $"WatchDate", $"AvailableDtTm")
-    //   // Our new case class, with timestamps
-    //   .as[FireCallInstanceWithTimestamps]
+    newFireDS
+      .show(truncate = false)
 
     // Date format for conversion
     val dateFormat = new SimpleDateFormat("MM/dd/yyyy")
     val timestampFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss a")
 
     // let's make a Firecall dataset with timestamps!
-    val fireTsDS = fireCallsDS.map { call =>
-      FireCallInstanceWithTimestamps(
-        call.CallNumber,
-        call.UnitID,
-        call.IncidentNumber,
-        call.CallType,
-        call.CallFinalDisposition,
-        call.Address,
-        call.City,
-        call.ZipCode,
-        call.Battalion,
-        call.StationArea,
-        call.Box,
-        call.OriginalPriority,
-        call.Priority,
-        call.FinalPriority,
-        call.ALSUnit,
-        call.CallTypeGroup,
-        call.NumAlarms,
-        call.UnitType,
-        call.UnitSequenceInCallDispatch,
-        call.FirePreventionDistrict,
-        call.SupervisorDistrict,
-        call.Neighborhood,
-        call.Location,
-        call.RowID,
-        call.Delay,  // Renamed to ResponseDelayedinMins
-        call.CallDate.map(d => new Timestamp(dateFormat.parse(d).getTime)),
-        call.WatchDate.map(d => new Timestamp(dateFormat.parse(d).getTime)),
-        call.AvailableDtTm.map(d => new Timestamp(timestampFormat.parse(d).getTime))
-      )
-    }
+    val fireTsDS = fireCallsDS
+      .map(call => mapFireCallsToFireCallsTimestamp(call, dateFormat, timestampFormat))
 
     println("Fire DS is now with timestamps, showing only timestamps \n")
     fireTsDS
       // map to OnlyTimestamps case class to show
-      .map(call => OnlyTimestamps(call.IncidentDate,
+      .map(call => OnlyTimestamps(
+        call.IncidentDate,
         call.OnWatchDate,
         call.AvailableDtTS))
-      // .select("IncidentDate", "OnWatchDate", "AvailableDtTS")
       .show(5, truncate = false)
-
-    // this is done by Dataframe API
-    // val maxDate: Timestamp = fireTsDS
-    // .select(max($"IncidentDate"))
-    // .take(1)(0)
-    // .getTimestamp(0)
 
     // With dataset API
     val maxDate2: Timestamp = fireTsDS
-      // Filter out undefined dates
+      // Filter out undefined dates, null filter
       .filter(_.IncidentDate.isDefined)
       // Map to extract the defined IncidentDate
       .map(_.IncidentDate.get)
       // Reduce to find the maximum date
       .reduce((date1, date2) => if (date1.after(date2)) date1 else date2)
 
-
     val sevenDaysAgo: Timestamp = new Timestamp(maxDate2.getTime - 7L * 24 * 60 * 60 * 1000)
 
     val lastSevenDaysDS: Dataset[FireCallInstanceWithTimestamps] = fireTsDS
       .filter(call => call.IncidentDate.isDefined && call.IncidentDate.get.after(sevenDaysAgo))
-      // .filter($"IncidentDate" >= date_sub(lit(maxDate), 7))
       // we cannot use this:
       //.filter(call => call.IncidentDate >= date_sub(lit(maxDate), days = 7))
       // Because filter function in the Dataset API expects a predicate
@@ -259,13 +169,6 @@ object FireCallsSolvedQuestionsDataset {
     println(s"Number of calls logged in the last seven days: $callCount\n")
 
     println("How many years of FireCalls data do we have?\n")
-
-    // this was Dataframe API
-    // fireTsDS
-    //   .select(year($"IncidentDate"))
-    //   .distinct()
-    //   .orderBy(year($"IncidentDate"))
-    //   .show()
 
     fireTsDS
       // Filter out records where IncidentDate is not defined
@@ -290,16 +193,6 @@ object FireCallsSolvedQuestionsDataset {
 
     println("Some calculations - min - max - avg\n")
 
-    // This was Dataframe API
-    // fireTsDS
-    //   .agg(
-    //     F.sum("NumAlarms").alias("Total Alarms"),
-    //     F.avg("ResponseDelayedinMins").as("Average Delay in Mins"),
-    //     F.min("ResponseDelayedinMins").alias("Minimum Delay in Mins"),
-    //     F.max("ResponseDelayedinMins").alias("Maximum Delay in Mins")
-    //   )
-    //   .show()
-
     // The Dataset API does not have direct equivalents for
     // the DataFrame agg method, so we need to perform the
     // aggregations using Scala's collection operations.
@@ -312,8 +205,10 @@ object FireCallsSolvedQuestionsDataset {
         row.ResponseDelayedinMins.get,
         row.ResponseDelayedinMins.get,
         row.ResponseDelayedinMins.get,
+        // 1 for counting the number of records
         1
       ))
+      // an accumulator and a value
       .reduce((acc, value) => (
         // Sum of NumAlarms
         acc._1 + value._1,
@@ -327,6 +222,8 @@ object FireCallsSolvedQuestionsDataset {
         acc._5 + value._5
       ))
 
+    // now we have calculated what we are looking for,
+    // we can just use it!
     val totalAlarms = aggregationResult._1
     val averageDelayInMins = aggregationResult._2 / aggregationResult._5
     val minimumDelayInMins = aggregationResult._3
@@ -340,7 +237,48 @@ object FireCallsSolvedQuestionsDataset {
       .toDS()
 
     result.show()
+  }
 
-
+  /**
+   * A simple mapping method to generate
+   * FireCallInstanceWithTimestamps instances
+   * @param call
+   * @param dateFormat
+   * @param timestampFormat
+   * @return
+   */
+  def mapFireCallsToFireCallsTimestamp(call: FireCallInstance,
+                     dateFormat: SimpleDateFormat,
+                     timestampFormat: SimpleDateFormat): FireCallInstanceWithTimestamps = {
+    FireCallInstanceWithTimestamps(
+      call.CallNumber,
+      call.UnitID,
+      call.IncidentNumber,
+      call.CallType,
+      call.CallFinalDisposition,
+      call.Address,
+      call.City,
+      call.Zipcode,
+      call.Battalion,
+      call.StationArea,
+      call.Box,
+      call.OriginalPriority,
+      call.Priority,
+      call.FinalPriority,
+      call.ALSUnit,
+      call.CallTypeGroup,
+      call.NumAlarms,
+      call.UnitType,
+      call.UnitSequenceInCallDispatch,
+      call.FirePreventionDistrict,
+      call.SupervisorDistrict,
+      call.Neighborhood,
+      call.Location,
+      call.RowID,
+      call.Delay,  // Renamed to ResponseDelayedinMins
+      call.CallDate.map(d => new Timestamp(dateFormat.parse(d).getTime)),
+      call.WatchDate.map(d => new Timestamp(dateFormat.parse(d).getTime)),
+      call.AvailableDtTm.map(d => new Timestamp(timestampFormat.parse(d).getTime))
+    )
   }
 }
