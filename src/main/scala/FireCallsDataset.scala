@@ -1,105 +1,104 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Encoder, SparkSession}
+import java.sql.Timestamp
+import java.text.SimpleDateFormat
 
-// Same example, with Datasets
+/**
+ * Now with typed transformations only!
+ *
+ * We do not have to type the schema, thanks to case classes!
+ */
 object FireCallsDataset {
 
-    def main(args: Array[String]): Unit = {
+  // For the first transformation
+  case class FireCallTransformed(CallDate: Option[String],
+                                 StationArea: Option[String],
+                                 Zipcode: Option[Int],
+                                 CallDateTimestamp: Option[Timestamp],
+                                 CallDateTimestampTwo: Option[Timestamp]
+                                )
+  // for final selection
+  case class FireCallTransformedSelected(CallDateTimestamp: Option[Timestamp],
+                                         StationArea: Option[String],
+                                         Zipcode: Option[Int],
+                                         CallDateTimestampTwo: Option[Timestamp])
 
-      val spark = SparkSession
-        .builder
-        .appName("sparkApp")
-        .master("local[*]")
-        .getOrCreate()
+  def main(args: Array[String]): Unit = {
 
-      // log level - verbose = False
-      spark.sparkContext.setLogLevel("ERROR")
+    val spark = SparkSession
+      .builder
+      .appName("Fire Calls Discovery with Datasets!")
+      .master("local[*]")
+      .getOrCreate()
 
-      // $ usage
-      import spark.implicits._
+    // log level - verbose = False
+    spark.sparkContext.setLogLevel("ERROR")
 
-      // Define the data path as a val
-      val fireCallsPath: String = {
-        val projectDir = System.getProperty("user.dir")
-        s"$projectDir/data/sf-fire-calls.csv"
-      }
+    import spark.implicits._
 
-      // Define schema - if we dont, we will get an error
-      // Because when Spark loads data from CSV
-      // file, and it infers all the fields as StringType by default.
-      // In other words, when without a defined schema or inferSchema,
-      // Spark treats all columns as StringType by default.
-      val fireSchema = StructType(
-        Array(
-          StructField("CallNumber", IntegerType, nullable = true),
-          StructField("UnitID", StringType, nullable = true),
-          StructField("IncidentNumber", IntegerType, nullable = true),
-          StructField("CallType", StringType, nullable = true),
-          StructField("CallDate", StringType, nullable = true),
-          StructField("WatchDate", StringType, nullable = true),
-          StructField("CallFinalDisposition", StringType, nullable = true),
-          StructField("AvailableDtTm", StringType, nullable = true),
-          StructField("Address", StringType, nullable = true),
-          StructField("City", StringType, nullable = true),
-          StructField("Zipcode", IntegerType, nullable = true),
-          StructField("Battalion", StringType, nullable = true),
-          StructField("StationArea", StringType, nullable = true),
-          StructField("Box", StringType, nullable = true),
-          StructField("OriginalPriority", StringType, nullable = true),
-          StructField("Priority", StringType, nullable = true),
-          StructField("FinalPriority", IntegerType, nullable = true),
-          StructField("ALSUnit", BooleanType, nullable = true),
-          StructField("CallTypeGroup", StringType, nullable = true),
-          StructField("NumAlarms", IntegerType, nullable = true),
-          StructField("UnitType", StringType, nullable = true),
-          StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
-          StructField("FirePreventionDistrict", StringType, nullable = true),
-          StructField("SupervisorDistrict", StringType, nullable = true),
-          StructField("Neighborhood", StringType, nullable = true),
-          StructField("Location", StringType, nullable = true),
-          StructField("RowID", StringType, nullable = true),
-          StructField("Delay", DoubleType, nullable = true)
-        )
+    // Define the data path as a val
+    val fireCallsPath: String = {
+      val projectDir = System.getProperty("user.dir")
+      s"$projectDir/data/sf-fire-calls.csv"
+    }
+
+    // Read the CSV file into a Dataset
+    val fireCallsDS = spark.read
+      .format("csv")
+      .option("header", value = true)
+      .schema(implicitly[Encoder[FireCallInstance]].schema)
+      .load(fireCallsPath)
+      .as[FireCallInstance]
+
+    println("\nThe schema before, for fireCalls DS \n")
+    fireCallsDS.printSchema()
+
+    // Convert strings to timestamps
+    val transformedDS = fireCallsDS
+      .map(transformCallInstance)
+
+    // Filter and order the dataset
+    val orderedSelection = transformedDS
+      // not null checks
+      .filter(call => call.CallDateTimestamp.isDefined && call.CallDateTimestampTwo.isDefined)
+      //
+      .filter(_.Zipcode.contains(94118))
+      .orderBy("CallDateTimestamp")
+      .map(value => FireCallTransformedSelected(value.CallDateTimestamp,
+        value.StationArea, value.Zipcode, value.CallDateTimestampTwo)
       )
 
-      // Read the CSV file into a Dataset
-      val fireCallsDS = spark.read
-        .format("csv")
-        .option("header", value = true)
-        .schema(fireSchema)
-        .load(fireCallsPath)
-        .as[FireCallInstance]
+    println("\n Ordered and filtered fireCalls DS, " +
+      "with type casted from string to timestamp \n")
+    orderedSelection.show(20)
 
-      println("\nThe schema before, for fireCalls DS \n")
-      fireCallsDS.printSchema()
+    println("\nThe schema after casting \n")
+    orderedSelection.printSchema()
 
-      // Make the new column
-      // from string to timestamp
-      val updatedFireCallsDS = fireCallsDS
-        .withColumn("CallDateTimestamp", unix_timestamp($"CallDate", "dd/MM/yyyy").cast("timestamp"))
-        .withColumn("CallDateTimestampTwo", to_timestamp($"CallDate", "dd/MM/yyyy"))
+    spark.stop()
+  }
 
-      // Now perform select and filter
-      val selection = updatedFireCallsDS
-        .select("CallDate", "StationArea", "ZipCode", "CallDateTimestamp", "CallDateTimestampTwo")
-        .filter($"CallDateTimestamp".isNotNull)
-        .filter($"CallDateTimestampTwo".isNotNull)
+  /**
+   * Simplify the transformation with a method
+   *
+   * We cannot use unix_timestamp or to_timestamp
+   * because they return Column objects, and casting
+   * them directly to Timestamp isn't correct.
+   *
+   * @param call
+   * @return
+   */
+  def transformCallInstance(call: FireCallInstance): FireCallTransformed = {
 
-      val orderedSelection = selection
-        .where("ZipCode = 94118")
-        .orderBy("CallDateTimestamp")
-        .select("CallDateTimestamp", "StationArea", "ZipCode", "CallDateTimestampTwo")
+    val dateFormat = new SimpleDateFormat("dd/MM/yyyy")
 
-      println("\n Ordered and filtered fireCalls DS, " +
-        "with type casted from string to timestamp \n")
-      orderedSelection.show(20)
-
-      println("\nThe schema after casting \n")
-      orderedSelection.printSchema()
-
-      spark.stop()
+    val callDateTimestamp = call.CallDate.map { date =>
+      new Timestamp(dateFormat.parse(date).getTime)
     }
+    val callDateTimestampTwo = call.CallDate.map { date =>
+      new Timestamp(dateFormat.parse(date).getTime)
+    }
+    FireCallTransformed(call.CallDate, call.StationArea, call.Zipcode, callDateTimestamp, callDateTimestampTwo)
+  }
 }
