@@ -9,6 +9,10 @@ object MnmCandies {
     // define our SparkSession
     val spark = SparkSession
       .builder()
+      // we will use local mode, to be able to
+      // run the applications directly from IDE
+      // To learn more:
+      // https://spark.apache.org/docs/latest/submitting-applications.html
       .master("local[*]")
       .appName("MnMCount")
       .getOrCreate()
@@ -38,8 +42,8 @@ object MnmCandies {
       s"$projectDir/data/mnm_dataset.csv"
     }
 
-    // let spark handle the schema
-    // our csv has a header!
+    // Let spark handle the schema
+    // Our csv has a header!
     val mnmDF = spark
       .read
       .format("csv")
