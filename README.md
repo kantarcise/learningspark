@@ -12,7 +12,7 @@ I thought, it shouldn't be this hard.
 
 ## Scala ? 🤔 I don't know any Scala 😕
 
-Focus for 90 minutes and finish the [Prelude꞉ A Taste of Scala](https://docs.scala-lang.org/overviews/scala-book/prelude-taste-of-scala.html) here. After that, if you still want to discover more, you can check out [Tour of Scala](https://docs.scala-lang.org/tour/tour-of-scala.html). You can test your understanding [in this website](https://scastie.scala-lang.org/).
+Focus for 90 minutes and finish the [Prelude꞉ A Taste of Scala](https://docs.scala-lang.org/overviews/scala-book/prelude-taste-of-scala.html). After that, if you still want to discover more, you can check out [Tour of Scala](https://docs.scala-lang.org/tour/tour-of-scala.html). You can test your understanding [in this website - Scastie](https://scastie.scala-lang.org/).
 
 ## Usage 🔨
 
@@ -53,19 +53,19 @@ This repository is tested on
 
 1) You can follow [this video](https://www.youtube.com/watch?v=-AXBg3sk6II) to install Apache Spark.
 
-Here are all the steps. If you get stuck, you can refer back to the video.
+Down below are all the steps taken in the video. If you get stuck, you can refer back to the video.
 
 Prerequisites:
 
-- Install Java 11 and [add it to path.](https://tecadmin.net/adding-directory-to-path-variable-in-linux/) Wait, what was [JDK, JRE, JVM again ??](https://www.geeksforgeeks.org/differences-jdk-jre-jvm/)
+- Install Java 11 and [add it to path](https://tecadmin.net/adding-directory-to-path-variable-in-linux/). Wait, what was [JDK, JRE, JVM again ?](https://www.geeksforgeeks.org/differences-jdk-jre-jvm/)
 
-- Install Scala 2.18.12 from the source and add it to path. Why [Scala ?](https://www.projectpro.io/article/why-learn-scala-programming-for-apache-spark/198)
+- Install Scala 2.18.12 from the source and add it to path. Why are we using [Scala again](https://www.projectpro.io/article/why-learn-scala-programming-for-apache-spark/198)?
 
 - Install Sbt 1.9.6 and add it to path. What is [sbt ?](https://www.scala-sbt.org/1.x/docs/) 
 
-- Install Spark 3.5.0, unzip it. Add it to path that you unzipped. With or Without Hadoop ? Here is [the answer.](https://stackoverflow.com/questions/48514247/if-i-already-have-hadoop-installed-should-i-download-apache-spark-with-hadoop-o)
+- Install Spark 3.5.0, unzip it. Add it to path that you unzipped. Should you download the one with or without Hadoop ? Here is [the answer](https://stackoverflow.com/questions/48514247/if-i-already-have-hadoop-installed-should-i-download-apache-spark-with-hadoop-o).
 
-Now you should be able to use 
+Now you should be able to use:
 
 ```bash
 spark-shell
@@ -92,11 +92,13 @@ To open the IDE. You can make a [Desktop Shortcut](https://askubuntu.com/a/11455
 
 ### Code Catalog 📚
 
-Here is all the code explained in detail.
+Here is all the code in this repository, explained in detail. After you cloned the repo, you can simply make a project from existing source with it!
 
 #### Chapter 0 - A Fast Start (Not a Part of the Book)
 
 - If you want to just see what are Dataset's and Dataframe's in Spark, you can check out [Aggregates](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Aggregates.scala). What does aggregates mean, you ask? Well, continue to find out. 😌
+
+- Also if you have some familiartiy to Python, you can check out the difference between Type Annotations in Scala and Type Hints in Python, [in this note](https://github.com/kantarcise/learningspark/blob/main/reading/TypeAnnotationsVsTypeHints.md).
 
 #### Chapter 1 - Introduction to Apache Spark: A Unified Analytics Engine
 
@@ -647,6 +649,8 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 50) **Optimizing Pipelines**: The value of parallelism should be chosen carefully to maximize parallelism without exceeding cluster resources, and larger values may not always lead to improved performance. Generally speaking, a value up to 10 should be sufficient for most clusters.
 
 51) **Cross Validator Inside Pipeline or Vice Versa ??**:  There’s another trick we can use to speed up model training: putting the cross-validator inside the pipeline (e.g., `Pipeline(stages=[..., cv])`) instead of putting the pipeline inside the cross-validator (e.g., `CrossValidator(estimator=pipeline, ...)`). Every time the cross-validator evaluates the pipeline, it runs through every step of the pipeline for each model, even if some of the steps don’t change, such as the StringIndexer. By reevaluating every step in the pipeline, we are learning the same StringIndexer mapping over and over again, even though it’s not changing. If instead we put our cross-validator inside our pipeline, then we won’t be reevaluating the StringIndexer (or any other estimator) each time we try a different model.
+
+52) **Logging - Configuring Logging Programmatically**: Spark gives us the ability to configure logging as we please. Since Spark 3.3, Spark migrates its log4j dependency from 1.x to 2.x, [here is the link](https://spark.apache.org/docs/latest/core-migration-guide.html#upgrading-from-core-32-to-33). We can configure the `log4j2.properties` file under our spark conf, which is typically at `/usr/local/spark/conf`, but for now, this is confusing for me. Main reason for this is that the `log4j2.properties` file effects all of the Spark. Instead, we can configure logging programmatically! To see an example of this, check out [MnmCandiesDatasetWithLogger](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDatasetWithLogger.scala).
 
 ## Offer
 
