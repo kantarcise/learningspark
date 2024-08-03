@@ -15,41 +15,7 @@ class FireCallsTest extends AnyFunSuite {
   import spark.implicits._
 
   test("Timestamp conversion and filtering") {
-
-    // Because we used Option[Datatype]
-    // we have to use Some(Datatype) for our mock data
-
-    // How are they related ?
-
-    // In Scala, Option is a type that represents a value that
-    // may be present or absent. It is a container that can hold either
-    // a value (Some) or no value (None).
-    //
-    // Using Option helps to avoid null values and the issues associated
-    // with them by explicitly handling the presence or absence of a value.
-    //
-    //  Option Type
-    //  Option is a sealed trait with two subclasses: Some and None.
-    //
-    //  Some represents a value that is present.
-    //   None represents the absence of a value.
-    //
-    //  Why Use Option?
-    //  Using Option makes your code safer and more expressive by avoiding
-    //  null and clearly indicating when a value might be missing.
-    //  This helps prevent NullPointerException and makes it explicit
-    //  that a value may or may not be present.
-    //
-    //  Some
-    //  Some is a case class that holds a value. It is used to
-    //  wrap a value in an Option.
-
-    //  Why Did We Use Some in the Test Data?
-    //  In the case class FireCallInstance, fields are defined as Option[Type].
-    //  This indicates that each field can either have a
-    //  value (Some(value)) or no value (None). When creating instances
-    //  of FireCallInstance for testing, we need to wrap each value
-    //  in Some to indicate that the value is present.
+    
     val testData = Seq(
         FireCallInstance(Some(1), Some("M1"), Some(1001), Some("Medical Incident"), Some("01/01/2021"), Some("01/01/2021"), Some("Other"), Some("01/01/2021 01:01:01 AM"), Some("123 Main St"), Some("San Francisco"), Some(94118), Some("B01"), Some("01"), Some("123"), Some("Low"), Some("High"), Some(1), Some(true), Some("Medical"), Some(1), Some("Engine"), Some(1), Some("FPD01"), Some("SD01"), Some("N01"), Some("POINT (37.7749 -122.4194)"), Some("1"), Some(1.2f)),
         FireCallInstance(Some(2), Some("M2"), Some(1002), Some("Fire Incident"), Some("02/01/2021"), Some("02/01/2021"), Some("Other"), Some("02/01/2021 02:02:02 AM"), Some("456 Main St"), Some("San Francisco"), Some(94118), Some("B02"), Some("02"), Some("456"), Some("Medium"), Some("Medium"), Some(2), Some(false), Some("Fire"), Some(2), Some("Truck"), Some(2), Some("FPD02"), Some("SD02"), Some("N02"), Some("POINT (37.7749 -122.4194)"), Some("2"), Some(2.3f)),
