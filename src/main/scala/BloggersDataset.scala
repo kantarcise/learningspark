@@ -1,10 +1,20 @@
 package learningSpark
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions.{col, concat, expr}
+import org.apache.spark.sql.functions.{col, expr}
 
-// same demonstrations, With Dataset API
+/**
+ * Same demonstrations, With Dataset API
+ *
+ * We are using a case class BlogWriters and getting
+ * the schema thanks to it!
+ *
+ * We are also using a scoped case class Authors just to
+ * demonstrate the usage for toDS()
+ */
 object BloggersDataset {
+
+  case class Authors(name: String, state: String)
 
   def main(args: Array[String]) {
 
@@ -23,10 +33,9 @@ object BloggersDataset {
       s"$projectDir/data/blogs.json"
     }
 
-    // Importing implicits for Dataset
     import spark.implicits._
 
-    // Create a Dataset by reading from the JSON file
+    // Make a Dataset by reading from the JSON file
     // We are using the case class we wrote for it!
     val blogsDS = spark
       .read
@@ -35,8 +44,9 @@ object BloggersDataset {
       .as[BlogWriters]
 
     // Show the Dataset schema as output
-    println("Show Bloggers DS\n")
-    blogsDS.show(truncate = false)
+    println("\nShow Bloggers DS\n")
+    blogsDS
+      .show(truncate = false)
 
     // cache the DS, we will use it a lot
     blogsDS.cache()
@@ -60,40 +70,15 @@ object BloggersDataset {
       .show(3)
 
     // Big hitters - with expr
-    println("big hitters - with expr\n")
+    println("Big hitters - with expr\n")
     blogsDS
       .withColumn("Big Hitters", expr("Hits > 10000"))
       .show()
 
-    // Big hitters with col
-    println("big hitters with col\n")
-    blogsDS
-      .withColumn("Big Hitters Bro", col("Hits") > 10000)
-      .show()
-
-    // Concatenate three columns with expr
-    println("Concatenate three columns with expr\n")
-    blogsDS
-      .withColumn("AuthorsId", concat(expr("Id"), expr("First"), expr("Last")))
-      .select(col("AuthorsId"))
-      .show(5)
-
-    // Concatenate three columns with col
-    println("Concatenate three columns with col\n")
-    blogsDS
-      .withColumn("AuthorsId", concat(col("Id"), col("First"), col("Last")))
-      .select("AuthorsId")
-      .show(5)
-
-    // Concatenate three columns with DOLLAR
-    println("Concatenate three columns with DOLLAR\n")
-    blogsDS
-      .withColumn("AuthorsId", concat($"Id", $"First", $"Last"))
-      .select($"AuthorsId")
-      .show(5)
-
     // Sort by column Id with col
-    println("sort by column Id with col\n")
+    // sort is a Typed Transformation!
+    // https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Dataset.html
+    println("Sort by column Id with col\n")
     blogsDS
       .sort(col("Id").desc)
       .show()
@@ -104,14 +89,19 @@ object BloggersDataset {
       .sort($"Id".desc)
       .show()
 
-    // For testing, make data in code and use it for a Dataset
-    println("Just for testing, make data in code and use it for a DS")
-    val authors = Seq(
-      ("Matei Zaharia", "CA"),
-      ("Reynold Xin", "CA")
-    ).toDF("name", "state").as[(String, String)]
+    // toDF was to convert strongly typed
+    // collections to Dataframes
 
-    println("Here is a ds made from JUST rows\n")
+    // If we want to use toDS, we should have a case class for Authors
+    // and make our sequence with them!
+    // For testing, make data in code and use it for a Dataset
+    println("Write some data in code and use it for a DS\n")
+    val authors = Seq(
+      Authors("Matei Zaharia", "CA"),
+      Authors("Reynold Xin", "CA"))
+      .toDS()
+
+    println("Here is a ds made with toDS(), from Authors objects\n")
     authors.show()
 
     // Print the schema
