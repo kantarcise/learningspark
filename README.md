@@ -104,11 +104,13 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - This chapter is just a reading assignment. I think it is important to learn the history/roots of tools and also have a high level picture what they might look like, as we try to master them.
 
+- If you want to hear the story from GPT-4o, you can check out the [note here](https://github.com/kantarcise/learningspark/blob/main/reading/GFStoSparkStory.md).
+
 #### Chapter 2 - Downloading Apache Spark and Getting Started
 
-- We will see our first example where we load some data onto Spark and tried to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandies.scala) We will discover about relative paths, user inputs and Dataframe Schemas.
+- In our first example, we'll load some data onto Spark and try to answer some questions based on the data! Processed sugar is terrible and you know it, however, here is an [example on MnM's](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandies.scala) In this application, we'll discover about relative paths (`System.getProperty("user.dir")`), user inputs (`args(0)`) and Dataframe Schemas.
 
-- Also here is the same example, using [only Datasets!](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDataset.scala) 
+- Also here is the same example, using [only Datasets](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDataset.scala)! This is our first contact with `as[]` method to make Datasets and some typed transformations like `groupByKey` and a class like `Aggregator`. We will use them repeatedly, so do not worry if you do not understand them right away! Also, what we mean when we are making a Application with Dataset's is that we are exclusively using the [Typed Transformations](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Dataset.html).
 
 #### Chapter 3 - Apache Spark’s Structured APIs
 
