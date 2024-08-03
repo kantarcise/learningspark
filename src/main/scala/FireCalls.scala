@@ -42,7 +42,7 @@ object FireCalls {
       StructField("Neighborhood", StringType, nullable = true),
       StructField("Location", StringType, nullable = true),
       StructField("RowID", StringType, nullable = true),
-      StructField("Delay", FloatType, nullable = true)
+      StructField("Delay", DoubleType, nullable = true)
     )
   )
 
@@ -78,14 +78,14 @@ object FireCalls {
     // Let's make the new column from string to timestamp
     // both approaches will work
     val updatedFireCallsDF = fireCallsDF
-      // With UNIX TIMESTAMP
+      // With unix_timestamp
       .withColumn("CallDateTimestamp", unix_timestamp($"CallDate", "dd/MM/yyyy").cast(TimestampType))
-      // WITH TO_TIMESTAMP
+      // With to_timestamp
       .withColumn("CallDateTimestampTwo", to_timestamp($"CallDate", "dd/MM/yyyy"))
 
     // Now perform select and filter
     val selection = updatedFireCallsDF
-      .select("CallDate", "StationArea", "ZipCode", "CallDateTimestamp", "CallDateTimestampTwo")
+      .select("CallDate", "StationArea", "Zipcode", "CallDateTimestamp", "CallDateTimestampTwo")
       // both filters will work down below!
       // we can use the name of the Dataframe to access the col!
       .filter(updatedFireCallsDF("CallDateTimestamp").isNotNull)
@@ -94,7 +94,7 @@ object FireCalls {
     val orderedSelection = selection
       .where("ZipCode = 94118")
       .orderBy("CallDateTimestamp")
-      .select("CallDateTimestamp", "StationArea", "ZipCode", "CallDateTimestampTwo")
+      .select("CallDateTimestamp", "StationArea", "Zipcode", "CallDateTimestampTwo")
 
     println("\n Ordered and filtered fireCalls DF, " +
       "with type casted from string to timestamp \n")
