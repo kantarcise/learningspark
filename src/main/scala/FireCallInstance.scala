@@ -14,7 +14,7 @@ case class FireCallInstance(CallNumber: Option[Int],
                              AvailableDtTm: Option[String],
                              Address: Option[String],
                              City: Option[String],
-                             ZipCode: Option[Int],
+                             Zipcode: Option[Int],
                              Battalion: Option[String],
                              StationArea: Option[String],
                              Box: Option[String],
@@ -31,6 +31,5 @@ case class FireCallInstance(CallNumber: Option[Int],
                              Neighborhood: Option[String],
                              Location: Option[String],
                              RowID: Option[String],
-                             // TODO - if we make Delay: Option[Float] code errors, why?
                              Delay: Option[Double]
                            )
