@@ -3,7 +3,6 @@ package learningSpark
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.{col, concat, expr}
 import org.apache.spark.sql.types.{ArrayType, IntegerType, StringType, StructField, StructType}
-
 import org.apache.spark.sql.Row
 
 object Bloggers {
@@ -16,13 +15,15 @@ object Bloggers {
 
   def main(args: Array[String]) {
 
+    // builder VS builder()
     // In Scala, if a method does not take any
     //  parameters, you can call it with or without parentheses.
-    //  builder VS builder()
-    // Here is more info: https://docs.scala-lang.org/style/method-invocation.html
+    // Here is more info:
+    // https://docs.scala-lang.org/style/method-invocation.html
     val spark = SparkSession
       .builder
       //  A master URL must be set in your configuration
+      // we are continuing with local mode!
       .master("local[*]")
       .appName("Bloggers")
       .getOrCreate()
@@ -54,7 +55,8 @@ object Bloggers {
       StructField("Url", StringType, nullable = false),
       StructField("Published", StringType, nullable = false),
       StructField("Hits", IntegerType, nullable = false),
-      StructField("Campaigns", ArrayType(StringType), nullable = false)))
+      StructField("Campaigns", ArrayType(StringType), nullable = false))
+    )
 
     // Make a DataFrame by reading from the JSON file
     // with a predefined schema
@@ -63,7 +65,8 @@ object Bloggers {
       .schema(schema)
       .json(bloggersFilePath)
 
-    // We can also do this - the unified way read - format - load
+    // We can also do this -
+    //  the unified way => read - format - load
     // val blogsDFSecond = spark
     //   .read
     //   .schema(schema)
@@ -71,81 +74,75 @@ object Bloggers {
     //   .load(bloggersFilePath)
 
     // Show the DataFrame schema as output
-    println("Show Bloggers DF\n")
+    println("\nShow Bloggers DF\n")
     blogsDF.show(truncate = false)
 
-    // cache the DF, we will use it a lot
+    // Let's cache the DF, we will use it a lot
     blogsDF.cache()
 
     // just prints Id
     // println(blogsDF.col("Id"))
 
-    // for $ access
     import spark.implicits._
 
     // These statements return the same value, showing that
     // expr is the same as a col method call
 
-    // Same statement in Way 1
     // calculate an expression with expr
-    println("Expression with expr\n")
+    println("Same statement in First Approach - Expression with expr\n")
     blogsDF
       .select(expr("Hits * 2"))
       .show(3)
 
-    println("Using col\n")
-    // Same statement in Way 2
+    println("Same statement in Second Approach - Using col\n")
     // or use col
     blogsDF
       .select(col("Hits") * 2)
       .show(3)
 
-
-    println("Using just quotation marks\n")
-    // Same statement in Way 3
-    // or just use quotation marks - the code down below works, which is kinda amazing
+    println("We can just use quotation marks, but no calculation here\n")
+    // or just use quotation marks - the code down below
+    // works, which is kinda amazing
     // if you want expressions in select, use Dollar Or Col
     blogsDF
       .select("Hi" + "ts")
       .show(3)
 
-    println("Using the DOLLAR\n")
-    // Same statement in Way 4
-    // can we use the DOLLAR ? Yes
+    println("Same statement in Fourth Approach - Using the DOLLAR\n")
+    // Can we use the DOLLAR ? Yes
     blogsDF
       .select($"Hits" * 2)
       .show(3)
 
-    // Let's calculate the big hitters, articles that got the most clicks
+    println("\nLet's now calculate the big hitters, articles that got the most clicks\n")
 
     // big hitters - with expr
-    println(" big hitters - with expr\n")
+    println("Big hitters - with expr\n")
     blogsDF
-      .withColumn("Big Hitters", expr("Hits > 10000"))
+      .withColumn("BigHitters", expr("Hits > 10000"))
       .show()
 
-    println("big hitters with col\n")
+    println("Big hitters - with col\n")
     // big hitters with col
     blogsDF
-      .withColumn("Big Hitters Bro", col("Hits") > 10000)
+      .withColumn("BigHittersHere", col("Hits") > 10000)
       .show()
 
+    println("\nLet's learn how to Concatenate Columns.\n")
 
-    //  Let's learn how to Concatenate Columns.
-
-    // Concatenate three columns, create a new column, and show the
-    // newly created concatenated column
+    // Concatenate three columns, make a new column, and show the
+    // newly made concatenated column
 
     println("Concatenate three columns with expr\n")
     blogsDF
-      .withColumn("AuthorsId", (concat(expr("Id"), expr("First"), expr("Last"))))
+      .withColumn("AuthorsId", concat(expr("Id"), expr("First"), expr("Last")))
       .select(col("AuthorsId"))
       .show(5)
 
     println("Concatenate three columns with col\n")
     // can you do it with col ?
     blogsDF
-      .withColumn("AuthorSID", (concat(col("Id"), col("First"), col("Last"))))
+      .withColumn("AuthorSID", concat(col("Id"), col("First"), col("Last")))
       .select("AuthorSID")
       .show(5)
 
@@ -156,16 +153,15 @@ object Bloggers {
       .select($"AuthorSID")
       .show(5)
 
+    println("\nWe can sort the Dataframe by some columns\n")
 
-    // We can sort the Dataframe by some columns
-
-    println("sort by column Id with col\n")
+    println("Sort by column Id with col\n")
     // Sort by column "Id" in descending order
     blogsDF
       .sort(col("Id").desc)
       .show()
 
-    println("sort by column Id with DOLLAR\n")
+    println("Sort by column Id with DOLLAR\n")
     blogsDF
       .sort($"Id".desc)
       .show()
@@ -173,7 +169,6 @@ object Bloggers {
     // What really is this $ usage ?
     // It is from spark framework, which represents a column.
     // Here is more:  - https://stackoverflow.com/a/42427471
-    // blogsDF.sort($"Id".desc).show()
 
     /*
     In this last example, the expressions blogs_df.sort(col("Id").desc) and
@@ -183,11 +178,9 @@ object Bloggers {
       function in Spark that converts column named Id to a Column
      */
 
-    // TODO: use rows for testing
+    println("\nJust for testing, make data in code and use it for a DF:\n")
 
-    println("Just for testing, make data in code and use it for a DF")
-
-    // We can make a Dataframe from just using ROWS
+    // We can make a Dataframe from just using Rows
     val rows = Seq(
       Row("Matei Zaharia", "CA"),
       Row("Reynold Xin", "CA")
@@ -203,6 +196,5 @@ object Bloggers {
     // We can also print the schema
     println("\n Here is the schema of our Bloggers DF\n")
     blogsDF.printSchema
-
   }
 }
