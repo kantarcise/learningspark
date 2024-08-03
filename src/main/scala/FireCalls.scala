@@ -13,6 +13,10 @@ import org.apache.spark.sql.types._
 object FireCalls {
 
   // If we want to use Dataframe API, we kinda had to write this.
+  // Because when Spark loads data from CSV
+  // file, and it infers all the fields as StringType by default.
+  // In other words, when without a defined schema or inferSchema,
+  // Spark treats all columns as StringType by default.
   val fireSchema: StructType = StructType(
     Array(
       StructField("CallNumber", IntegerType, nullable = true),
