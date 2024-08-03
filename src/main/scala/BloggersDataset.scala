@@ -39,6 +39,7 @@ object BloggersDataset {
     // We are using the case class we wrote for it!
     val blogsDS = spark
       .read
+      // another way to get the schema, from a case class!
       .schema(implicitly[org.apache.spark.sql.Encoder[BlogWriters]].schema)
       .json(bloggersFilePath)
       .as[BlogWriters]
@@ -69,12 +70,6 @@ object BloggersDataset {
       .select(($"Hits" * 2).as[Int])
       .show(3)
 
-    // Big hitters - with expr
-    println("Big hitters - with expr\n")
-    blogsDS
-      .withColumn("Big Hitters", expr("Hits > 10000"))
-      .show()
-
     // Sort by column Id with col
     // sort is a Typed Transformation!
     // https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Dataset.html
@@ -94,7 +89,7 @@ object BloggersDataset {
 
     // If we want to use toDS, we should have a case class for Authors
     // and make our sequence with them!
-    // For testing, make data in code and use it for a Dataset
+
     println("Write some data in code and use it for a DS\n")
     val authors = Seq(
       Authors("Matei Zaharia", "CA"),
