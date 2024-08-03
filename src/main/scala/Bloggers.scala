@@ -193,6 +193,15 @@ object Bloggers {
     println("Here is a df made from JUST rows\n")
     authorsDF.show()
 
+    println("We can also use toDF() to make Dataframes\n")
+
+    val authorsDFSecond = Seq(
+      ("Matei Zaharia", "CA"),
+      ("Reynold Xin", "CA"))
+      .toDF("name", "state")
+
+    authorsDFSecond.show()
+
     // We can also print the schema
     println("\n Here is the schema of our Bloggers DF\n")
     blogsDF.printSchema
