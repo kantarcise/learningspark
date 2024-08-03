@@ -4,20 +4,59 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
+/**
+ * Let's work on the /sf-fire-calls.csv
+ *
+ * And discover some common typecasting and
+ * typed & untyped transformations.
+ */
 object FireCalls {
+
+  // If we want to use Dataframe API, we kinda had to write this.
+  val fireSchema: StructType = StructType(
+    Array(
+      StructField("CallNumber", IntegerType, nullable = true),
+      StructField("UnitID", StringType, nullable = true),
+      StructField("IncidentNumber", IntegerType, nullable = true),
+      StructField("CallType", StringType, nullable = true),
+      StructField("CallDate", StringType, nullable = true),
+      StructField("WatchDate", StringType, nullable = true),
+      StructField("CallFinalDisposition", StringType, nullable = true),
+      StructField("AvailableDtTm", StringType, nullable = true),
+      StructField("Address", StringType, nullable = true),
+      StructField("City", StringType, nullable = true),
+      StructField("Zipcode", IntegerType, nullable = true),
+      StructField("Battalion", StringType, nullable = true),
+      StructField("StationArea", StringType, nullable = true),
+      StructField("Box", StringType, nullable = true),
+      StructField("OriginalPriority", StringType, nullable = true),
+      StructField("Priority", StringType, nullable = true),
+      StructField("FinalPriority", IntegerType, nullable = true),
+      StructField("ALSUnit", BooleanType, nullable = true),
+      StructField("CallTypeGroup", StringType, nullable = true),
+      StructField("NumAlarms", IntegerType, nullable = true),
+      StructField("UnitType", StringType, nullable = true),
+      StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
+      StructField("FirePreventionDistrict", StringType, nullable = true),
+      StructField("SupervisorDistrict", StringType, nullable = true),
+      StructField("Neighborhood", StringType, nullable = true),
+      StructField("Location", StringType, nullable = true),
+      StructField("RowID", StringType, nullable = true),
+      StructField("Delay", FloatType, nullable = true)
+    )
+  )
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
-      .appName("sparkApp")
+      .appName("Fire Calls Discovery!")
       .master("local[*]")
       .getOrCreate()
 
-    // log level - verbose = False
+    // we can also select ERROR
     spark.sparkContext.setLogLevel("ERROR")
 
-    // $ usage
     import spark.implicits._
 
     // Define the data path as a val
@@ -25,40 +64,6 @@ object FireCalls {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/sf-fire-calls.csv"
     }
-
-    // If we want to use Dataframe API, we kinda had to write this.
-    val fireSchema = StructType(
-      Array(
-        StructField("CallNumber", IntegerType, nullable = true),
-        StructField("UnitID", StringType, nullable = true),
-        StructField("IncidentNumber", IntegerType, nullable = true),
-        StructField("CallType", StringType, nullable = true),
-        StructField("CallDate", StringType, nullable = true),
-        StructField("WatchDate", StringType, nullable = true),
-        StructField("CallFinalDisposition", StringType, nullable = true),
-        StructField("AvailableDtTm", StringType, nullable = true),
-        StructField("Address", StringType, nullable = true),
-        StructField("City", StringType, nullable = true),
-        StructField("Zipcode", IntegerType, nullable = true),
-        StructField("Battalion", StringType, nullable = true),
-        StructField("StationArea", StringType, nullable = true),
-        StructField("Box", StringType, nullable = true),
-        StructField("OriginalPriority", StringType, nullable = true),
-        StructField("Priority", StringType, nullable = true),
-        StructField("FinalPriority", IntegerType, nullable = true),
-        StructField("ALSUnit", BooleanType, nullable = true),
-        StructField("CallTypeGroup", StringType, nullable = true),
-        StructField("NumAlarms", IntegerType, nullable = true),
-        StructField("UnitType", StringType, nullable = true),
-        StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
-        StructField("FirePreventionDistrict", StringType, nullable = true),
-        StructField("SupervisorDistrict", StringType, nullable = true),
-        StructField("Neighborhood", StringType, nullable = true),
-        StructField("Location", StringType, nullable = true),
-        StructField("RowID", StringType, nullable = true),
-        StructField("Delay", FloatType, nullable = true)
-      )
-    )
 
     // get the data onto a Dataframe
     val fireCallsDF = spark.read
@@ -70,8 +75,7 @@ object FireCalls {
     println("\nThe schema before, for fireCalls DF \n")
     fireCallsDF.printSchema()
 
-    // Make the new column
-    // from string to timestamp
+    // Let's make the new column from string to timestamp
     // both approaches will work
     val updatedFireCallsDF = fireCallsDF
       // With UNIX TIMESTAMP
@@ -83,6 +87,7 @@ object FireCalls {
     val selection = updatedFireCallsDF
       .select("CallDate", "StationArea", "ZipCode", "CallDateTimestamp", "CallDateTimestampTwo")
       // both filters will work down below!
+      // we can use the name of the Dataframe to access the col!
       .filter(updatedFireCallsDF("CallDateTimestamp").isNotNull)
       .filter($"CallDateTimestampTwo".isNotNull)
 
