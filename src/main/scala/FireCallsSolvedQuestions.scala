@@ -1,29 +1,68 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.DoubleType
 
 // Here is another way to import
 // kinda like python - `import numpy as np`
 import org.apache.spark.sql.{functions => F}
-
-import org.apache.spark.sql.types.{BooleanType, FloatType, IntegerType,
-  StringType, StructField, StructType, TimestampType}
+import org.apache.spark.sql.types.{BooleanType, IntegerType,
+  StringType, StructField, StructType}
 import org.apache.spark.sql.SaveMode
 
+/**
+ * Let's answer some questions about our data
+ * to analyze what we are working with here!
+ *
+ * There are 8 questions we are trying to answer.
+ */
 object FireCallsSolvedQuestions {
+
+  // define schema for Dataframe
+  val fireSchema: StructType = StructType(Array(
+      StructField("CallNumber", IntegerType, nullable = true),
+      StructField("UnitID", StringType, nullable = true),
+      StructField("IncidentNumber", IntegerType, nullable = true),
+      StructField("CallType", StringType, nullable = true),
+      StructField("CallDate", StringType, nullable = true),
+      StructField("WatchDate", StringType, nullable = true),
+      StructField("CallFinalDisposition", StringType, nullable = true),
+      StructField("AvailableDtTm", StringType, nullable = true),
+      StructField("Address", StringType, nullable = true),
+      StructField("City", StringType, nullable = true),
+      StructField("Zipcode", IntegerType, nullable = true),
+      StructField("Battalion", StringType, nullable = true),
+      StructField("StationArea", StringType, nullable = true),
+      StructField("Box", StringType, nullable = true),
+      StructField("OriginalPriority", StringType, nullable = true),
+      StructField("Priority", StringType, nullable = true),
+      StructField("FinalPriority", IntegerType, nullable = true),
+      StructField("ALSUnit", BooleanType, nullable = true),
+      StructField("CallTypeGroup", StringType, nullable = true),
+      StructField("NumAlarms", IntegerType, nullable = true),
+      StructField("UnitType", StringType, nullable = true),
+      StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
+      StructField("FirePreventionDistrict", StringType, nullable = true),
+      StructField("SupervisorDistrict", StringType, nullable = true),
+      StructField("Neighborhood", StringType, nullable = true),
+      StructField("Location", StringType, nullable = true),
+      StructField("RowID", StringType, nullable = true),
+      StructField("Delay", DoubleType, nullable = true)
+    )
+  )
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
-      .appName("FireCallsSolvedQuestions")
-      . master("local[*]")
+      // we can use the class name!
+      .appName(this.getClass.getSimpleName)
+      .master("local[*]")
       .getOrCreate()
 
-    // log level - verbose = False
     spark.sparkContext.setLogLevel("ERROR")
 
-    // dollar usage
     import spark.implicits._
 
     // Define the data path as a val
@@ -31,40 +70,6 @@ object FireCallsSolvedQuestions {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/sf-fire-calls.csv"
     }
-
-    // define schema for Dataframe
-    val fireSchema = StructType(
-      Array(
-        StructField("CallNumber", IntegerType, nullable = true),
-        StructField("UnitID", StringType, nullable = true),
-        StructField("IncidentNumber", IntegerType, nullable = true),
-        StructField("CallType", StringType, nullable = true),
-        StructField("CallDate", StringType, nullable = true),
-        StructField("WatchDate", StringType, nullable = true),
-        StructField("CallFinalDisposition", StringType, nullable = true),
-        StructField("AvailableDtTm", StringType, nullable = true),
-        StructField("Address", StringType, nullable = true),
-        StructField("City", StringType, nullable = true),
-        StructField("Zipcode", IntegerType, nullable = true),
-        StructField("Battalion", StringType, nullable = true),
-        StructField("StationArea", StringType, nullable = true),
-        StructField("Box", StringType, nullable = true),
-        StructField("OriginalPriority", StringType, nullable = true),
-        StructField("Priority", StringType, nullable = true),
-        StructField("FinalPriority", IntegerType, nullable = true),
-        StructField("ALSUnit", BooleanType, nullable = true),
-        StructField("CallTypeGroup", StringType, nullable = true),
-        StructField("NumAlarms", IntegerType, nullable = true),
-        StructField("UnitType", StringType, nullable = true),
-        StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
-        StructField("FirePreventionDistrict", StringType, nullable = true),
-        StructField("SupervisorDistrict", StringType, nullable = true),
-        StructField("Neighborhood", StringType, nullable = true),
-        StructField("Location", StringType, nullable = true),
-        StructField("RowID", StringType, nullable = true),
-        StructField("Delay", FloatType, nullable = true)
-      )
-    )
 
     val fireCallsDF = spark
       .read
@@ -101,7 +106,8 @@ object FireCallsSolvedQuestions {
     // we can run spark.sql() queries on this table - but
     // we will discover that later.
     // Also, we can read this table back to a Dataframe
-    val readBackDF = spark.table(parquetTable)
+    val readBackDF: DataFrame = spark
+      .table(parquetTable)
 
     // 1- Find all incidents without medical ones.
     val noMedicalSmallFireDF = fireCallsDF
@@ -181,7 +187,8 @@ object FireCallsSolvedQuestions {
 
     // 5- Find last 7 days:
     // Calculate the number of calls logged in the last seven days
-    // TODO : this is cool, but not useful - because it is from current date
+    // TODO : This is cool, but not useful - 
+    //  because it is from current date
     val lastSevenDaysFromCurrentDate = fireTsDF
       .where(col("IncidentDate") >= date_sub(current_date(), 7))
 
@@ -224,7 +231,7 @@ object FireCallsSolvedQuestions {
 
     // 7- What were the most common types of fire calls?
     // My approach
-    println("my approach")
+    println("My approach")
     println("The most common types of fire calls\n")
     fireTsDF
       .select(col("CallType"))
@@ -257,5 +264,4 @@ object FireCallsSolvedQuestions {
       .show()
 
   }
-
 }
