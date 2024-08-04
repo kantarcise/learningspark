@@ -134,7 +134,13 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Then we will get to the [IoT Devices data](https://github.com/kantarcise/learningspark/blob/main/data/iot_devices.json), as a JSON. We will start with a basic workout on Datasets, discovering the differencee between Lambdas and DSL expressions (Page 170 in the book), with [IoTDatasetFunctionComparison](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IoTDatasetFunctionComparison.scala).
 
-- At the end of Chapter 3, we will practice our skills on the IoT Devices data and discover more with [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) as an End to End pipeline. This will teach us about `collect`, `take`, `first`, `.stat.approxQuantile` and different types of combinations for `groupBy - agg - orderBy` and `groupBy - orderBy` on multiple cols. We will test all of our approaches, [here.](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/IotDatasetWorkoutTest.scala)
+- If you want to read more about how should we decide between [Typed and Untyped transformations](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Dataset.html) in our Datasets, you can read [this note](https://github.com/kantarcise/learningspark/blob/main/reading/TypedVSUntypedTransformations.md).
+
+- At the end of Chapter 3, we will practice our skills on the IoT Devices data and discover more with [IoTDataframeWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IoTDataframeWorkout.scala) as an End to End pipeline. This will teach us about `collect`, `take`, `first`, `.stat.approxQuantile` and different types of combinations for `groupBy - agg - orderBy` and `groupBy - orderBy` on multiple cols. We will test all of our approaches, [here.](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/IotDatasetWorkoutTest.scala)
+
+- [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) will show us all the untyped transformations we did, in typed transformations version! This one is a great practice for a unique `Aggregator`, `map() - reduce()` and a replicate of `stat.approxQuantile` - `getQuantile`! 🎩
+
+
 
 #### Chapter 4 - Spark SQL and DataFrames: Introduction to Built-in Data Sources
 
