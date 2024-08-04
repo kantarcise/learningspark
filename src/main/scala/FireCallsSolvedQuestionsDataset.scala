@@ -1,16 +1,21 @@
 package learningSpark
 
-import org.apache.spark.sql.{Dataset, Encoder, SaveMode, SparkSession, functions => F}
+import org.apache.spark.sql.{Dataset, Encoder, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
-
 import java.text.SimpleDateFormat
 import java.sql.Timestamp
 
-// same exercises, using Dataset API
+/**
+ * Let's try to solve the same questions that we've
+ * answered in FireCallsSolvedQuestions
+ *
+ * But this time, with typed transformations only!
+ *
+ */
 object FireCallsSolvedQuestionsDataset {
 
-  // a lot of intermediate case classes
+  // Let's scope some case classes that we will use!
+  // there will be a lot of intermediate case classes
   case class NoMedicalFire(IncidentNumber: Option[Int],
                            AvailableDtTm: Option[String],
                            CallType: Option[String])
@@ -71,7 +76,8 @@ object FireCallsSolvedQuestionsDataset {
     println("\n fireCallsDS saved as parquet\n")
 
     // We can write our Dataset as table too!
-    // Careful! If you run this code again, it will error, saying the file already exists.
+    // Careful! If you run this code again, it will error,
+    // saying the file already exists.
     val parquetTable = "fireCallTableFromDataset"
     fireCallsDS.write
       .format("parquet")
@@ -89,7 +95,8 @@ object FireCallsSolvedQuestionsDataset {
       // or explicitly
       .filter(m => !m.CallType.contains("Medical Incident"))
       // map to NoMedicalFire case class
-      .map(calls => NoMedicalFire(calls.IncidentNumber, calls.AvailableDtTm, calls.CallType))
+      .map(calls => NoMedicalFire(calls.IncidentNumber,
+        calls.AvailableDtTm, calls.CallType))
 
     println("No medical incidents\n")
     noMedicalSmallFireDS.show(5, truncate = false)
@@ -119,7 +126,8 @@ object FireCallsSolvedQuestionsDataset {
 
     val newFireDS = fireCallsDS
       // rename the col by mapping!
-      // Handle Option and provide default value - because we have Option[Double] in Delay!
+      // Handle Option and provide default value - because we
+      // have Option[Double] in Delay!
       .map(call => FireCallTransformed(call.Delay.getOrElse(.0)))
       .filter(firecall => firecall.ResponseDelayedinMins > 5.0)
 
@@ -156,7 +164,8 @@ object FireCallsSolvedQuestionsDataset {
     val sevenDaysAgo: Timestamp = new Timestamp(maxDate2.getTime - 7L * 24 * 60 * 60 * 1000)
 
     val lastSevenDaysDS: Dataset[FireCallInstanceWithTimestamps] = fireTsDS
-      .filter(call => call.IncidentDate.isDefined && call.IncidentDate.get.after(sevenDaysAgo))
+      .filter(call => call.IncidentDate.isDefined &&
+        call.IncidentDate.get.after(sevenDaysAgo))
       // we cannot use this:
       //.filter(call => call.IncidentDate >= date_sub(lit(maxDate), days = 7))
       // Because filter function in the Dataset API expects a predicate
