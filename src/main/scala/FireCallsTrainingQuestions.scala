@@ -1,67 +1,67 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.SaveMode
 
-
+/**
+ * Let's now answer some questions that the book gave us as exercise!
+ *
+ * We have 7 questions to answer.
+ *
+ * Exercise keep us alive :)
+ */
 object FireCallsTrainingQuestions {
+
+  // the same schema
+  val fireSchema: StructType = StructType(Array(
+    StructField("CallNumber", IntegerType, nullable = true),
+    StructField("UnitID", StringType, nullable = true),
+    StructField("IncidentNumber", IntegerType, nullable = true),
+    StructField("CallType", StringType, nullable = true),
+    StructField("CallDate", StringType, nullable = true),
+    StructField("WatchDate", StringType, nullable = true),
+    StructField("CallFinalDisposition", StringType, nullable = true),
+    StructField("AvailableDtTm", StringType, nullable = true),
+    StructField("Address", StringType, nullable = true),
+    StructField("City", StringType, nullable = true),
+    StructField("Zipcode", IntegerType, nullable = true),
+    StructField("Battalion", StringType, nullable = true),
+    StructField("StationArea", StringType, nullable = true),
+    StructField("Box", StringType, nullable = true),
+    StructField("OriginalPriority", StringType, nullable = true),
+    StructField("Priority", StringType, nullable = true),
+    StructField("FinalPriority", IntegerType, nullable = true),
+    StructField("ALSUnit", BooleanType, nullable = true),
+    StructField("CallTypeGroup", StringType, nullable = true),
+    StructField("NumAlarms", IntegerType, nullable = true),
+    StructField("UnitType", StringType, nullable = true),
+    StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
+    StructField("FirePreventionDistrict", StringType, nullable = true),
+    StructField("SupervisorDistrict", StringType, nullable = true),
+    StructField("Neighborhood", StringType, nullable = true),
+    StructField("Location", StringType, nullable = true),
+    StructField("RowID", StringType, nullable = true),
+    StructField("Delay", FloatType, nullable = true))
+  )
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
-      .appName("Workout")
+      .appName(this.getClass.getSimpleName)
       .master("local")
       .getOrCreate()
 
-    // verbose = False
     spark.sparkContext.setLogLevel("ERROR")
-
-    // dollar sign usage
     import spark.implicits._
 
-    // Define the data path as a val
     val fireCallsPath: String = {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/sf-fire-calls.csv"
     }
 
-    // the same schema
-    val fireSchema = StructType(
-      Array(
-        StructField("CallNumber", IntegerType, nullable = true),
-        StructField("UnitID", StringType, nullable = true),
-        StructField("IncidentNumber", IntegerType, nullable = true),
-        StructField("CallType", StringType, nullable = true),
-        StructField("CallDate", StringType, nullable = true),
-        StructField("WatchDate", StringType, nullable = true),
-        StructField("CallFinalDisposition", StringType, nullable = true),
-        StructField("AvailableDtTm", StringType, nullable = true),
-        StructField("Address", StringType, nullable = true),
-        StructField("City", StringType, nullable = true),
-        StructField("Zipcode", IntegerType, nullable = true),
-        StructField("Battalion", StringType, nullable = true),
-        StructField("StationArea", StringType, nullable = true),
-        StructField("Box", StringType, nullable = true),
-        StructField("OriginalPriority", StringType, nullable = true),
-        StructField("Priority", StringType, nullable = true),
-        StructField("FinalPriority", IntegerType, nullable = true),
-        StructField("ALSUnit", BooleanType, nullable = true),
-        StructField("CallTypeGroup", StringType, nullable = true),
-        StructField("NumAlarms", IntegerType, nullable = true),
-        StructField("UnitType", StringType, nullable = true),
-        StructField("UnitSequenceInCallDispatch", IntegerType, nullable = true),
-        StructField("FirePreventionDistrict", StringType, nullable = true),
-        StructField("SupervisorDistrict", StringType, nullable = true),
-        StructField("Neighborhood", StringType, nullable = true),
-        StructField("Location", StringType, nullable = true),
-        StructField("RowID", StringType, nullable = true),
-        StructField("Delay", FloatType, nullable = true)
-      )
-    )
-
-    val fireDF = spark
+    val fireDF: DataFrame = spark
       .read
       .format("csv")
       .option("header", value = true)
@@ -81,16 +81,19 @@ object FireCallsTrainingQuestions {
       .withColumn("AvailableDtTS", to_timestamp(col("AvailableDtTm"), complexTimePattern))
       .drop($"AvailableDtTm")
 
-    println("DF with timestamps\n")
+    // we will repeatedly use fireTsDF
+    fireTsDF.cache()
+
+    println("\nDF with timestamps\n")
     fireTsDF.show()
 
-    // to evaluate some stats on timestamps, we can generate
+    // To evaluate some stats on timestamps, we can generate
     // some Timestamps ourselves
     val endOf2018TS = to_timestamp(lit("12/31/2018"), simpleTimePattern)
     val beginningOf2018TS = to_timestamp(lit("01/01/2018"), simpleTimePattern)
 
     // 1 • What were all the different types of fire calls in 2018?
-    val distinctTypesOfFireCallsDS = fireTsDF
+    val distinctTypesOfFireCallsDF = fireTsDF
       .where(col("IncidentDate") >= beginningOf2018TS)
       .where(col("IncidentDate") <= endOf2018TS)
       .select(col("CallType"))
@@ -99,25 +102,24 @@ object FireCallsTrainingQuestions {
       // .dropDuplicates()
 
     // we can also use, between() !
-    val testingBetweenDS = fireTsDF
+    val testingBetweenDF = fireTsDF
       .where($"IncidentDate".between(beginningOf2018TS, endOf2018TS))
       .select($"CallType")
       .distinct()
 
     // in 2018
-    println("distinctTypesOfFireCalls in 2018\n")
-    distinctTypesOfFireCallsDS
+    println("What were all the different types of fire calls in 2018?\n")
+    distinctTypesOfFireCallsDF
       .show(100)
 
     println("distinctTypesOfFireCalls in 2018, with between()\n")
-    testingBetweenDS
+    testingBetweenDF
       .show(100)
 
     // To check they are the same in count:
-    distinctTypesOfFireCallsDS.count()
-    testingBetweenDS.count()
+    assert(distinctTypesOfFireCallsDF.count() == testingBetweenDF.count())
 
-    // show all distinct Types
+    // If you want to see all distinct CallTypes
     //    fireTsDF
     //      .select("CallType")
     //      .distinct()
@@ -148,7 +150,7 @@ object FireCallsTrainingQuestions {
       .groupBy(col("Neighborhood"))
       // count all
       .agg(count("*").alias("CallCount"))
-      // order by it
+      // order by CallCount
       .orderBy(desc("CallCount"))
       // get the biggest - we can also use take(1)
       // limit will return a DF
@@ -204,9 +206,8 @@ object FireCallsTrainingQuestions {
 
     // TODO : Currently correlation calculation for columns with dataType string not supported.
     // val correlationNeighborhoodZipcode = fireTsDF
-    // .stat.corr("Neighborhood", "Zipcode")
+    //   .stat.corr("Neighborhood", "Zipcode")
     // println(s"Correlation Between Neighborhood and Zipcode $correlationNeighborhoodZipcode")
-
 
     // 7 • How can we use Parquet files or SQL tables to store this data and read it back?
 
