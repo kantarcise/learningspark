@@ -96,7 +96,8 @@ object FireCallsSolvedQuestions {
     // We can save our Dataframe as a table
     // which will generate the files under project root:
     // /spark-warehouse/part...
-    // Careful! If you run this code again, it will error, saying the file already exists.
+    // Careful! If you run this code again, it will error, saying the
+    // file already exists.
     val parquetTable = "fireCallTable" // name of the table
     fireCallsDF
       .write
@@ -187,7 +188,7 @@ object FireCallsSolvedQuestions {
 
     // 5- Find last 7 days:
     // Calculate the number of calls logged in the last seven days
-    // TODO : This is cool, but not useful - 
+    // TODO : This is cool, but not useful -
     //  because it is from current date
     val lastSevenDaysFromCurrentDate = fireTsDF
       .where(col("IncidentDate") >= date_sub(current_date(), 7))
@@ -202,9 +203,12 @@ object FireCallsSolvedQuestions {
       .select(max($"IncidentDate"))
       // collect ===  DANGEROUS -
       // Why ? - If you are working with huge
-      // amounts of data, then the driver node might easily run out of memory.
-      // take() action scans the first partition it finds and returns the result.
-      //.collect()(0) // collect returns an array containing all rows
+      // amounts of data, then the driver node might
+      // easily run out of memory.
+      //    take() action scans the first partition it
+      //    finds and returns the result.
+      //  .collect()(0)
+      //      collect returns an array containing all rows
       .take(1)(0)
       // and get it as timestamp
       .getTimestamp(0)
@@ -254,7 +258,8 @@ object FireCallsSolvedQuestions {
       .show(10)
 
     // 8- Compute the sum of alarms, the average response time,
-    // and the minimum and maximum response times to all fire calls in our data:
+    // and the minimum and maximum response times
+    // to all fire calls in our data:
     println("Some calculations - min - max - avg\n")
     fireTsDF
       .select(F.sum("NumAlarms").alias("Total Alarms"),
