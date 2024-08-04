@@ -1,38 +1,52 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 
-// Let's discover how to effectively use the Dataset - Dataframe API
+/**
+ * Let's discover how to effectively use the
+ * Dataset - Dataframe API
+ * meaning, typed and untyped transformations.
+ *
+ * In the book, at the end of Chapter 6, there is
+ * a different experiment regarding
+ * DSL and Lambda usage!
+ */
 object IoTDatasetFunctionComparison {
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
-      .builder()
+      .builder
       .appName("IoTDatasetFunctionComparison")
       .master("local[*]")
       .getOrCreate()
 
-    // verbose = False
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Import implicits for encoders
     import spark.implicits._
 
-    // Define the data path as a val
     val iotFilePath: String = {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/iot_devices.json"
     }
 
-    // THIS IS A DATASET NOW, thanks to Case Class
-    val iotDS = spark
+    val iotDS: Dataset[DeviceIoTData] = spark
       .read
       .json(iotFilePath)
       .as[DeviceIoTData]
 
+    val iotDF: DataFrame = spark
+      .read
+      .json(iotFilePath)
+
+    // cache both
+    iotDS.cache()
+    iotDF.cache()
+
     println("This is a IoT Devices Dataset, made with case Classes\n")
     iotDS.show(5, truncate = false)
+
+    println("First, let's understand the difference between DSL and Lambdas\n:")
 
     println("Filter Temperatures with Lambdas\n")
     val filterTempDs = iotDS
@@ -43,60 +57,60 @@ object IoTDatasetFunctionComparison {
     // More Information
     // Page 170 in the book Learning Spark
     println("Filter Temperatures with DSL\n")
-    val filterTempDsDSL = iotDS
+    val filterTempDsDSL = iotDF
       .filter($"temp" > 30)
       .filter($"humidity" > 70)
 
     filterTempDsDSL.show(5, truncate = false)
 
-    println("Here comes the good stuff")
+    println("Now, let's compare Lambdas vs DSL in Dataframes and Datasets\n")
 
-    println("Let's compare Lambdas vs DSL in Dataframes and Datasets\n")
-
-    println("Here is a small part of Dataset as a Dataframe, where temp > 25\n")
+    println("Here is a small part of Dataset, where temp > 25\n")
     val startTimeLambdaTempDF = System.nanoTime()
     // this is a DataFrame
     val tempDF = iotDS
       .filter(d => {d.temp > 25})
-      .map(d => (d.temp, d.device_name, d.device_id, d.cca3))
+      .map(d => DeviceTempByCountry(d.temp, d.device_name, d.device_id, d.cca3))
       .toDF("temp", "device_name", "device_id", "cca3")
 
     val endTimeLambdaTempDF = System.nanoTime()
-    val durationLambdaTempDF = (endTimeLambdaTempDF - startTimeLambdaTempDF) / 1e9d // convert to seconds
-
-    // 0.033 seconds
-    println(f"Duration with LAMBDA ONLY in Dataframes: $durationLambdaTempDF%.3f seconds\n")
+    // convert to milliseconds
+    val durationLambdaTempDF = (endTimeLambdaTempDF - startTimeLambdaTempDF) / 1e6d
 
     tempDF.show(truncate = false)
+
+    // 0.033 seconds
+    println(f"Duration with LAMBDA ONLY in Dataframes: $durationLambdaTempDF%.3f milliseconds\n")
 
     println("Small part of Dataset as a Dataframe, where temp > 25")
     println("Now without lambdas\n")
     val startTimeDSLTempDF = System.nanoTime()
-    val tempDFDSL = iotDS
+    val tempDFDSL = iotDF
       .filter($"temp" > 25)
       .select($"temp", $"device_name", $"device_id", $"cca3")
     val endTimeDSLTempDF = System.nanoTime()
-    val durationTimeDSLTempDF = (endTimeDSLTempDF - startTimeDSLTempDF) / 1e9d // convert to seconds
 
-    // 0.010 seconds
-    println(f"Duration with DSL only in Dataframes: $durationTimeDSLTempDF%.3f seconds\n")
+    // convert to milliseconds
+    val durationTimeDSLTempDF = (endTimeDSLTempDF - startTimeDSLTempDF) / 1e6d
 
     tempDFDSL.show(truncate = false)
+
+    // 0.010 seconds
+    println(f"Duration with DSL only in Dataframes: $durationTimeDSLTempDF%.3f milliseconds\n")
 
     println("Dataset - With Lambdas\n")
 
     val startTimeLambdaTempDS = System.nanoTime()
     val tempDS = iotDS
       .filter(d => {d.temp > 25})
-      .map(d => (d.temp, d.device_name, d.device_id, d.cca3))
-      .toDF("temp", "device_name", "device_id", "cca3")
-      .as[DeviceTempByCountry]
+      .map(d => DeviceTempByCountry(d.temp, d.device_name, d.device_id, d.cca3))
 
     val endTimeLambdaTempDS = System.nanoTime()
-    val durationTimeLambdaTempDS = (endTimeLambdaTempDS - startTimeLambdaTempDS) / 1e9d // convert to seconds
+    // convert to milliseconds
+    val durationTimeLambdaTempDS = (endTimeLambdaTempDS - startTimeLambdaTempDS) / 1e6d
 
     // 0.029 seconds
-    println(f"Duration with LAMBDA ONLY in Datasets: $durationTimeLambdaTempDS%.3f seconds\n")
+    println(f"Duration with LAMBDA ONLY in Datasets: $durationTimeLambdaTempDS%.3f milliseconds\n")
     tempDS.show(truncate = false)
 
     println("Dataset - Now without Lambdas\n")
@@ -108,12 +122,12 @@ object IoTDatasetFunctionComparison {
       .as[DeviceTempByCountry]
 
     val endTimeDSLTempDS = System.nanoTime()
-    val durationTimeDSLTempDS = (endTimeDSLTempDS - startTimeDSLTempDS) / 1e9d // convert to seconds
-
-    // 0.014 seconds
-    println(f"Duration with DSL only in Dataframes: $durationTimeDSLTempDS%.3f seconds\n")
+    val durationTimeDSLTempDS = (endTimeDSLTempDS - startTimeDSLTempDS) / 1e6d
 
     tempDSDSL.show(truncate = false)
+
+    // 0.014 seconds
+    println(f"Duration with DSL only in Datasets: $durationTimeDSLTempDS%.3f milliseconds\n")
 
     // Or you can inspect only the first row of your Dataset:
     // using first()
