@@ -5,7 +5,10 @@ import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.expressions.Window
 
-// Now we are ready for some decomposition!
+/** Now we are ready for some decomposition!
+ *
+ * Let's try to decompose our application.
+ */
 object FlightDelaysAdvancedDecomposed {
 
   def main(args: Array[String]): Unit = {
@@ -58,7 +61,8 @@ object FlightDelaysAdvancedDecomposed {
   }
 
   def createSparkSession(): SparkSession = {
-    val spark = SparkSession.builder
+    val spark = SparkSession
+      .builder
       .appName("FlightDelaysAdvanced")
       .master("local[*]")
       .getOrCreate()
@@ -72,7 +76,8 @@ object FlightDelaysAdvancedDecomposed {
     s"$projectDir/data/$fileName"
   }
 
-  def readDepartureDelays(spark: SparkSession, filePath: String): DataFrame = {
+  def readDepartureDelays(spark: SparkSession,
+                          filePath: String): DataFrame = {
 
     val departureDelaysSchema = StructType(Array(
       StructField("date", StringType, nullable = true),
@@ -111,12 +116,14 @@ object FlightDelaysAdvancedDecomposed {
 
     // let's print schemas before and after to see the effect!
 
+    println("Schemas before casting!")
     departureDelaysDF.printSchema()
 
     departureDelaysDF
       .withColumn("delay", $"delay".cast(IntegerType))
       .withColumn("distance", $"distance".cast(IntegerType))
 
+    println("Schemas After casting!")
     departureDelaysDF.printSchema()
 
   }
@@ -125,7 +132,7 @@ object FlightDelaysAdvancedDecomposed {
     departureDelaysDF.createOrReplaceTempView("departureDelays")
   }
 
-  def  createSmallDataFrame(departureDelaysDF: DataFrame): DataFrame = {
+  def createSmallDataFrame(departureDelaysDF: DataFrame): DataFrame = {
 
     println("A small DF which is made from departureDelaysDf!\n")
     val fooDF = departureDelaysDF
@@ -239,6 +246,11 @@ object FlightDelaysAdvancedDecomposed {
     // .show()
   }
 
+  /**
+   * TODO: Is there a better name for this?
+   * @param departureDelaysDF: the dataframe
+   * @return
+   */
   def performWindowing(departureDelaysDF: DataFrame): DataFrame = {
 
     import departureDelaysDF.sparkSession.implicits._
@@ -253,7 +265,8 @@ object FlightDelaysAdvancedDecomposed {
       .agg(sum("delay").alias("TotalDelays"))
   }
 
-  def calculateDenseRank(spark: SparkSession, departureDelaysWindowDf: DataFrame): Unit = {
+  def calculateDenseRank(spark: SparkSession,
+                         departureDelaysWindowDf: DataFrame): Unit = {
 
     import departureDelaysWindowDf.sparkSession.implicits._
 
@@ -319,7 +332,6 @@ object FlightDelaysAdvancedDecomposed {
     FROM departureDelays
       WHERE origin = 'SEA'
      */
-
 
     val filteredDf = departureDelaysDF
       .where($"origin" === "SEA")
