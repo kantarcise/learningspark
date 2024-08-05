@@ -140,11 +140,13 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - [IotDatasetWorkout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/IotDatasetWorkout.scala) will show us all the untyped transformations we did, in typed transformations version! This one is a great practice for a unique `Aggregator`, `map() - reduce()` and a replicate of `stat.approxQuantile` - `getQuantile`! 🎩
 
-
-
 #### Chapter 4 - Spark SQL and DataFrames: Introduction to Built-in Data Sources
 
-- In Chapter 4 we will discover about Spark SQL, which is literally SQL stuff. For that, we will use a data about Flight Delays, a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) we will discover more about, views & tables, union Dataframes, instead of using multiple unions, using `when().when().when().when().otherwise()`, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))` Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala).
+- In Chapter 4 we will discover about Spark SQL, which is literally [SQL](https://aws.amazon.com/what-is/sql/#:~:text=Structured%20query%20language%20(SQL)%20is,relationships%20between%20the%20data%20values.) stuff. 
+
+- We'll use a data about [Flight Delays](https://github.com/kantarcise/learningspark/blob/main/data/departuredelays.csv), a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) will help us discover discover more about, views & tables, union Dataframes, using `when().when().when().when().otherwise()` instead of using multiple unions, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))` 
+
+- Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala) so that we can use typed transformations.
 
 - On mocked data, you can see our techniques tested in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala).
 
@@ -672,7 +674,7 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 
 Maybe you've never coded in Java/Scala. You tried your luck with PySpark but it never went to being more than a small side project.
 
-Well, with this resource, you will have a window for a [20 seconds of insane courage](https://www.youtube.com/watch?v=Ndp-_cWdxYU).
+Well, with this resource, you will have a window for a [20 seconds of insane courage](https://www.youtube.com/watch?v=OFp2Rn5foIc).
 
 After you covered all the material, you'll be confident in your ability to solve problems with this tool.
 
