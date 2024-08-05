@@ -5,8 +5,11 @@ import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
-// Let's analyze a Flight data with Spark SQL
-object FlightDelays {
+/** Let's analyze a Flight data with Spark SQL
+ *
+ *  Our data is called departuredelays.
+ */
+ object FlightDelays {
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
@@ -15,13 +18,10 @@ object FlightDelays {
       .master("local[*]")
       .getOrCreate()
 
-    // verbose = False
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Import implicits for encoders
     import spark.implicits._
 
-    // Define the data path as a val
     val departureDelaysFilePath: String = {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/departuredelays.csv"
@@ -61,31 +61,31 @@ object FlightDelays {
     // /home/sezai/IdeaProjects/sparkTraining/spark-warehouse/
     */
 
-
     // we need a Table or View to query with SQL
     println("Making a temp view from df, named us_delay_flights_tbl\n")
     flightDelaysDF.createOrReplaceTempView("us_delay_flights_tbl")
 
     println("Running an spark.sql for longDistance flights: \n")
     // Now we can run these!
-    val longDistanceSqlWay: DataFrame = spark.sql("""SELECT distance, origin, destination
+    val longDistanceSqlWay: DataFrame = spark
+      .sql("""SELECT distance, origin, destination
               FROM us_delay_flights_tbl WHERE distance > 1000
               ORDER BY distance DESC""")
     // .show(10)
 
     println("Running an Dataframe API for longDistance flights : \n")
-    // now let's make it with Dataframe API
+    // Now let's make the query with Dataframe API
     val longDistanceDF = flightDelaysDF
       .select($"distance", $"origin", $"destination")
       .where($"distance" > 1000)
       .orderBy($"distance".desc)
 
-    println("The explaining FOR \n")
+    println("The explaining FOR two dataframes are: \n")
 
     longDistanceSqlWay.explain()
     longDistanceDF.explain()
 
-    println("They are exactly the same!\n")
+    println("\nThey are exactly the same!\n")
 
     // Let's try caching the flightDelaysDF
     // it is obviously, faster
@@ -109,7 +109,7 @@ object FlightDelays {
       .where($"origin" === "PDX")
       .count()
 
-    println(s"Origin being PDX flight count is $pdxCount")
+    println(s"\nOrigin being PDX, flight count is $pdxCount")
 
     val sttCount = longDistanceDF
       .select("origin")
@@ -131,7 +131,9 @@ object FlightDelays {
     // .count()
     // 56
 
-    sfChiDelayed.show(truncate = false)
+    println("All flights between SFO and ORD with at least a two-hour delay\n")
+    sfChiDelayed
+      .show(truncate = false)
 
     println("Running spark.sql for sfChiDelayed\n")
     // now with SQL
@@ -183,7 +185,7 @@ object FlightDelays {
       .withColumn("Flight_Delays", lit("Early"))
 
     // now that we calculated all of the Dataframes, we can union them
-    val bigDf = delayCategorizedVeryLong
+    val bigDelaysDf = delayCategorizedVeryLong
       .union(delayCategorizedLong)
       .union(delayCategorizedShort)
       .union(delayCategorizedTolerable)
@@ -192,12 +194,10 @@ object FlightDelays {
       // order by multiple columns
       .orderBy($"origin", $"delay".desc)
 
-    // here is a simpler approach
+    // Here is a simpler approach
     // instead of all that code!
 
-    println("With column (Flight_Delays), when something, do this when other thing do that\n")
-
-    // Create the DataFrame transformations
+    // Make the DataFrame transformations
     val dfWithFlightDelays = flightDelaysDF
       .select($"delay", $"origin", $"destination")
       .withColumn("Flight_Delays",
@@ -210,16 +210,17 @@ object FlightDelays {
       )
       .orderBy($"origin", $"delay".desc)
 
-    println("Here is a simpler approach, instead of all that code!\n")
+    println("With column (Flight_Delays), with when - when - otherwise:\n")
+
     dfWithFlightDelays
       .show(truncate = false)
 
     println("A lot of Dataframes union:\n")
     // the result
-    bigDf
+    bigDelaysDf
       .show(truncate = false)
 
-    // Now, with SQL
+    // We can do the same with SQL
     println("Now, with spark.sql\n")
     spark.sql("""SELECT delay, origin, destination,
           CASE
