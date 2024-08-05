@@ -1,47 +1,85 @@
 package learningSpark
 
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types._
+import org.apache.spark.sql.{Dataset, Encoder, SparkSession}
 
-// Just the Dataset Version
+/**
+ * Let's now answer the questions we had, with
+ * typed transformations!
+ */
 object FlightDelaysDataset {
+
+  // we need some case classes for intermediate processes
+  case class DistanceBetween(distance: Int,
+                             origin: String,
+                             destination: String)
+
+  case class FlightWithoutDistance(date: String,
+                                   delay: Int,
+                                   origin: String,
+                                   destination: String)
+
+  case class FlightDelayWithCategory(delay: Int,
+                                     origin: String,
+                                     destination: String,
+                                     Flight_Delays: String)
+
+  /**
+   * We can replicate freqItems ourselves!
+   *
+   * The method freqItems has some untyped transformations inside,
+   * if this is an issue, we can use an Aggregator and have
+   * typed transformations too!
+   */
+  object FrequentItems {
+
+    case class FrequentItem(SomeFrequentItems: Seq[String])
+
+    /** For a given dataset, and colName
+     * calculate most n frequent elements inside!
+     */
+    def freqItems[T](ds: Dataset[T], colName: String,
+                     topN: Int = 10): Dataset[FrequentItem] = {
+      import ds.sparkSession.implicits._
+
+      // Extract the column values as a Dataset of Strings
+      val colDS = ds
+        .map(row => row.getClass.getMethod(colName).invoke(row).asInstanceOf[String])
+
+      // Count the occurrences of each item
+      val itemCounts = colDS.groupBy("value").count()
+
+      // Filter to get the most frequent items
+      val frequentItems = itemCounts
+        .orderBy($"count".desc).limit(topN).select("value").as[String].collect()
+
+      // Wrap the result in a case class and convert to a Dataset
+      val result = Seq(FrequentItem(frequentItems))
+      ds.sparkSession.createDataset(result)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
-      .appName("FlightDelaysDataset")
+      .appName("Flight Delays Dataset")
       .master("local[*]")
       .getOrCreate()
 
-    // verbose = False
-    spark.sparkContext.setLogLevel("ERROR")
+    spark.sparkContext.setLogLevel("WARN")
 
-    // Import implicits for encoders
     import spark.implicits._
 
-    // Define the data path as a val
     val departureDelaysFilePath: String = {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/departuredelays.csv"
     }
 
-    // Here is our schema
-    val departureDelaysSchema = StructType(
-      Array(
-        StructField("date", StringType, nullable = true),
-        StructField("delay", IntegerType, nullable = true),
-        StructField("distance", IntegerType, nullable = true),
-        StructField("origin", StringType, nullable = true),
-        StructField("destination", StringType, nullable = true)
-      )
-    )
-
     val flightDelaysDS = spark
       .read
       .format("csv")
       .option("header", value = true)
-      .schema(departureDelaysSchema)
+      .schema(implicitly[Encoder[Flights]].schema)
       .load(departureDelaysFilePath)
       .as[Flights]
 
@@ -49,26 +87,18 @@ object FlightDelaysDataset {
     println("Making a temp view from ds, named us_delay_flights_tbl\n")
     flightDelaysDS.createOrReplaceTempView("us_delay_flights_tbl")
 
-    println("Running an spark.sql for longDistance flights: \n")
-    // Now we can run these!
-    val longDistanceSqlWay: DataFrame = spark.sql("""SELECT distance, origin, destination
-              FROM us_delay_flights_tbl WHERE distance > 1000
-              ORDER BY distance DESC""")
-    // .show(10)
-
     println("Running an Dataset API for longDistance flights : \n")
-    // now let's make it with Dataset API
+
     val longDistanceDS = flightDelaysDS
-      .select($"distance", $"origin", $"destination")
-      .where($"distance" > 1000)
-      .orderBy($"distance".desc)
+      .filter(_.distance > 1000)
+      .map(value => DistanceBetween(value.distance,
+        value.origin, value.destination))
+      .orderBy('distance.desc)
+      // or
+      // .orderBy($"distance".desc)
 
-    println("The explaining FOR \n")
-
-    longDistanceSqlWay.explain()
+    println("Let's run .explain():\n")
     longDistanceDS.explain()
-
-    println("They are exactly the same!\n")
 
     // Let's try caching the flightDelaysDS
     // it is obviously, faster
@@ -82,19 +112,23 @@ object FlightDelaysDataset {
 
     println("Let's see some stats about longDistanceDS\n")
 
-    longDistanceDS
-      .stat
-      .freqItems(Seq("origin"))
-      .show(truncate = false)
+    println("Top 30 Origins in our data:\n")
+
+    // Apply the custom freqItems method
+    val frequentOriginsDS = FrequentItems.freqItems(
+      longDistanceDS, "origin", topN = 30)
+
+    // Show the result
+    frequentOriginsDS.show(truncate = false)
 
     val pdxCount = longDistanceDS
-      .filter($"origin" === "PDX")
+      .filter(_.origin.contains("PDX"))
       .count()
 
     println(s"Origin being PDX flight count is $pdxCount")
 
     val sttCount = longDistanceDS
-      .filter($"origin" === "STT")
+      .filter(_.origin.contains("STT"))
       .count()
 
     println(s"Origin being STT flight count is $sttCount")
@@ -102,16 +136,15 @@ object FlightDelaysDataset {
     // Next, we’ll find all flights between San Francisco (SFO) and Chicago
     // (ORD) with at least a two-hour delay:
 
-    // with ds
+    // with typed transformations
     val sfChiDelayed = flightDelaysDS
-      .filter($"origin" === "SFO")
-      .filter($"destination" === "ORD")
-      .filter($"delay" >= 120)
-      .select($"date", $"delay", $"origin", $"destination")
+      .filter(flight => flight.origin == "SFO" && flight.destination == "ORD" && flight.delay >= 120)
+      .map(flight => FlightWithoutDistance(flight.date, flight.delay, flight.origin, flight.destination))
       .orderBy($"delay".desc)
     // .count()
     // 56
 
+    println("All flights between SFO and ORD with at least a two-hour delay\n")
     sfChiDelayed.show(truncate = false)
 
     println("Running spark.sql for sfChiDelayed\n")
@@ -128,27 +161,19 @@ object FlightDelaysDataset {
     //  - Long Delays (2–6 hours), etc.
     //  We’ll add these human-readable labels in a new column called Flight_Delays:
 
-    println("With column (Flight_Delays), when something, do this when other thing do that\n")
+    // Make the typed transformations
 
-    // Create the Dataset transformations
+    // Apply typed transformations
     val dsWithFlightDelays = flightDelaysDS
-      .select($"delay", $"origin", $"destination")
-      .withColumn("Flight_Delays",
-        when($"delay" > 360, "Very Long Delays")
-          .when($"delay" > 120 && $"delay" < 360, "Long Delays")
-          .when($"delay" > 60 && $"delay" < 120, "Short Delays")
-          .when($"delay" > 0 && $"delay" < 60, "Tolerable Delays")
-          .when($"delay" === 0, "No Delays")
-          .otherwise("Early")
-      )
+      .map(flight => FlightDelayWithCategory(
+        flight.delay,
+        flight.origin,
+        flight.destination,
+        categorizeDelay(flight.delay)
+      ))
       .orderBy($"origin", $"delay".desc)
 
-    println("Here is a simpler approach, instead of all that code!\n")
-    dsWithFlightDelays
-      .show(truncate = false)
-
-    println("A lot of Datasets union:\n")
-    // the result
+    println("Here is delay categorized, with typed transformations!\n")
     dsWithFlightDelays
       .show(truncate = false)
 
@@ -177,5 +202,19 @@ object FlightDelaysDataset {
 
     println(f"Duration with Caching : $timeDifference%.3f seconds\n")
 
+  }
+
+  /** Define a function to categorize delays
+   *
+   * @param delay: The amount of delay
+   * @return The category
+   */
+  def categorizeDelay(delay: Int): String = {
+    if (delay > 360) "Very Long Delays"
+    else if (delay > 120 && delay <= 360) "Long Delays"
+    else if (delay > 60 && delay <= 120) "Short Delays"
+    else if (delay > 0 && delay <= 60) "Tolerable Delays"
+    else if (delay == 0) "No Delays"
+    else "Early"
   }
 }
