@@ -1,12 +1,12 @@
 package learningSpark
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions
 import org.apache.spark.storage.StorageLevel
 
-
-// too see all options about configuration
-// https://spark.apache.org/docs/3.5.0/configuration.html
+/** To see all options about configuration
+ *
+ * https://spark.apache.org/docs/3.5.0/configuration.html
+ */
 object ConfigurationsAndCaching {
 
   def main(args: Array[String]): Unit = {
@@ -81,9 +81,9 @@ object ConfigurationsAndCaching {
 
   }
 
-  /*
-    Print all configurations
-    While printing to the console, you can change the color easily!
+  /**
+   * Print all configurations for a SparkSession.
+   * While printing to the console, you can change the color easily!
    */
   def printConfigs(session: SparkSession) = {
     // Get conf
@@ -98,8 +98,7 @@ object ConfigurationsAndCaching {
     }
   }
 
-  /*
-    Print a single configuration
+  /** Print a single configuration about a Spark Session.
    */
   def printConfig(session: SparkSession, key:String) = {
     // get conf
@@ -107,17 +106,17 @@ object ConfigurationsAndCaching {
     println(s"${key} -> ${v}\n")
   }
 
-  /*
-  There are a lot of ways to set and get spark properties.
-  There is a precedence between them.
-  spark.conf file < cli < SparkApplication
-
-   All these settings will be merged, with any duplicate properties
-   reset in the Spark application taking precedence.
-
-   Likewise, values supplied on the command line will supersede
-   settings in the configuration file, provided they are not
-   overwritten in the application itself.
+  /**
+   * There are a lot of ways to set and get spark properties.
+   * There is a precedence between them.
+   * spark.conf file < cli < SparkApplication
+   *
+   * All these settings will be merged, with any duplicate properties
+   * reset in the Spark application taking precedence.
+   *
+   * Likewise, values supplied on the command line will supersede
+   * settings in the configuration file, provided they are not
+   * overwritten in the application itself.
    */
   def getSetProperties(spark: SparkSession): Unit  = {
     // To set or modify an existing configuration
@@ -143,6 +142,10 @@ object ConfigurationsAndCaching {
       spark.conf.get("spark.sql.autoBroadcastJoinThreshold"))
   }
 
+  /**
+   * Let's you see all the sql configurations.
+   * @param spark
+   */
   def seeSparkSQLConfigs(spark: SparkSession): Unit = {
     println("\nLet's see all spark.sql configurations:\n")
     // Only the Spark SQL–specific Spark configs
@@ -152,31 +155,31 @@ object ConfigurationsAndCaching {
       .show(200, truncate = false)
   }
 
-  /*
-  When you specify compute resources as command-line arguments to
-  spark-submit, as we did earlier, you cap the limit.
-
-  This means that if more resources are needed later as tasks queue
-  up in the driver due to a larger than anticipated workload,
-  Spark cannot accommodate or allocate extra resources.
-
-  If instead you use Spark’s dynamic resource allocation
-  configuration, the Spark driver can request more or fewer compute
-  resources as the demand of large workloads flows and ebbs.
-
-  In scenarios where your workloads are dynamic—that is, they vary in
-  their demand for compute capacity—using dynamic allocation helps to
-  accommodate sudden peaks.
-
-  One use case where this can be helpful is streaming, where the data
-  flow volume may be uneven.
-
-  Another is on-demand data analytics, where you might have a high
-  volume of SQL queries during peak hours.
-
-  Enabling dynamic resource allocation allows Spark to achieve better
-  utilization of resources, freeing executors when not in use and
-  acquiring new ones when needed
+  /**
+   * When you specify compute resources as command-line arguments to
+   * spark-submit, as we did earlier, you cap the limit.
+   *
+   * This means that if more resources are needed later as tasks queue
+   * up in the driver due to a larger than anticipated workload,
+   * Spark cannot accommodate or allocate extra resources.
+   *
+   * If instead you use Spark’s dynamic resource allocation
+   * configuration, the Spark driver can request more or fewer compute
+   * resources as the demand of large workloads flows and ebbs.
+   *
+   * In scenarios where your workloads are dynamic—that is, they vary in
+   * their demand for compute capacity—using dynamic allocation helps to
+   * accommodate sudden peaks.
+   *
+   * One use case where this can be helpful is streaming, where the data
+   * flow volume may be uneven.
+   *
+   * Another is on-demand data analytics, where you might have a high
+   * volume of SQL queries during peak hours.
+   *
+   * Enabling dynamic resource allocation allows Spark to achieve better
+   * utilization of resources, freeing executors when not in use and
+   * acquiring new ones when needed.
    */
   def sparkDynamicAllocation(spark: SparkSession): Unit = {
 
@@ -198,23 +201,23 @@ object ConfigurationsAndCaching {
       spark.conf.get("spark.dynamicAllocation.executorIdleTimeout"))
   }
 
-  /*
-  Lets discover about the effects for caching Dataframes.
-
-  Common use cases for caching are scenarios where you will want to access a large
-  data set repeatedly for queries or transformations.
-
-  Some examples include:
-     • DataFrames commonly used during iterative machine learning training
-     • DataFrames accessed commonly for doing frequent transformations
-          during ETL or building data pipelines
-
-   Not all use cases dictate the need to cache.
-
-   Some scenarios that may not warrant caching your DataFrames include:
-     • DataFrames that are too big to fit in memory
-     • An inexpensive transformation on a DataFrame not requiring frequent
-     use, regardless of size
+  /**
+   * Lets discover about the effects for caching Dataframes.
+   *
+   * Common use cases for caching are scenarios where you will want to access a large
+   * data set repeatedly for queries or transformations.
+   *
+   * Some examples include:
+   * • DataFrames commonly used during iterative machine learning training
+   * • DataFrames accessed commonly for doing frequent transformations
+   * during ETL or building data pipelines
+   *
+   * Not all use cases dictate the need to cache.
+   *
+   * Some scenarios that may not warrant caching your DataFrames include:
+   * • DataFrames that are too big to fit in memory
+   * • An inexpensive transformation on a DataFrame not requiring frequent
+   * use, regardless of size
    */
   def effectOfCache(spark: SparkSession): Unit = {
     import spark.implicits._
@@ -246,9 +249,9 @@ object ConfigurationsAndCaching {
 
   }
 
-  /*
-  Lets discover about the effects for persisting Dataframes.
- */
+  /**
+   * Lets discover about the effects for persisting Dataframes.
+   */
   def effectOfPersist(spark: SparkSession): Unit = {
     import spark.implicits._
     val df = spark.range(1 * 10000000)
@@ -286,6 +289,10 @@ object ConfigurationsAndCaching {
 
   }
 
+  /**
+   * Just like Dataframes/Datasets, we can cache tables!
+   * @param spark
+   */
   def cacheATable(spark: SparkSession): Unit = {
     import spark.implicits._
     val df = spark
@@ -299,10 +306,15 @@ object ConfigurationsAndCaching {
       .show()
   }
 
+  /**
+   * For more on partitioning, check out:
+   * https://spark.apache.org/docs/latest/sql-performance-tuning.html
+   * @param spark
+   */
   def setPartition(spark: SparkSession): Unit = {
     val numDF = spark
       .range(100L * 100 * 100)
-      .repartition(12)
+      //.repartition(12)
 
     println(s" *** Num of partitions in Dataframe ${numDF.rdd.getNumPartitions}")
 
@@ -315,11 +327,11 @@ object ConfigurationsAndCaching {
     printConfigs(spark)
   }
 
-  /*
-    Instead of repeatedly write the timing code, we can use this
-    method to time some part of code!
-
-    Taken from the book.
+  /**
+   * Instead of repeatedly write the timing code, we can use this
+   * method to time some part of code!
+   *
+   * Taken from the book.
    */
   def timer[A](blockOfCode: => A): (A, Double) = {
     val startTime = System.nanoTime
