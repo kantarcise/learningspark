@@ -162,17 +162,21 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 #### Chapter 6 - Spark SQL and Datasets
 
-- In Chapter 6, we will try to understand the dynamics of Memory Management for Datasets and DataFrames. For that, we have some mocked data and we will try to understand the DSL vs Lambda usage, with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala)
+- In Chapter 6, we will try to understand the dynamics of Memory Management for Datasets and DataFrames. For that, we have some mocked data which will help us with the DSL vs Lambda usage (typed vs untyped transformations really), with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala).
 
-- Before closing, we will have a small Dataset Workout on Internet Usage data which is made on fly (in the code), and we will practice what we have learned so far in [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala)
+- Before closing, we will have a small Dataset Workout on Internet Usage data which is made on fly (in the code), and we'll practice what we have learned so far, with [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala).
 
-- For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala). 
+- For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala).  If you follow the code, you will get an answer to the question: "What is a Trait?".
 
 #### Chapter 7 - Optimizing and Tuning Spark Applications
 
-- After all the code we have written, is there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we will discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
+- After all the code we have written, are there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! 🎉
 
-- Then we move onto some Joins! The book covered 2 different join methods and give an example to optimize one of them. In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible. In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will inspect the UI and detect an **Exchange** that we can get rid of with buckets! That example is in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
+- In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
+
+- Then we move onto some Joins! The book covered 2 different join methods and give an example to optimize one of them. In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible. 🥳
+
+- In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will inspect the UI and detect an **Exchange** that we can get rid of with buckets! That example is in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
 
 - Secret - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
 
