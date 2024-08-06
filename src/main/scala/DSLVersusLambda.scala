@@ -2,9 +2,14 @@ package learningSpark
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
 import java.util.Calendar
 
+/**
+ * Let's see the difference in between DSL (Domain Specific Language)
+ * and Lambda usage.
+ *
+ * Tip: Mixing both is not a good idea.
+ */
 object DSLVersusLambda {
   def main(args: Array[String]): Unit = {
 
@@ -14,13 +19,10 @@ object DSLVersusLambda {
       .master("local[*]")
       .getOrCreate()
 
-    // verbose = False
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Import implicits for encoders
     import spark.implicits._
 
-    // Define the data path as a val
     val personFilePath: String = {
       val projectDir = System.getProperty("user.dir")
       s"$projectDir/data/mockPerson.json"
@@ -43,7 +45,6 @@ object DSLVersusLambda {
     // Measure running time for lambda and DSL combined
     val startLambdaDSL = System.nanoTime()
 
-    // TODO - compare times ?
     val lambdaAndDSL = personDS
       // Everyone above 40: First lambda
       .filter(x => x.birthDate.split("/")(2).toInt < earliestYear)
@@ -56,7 +57,8 @@ object DSLVersusLambda {
       .count()
 
     val endLambdaDSL = System.nanoTime()
-    val durationLambdaDSL = (endLambdaDSL - startLambdaDSL) / 1e9d // convert to seconds
+    // convert to seconds
+    val durationLambdaDSL = (endLambdaDSL - startLambdaDSL) / 1e9d
 
     println(s"Count with lambda and DSL: $lambdaAndDSL")
     // 0.679 seconds
@@ -66,15 +68,20 @@ object DSLVersusLambda {
 
     val DSLOnly = personDS
       // TODO: IN MM/dd/yyyy format this does not work
-      //.filter(year($"birthDate") < earliestYear) // Everyone above 40
-      .filter(date_format(to_date($"birthDate", "MM/dd/yyyy"), "yyyy").cast("int") < earliestYear) // Everyone above 40
-      .filter($"salary" > 80000) // Everyone earning more than 80K
-      .filter($"lastName".startsWith("J")) // Last name starts with J
-      .filter($"firstName".startsWith("D")) // First name starts with D
+      //.filter(year($"birthDate") < earliestYear)
+      // Everyone above 40
+      .filter(date_format(to_date($"birthDate", "MM/dd/yyyy"), "yyyy").cast("int") < earliestYear)
+      // Everyone earning more than 80K
+      .filter($"salary" > 80000)
+      // Last name starts with J
+      .filter($"lastName".startsWith("J"))
+      // First name starts with D
+      .filter($"firstName".startsWith("D"))
       .count()
-    val endDSLOnly = System.nanoTime()
 
-    val durationDSLOnly = (endDSLOnly - startDSLOnly) / 1e9d // convert to seconds
+    val endDSLOnly = System.nanoTime()
+    // convert to seconds
+    val durationDSLOnly = (endDSLOnly - startDSLOnly) / 1e9d
 
     println(s"Count with DSL only: $DSLOnly")
     // 0.325 seconds
