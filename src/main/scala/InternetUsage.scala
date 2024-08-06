@@ -4,6 +4,10 @@ import org.apache.spark.sql.{SparkSession, Dataset}
 
 import scala.util.Random
 
+/**
+ * Let's make some data within the code, and run
+ * some queries on it!
+ */
 object InternetUsage {
   def main(args: Array[String]): Unit = {
 
@@ -29,7 +33,8 @@ object InternetUsage {
     displaySpecialTreatmentCosts(internetUsageDS)
 
     // Compute and display user cost usage dataset
-    val computeUserCostUsageDS: Dataset[UsageCost] = computeUserCostUsage(internetUsageDS)
+    val computeUserCostUsageDS: Dataset[UsageCost] = computeUserCostUsage(
+      internetUsageDS)
 
     println("Compute Usage - whole DF \n")
     computeUserCostUsageDS
@@ -75,7 +80,6 @@ object InternetUsage {
     Essentially, the underscore is used to represent each
     element in the dataset being passed to the filterWithUsage function.
      */
-
   }
 
   def displaySpecialTreatmentCosts(internetUsageDS: Dataset[Usage]): Unit = {
@@ -86,17 +90,13 @@ object InternetUsage {
     internetUsageDS
       // we can directly map it to an another Dataset
       .map((u: Usage) => SpecialPrices(if (u.usage > 750) u.usage * .15 else u.usage * .50))
-      // not needed. Dataset is already in SpecialPrices type
-      // .as[SpecialPrices]
       .show(5, truncate = false)
 
     println("special treatment to most users - with a method (computeCostUsage)!\n")
     // with function
     internetUsageDS
       // we can directly map it to an another Dataset - with a method too.
-      .map((u:Usage) => SpecialPrices({computeCostUsage(u.usage)}))
-      // not needed. Dataset is already in SpecialPrices type
-      // .as[SpecialPrices]
+      .map((u: Usage) => SpecialPrices({computeCostUsage(u.usage)}))
       .show(5, false)
 
     // println("special treatment to most users - WITHOUT lambdas\n")
