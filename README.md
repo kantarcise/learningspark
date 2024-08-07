@@ -174,7 +174,9 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
 
-- Then we move onto some Joins! The book covered 2 different join methods and give an example to optimize one of them. In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible. 🥳
+- Then we move onto some Joins! The book covered 2 different join strategies of Spark and give an example to optimize one of them. If you are confused about join types and join strategies, [this note](https://github.com/kantarcise/learningspark/blob/main/reading/SparkJoinStrategies.md) might be a goldmine, thanks to GPT-4o!
+
+- In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible (and also the fastest). 🥳
 
 - In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will inspect the UI and detect an **Exchange** that we can get rid of with buckets! That example is in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
 
