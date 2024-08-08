@@ -172,19 +172,27 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - After all the code we have written, are there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! 🎉
 
-- In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code! 
+- In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code!
 
 - Then we move onto some Joins! The book covered 2 different join strategies of Spark and give an example to optimize one of them. If you are confused about join types and join strategies, [this note](https://github.com/kantarcise/learningspark/blob/main/reading/SparkJoinStrategies.md) might be a goldmine, thanks to GPT-4o!
 
 - In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible (and also the fastest). 🥳
 
-- In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will inspect the UI and detect an **Exchange** that we can get rid of with buckets! That example is in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
+- In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will use the default joining strategy for Spark. When we inspect the UI, we'll detect an **Exchange** that we can get rid of with [`buckets`](https://spark.apache.org/docs/3.5.1/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrameWriter.bucketBy.html?highlight=bucketby)!
 
-- Secret - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
+- With `bucketBy` method of `DataFrameWriter`, we will see how we can optimize a Sort Merge Join, in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
+
+- **Secret 💎** - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
 
 #### Chapter 8 - Structured Streaming
 
-- In Chapter 8, we will see the basics of Spark's Structured streaming. In [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) we will have an apllication up an running, and in [NumberCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NumberCount.scala) we discover the value of `try/catch` blocks in the code, while working with Dataset API. The test [WordCountTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountTest.scala) will give us a simple testing blueprint for streaming applications!
+- In Chapter 8, we will see the basics of Spark's Structured Streaming! 🏂
+
+- In [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) we will have an Streaming application up an running while discovering `flatMap`. 
+
+- With [NumberCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NumberCount.scala) we discover the value of `try/catch` blocks in the code, while working with Dataset API. We will also discover a simple and powerful mechanism about monitorting Streaming Queries, with `query.lastProgress`.
+
+- The test [WordCountTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountTest.scala) will give us a simple testing blueprint for streaming applications! 
 
 - We can also write a [CustomListener](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/CustomListener.scala) to get more information about our `StreamingQuery`. We also have a method called `printProgress` that prints the `query.lastProgress` in a seperate Thread with defined periods, which might be useful.
 
