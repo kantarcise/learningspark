@@ -1,24 +1,25 @@
 package learningSpark
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 import org.apache.spark.storage.StorageLevel._
 import org.apache.spark.sql.SaveMode
 import scala.util.Random
 
-// can we optimize SortMergeJoin ?
-
-// Yes!
-
-// We can eliminate the Exchange step from the previous example
-// if we made partitioned buckets for common sorted keys
-// or columns on which we want to perform frequent equijoins.
-
-// We can make an explicit number of buckets to store specific sorted
-// columns (one key per bucket). Presorting and reorganizing data
-// in this way boosts performance, as it allows us to skip the
-// expensive Exchange operation and go straight to WholeStageCodegen.
+/** Can we optimize SortMergeJoin ?
+ *
+ * Yes!
+ * We can eliminate the Exchange step from the previous example
+ * if we made partitioned buckets for common sorted
+ * keys or columns on which we want to perform frequent
+ * equijoins.
+ *
+ * We can make an explicit number of buckets to store
+ * specific sorted columns (one key per bucket). Presorting and
+ * reorganizing data in this way boosts performance, as
+ * it allows us to skip the expensive Exchange
+ * operation and go straight to WholeStageCodegen.
+ */
 object SortMergeJoinBucketed {
   // curried function to benchmark any code or function
   def benchmark(name: String)(f: => Unit) {
@@ -31,7 +32,7 @@ object SortMergeJoinBucketed {
   }
 
   // main class setting the configs
-  def main (args: Array[String] ) {
+  def main(args: Array[String]): Unit ={
 
     val spark = SparkSession.builder
       .appName("SortMergeJoinBucketed")
@@ -46,7 +47,6 @@ object SortMergeJoinBucketed {
 
     import spark.implicits._
 
-    // Verbose = false
     spark.sparkContext.setLogLevel("ERROR")
 
     var states = scala.collection.mutable.Map[Int, String]()
@@ -77,7 +77,8 @@ object SortMergeJoinBucketed {
       .toDF("transaction_id", "quantity", "users_id",
         "amount", "state", "items")
 
-    // cache them on Disk only so we can see the difference in size in the storage UI
+    // cache them on Disk only so we can see the
+    // difference in size in the storage UI
     usersDF.persist(DISK_ONLY)
     ordersDF.persist(DISK_ONLY)
 
@@ -90,8 +91,8 @@ object SortMergeJoinBucketed {
     usersDF.orderBy(asc("uid"))
       .write.format("parquet")
       .mode(SaveMode.Overwrite)
-      // eual to number of cores I have on my laptop
-      .bucketBy(8, "uid")
+      // should be equal to number of cores I have on my PC
+      .bucketBy(12, "uid")
       .saveAsTable("UsersTbl")
 
     // make bucket and table for users_id
@@ -122,8 +123,9 @@ object SortMergeJoinBucketed {
     // we can see that now we have skipped the Exchange!
     joinUsersOrdersBucketDF.explain()
 
-    // uncomment to view the SparkUI otherwise the program terminates and shutdowsn the UI
-    Thread.sleep(1000 * 6 * 1)
+    // uncomment to view the SparkUI otherwise the
+    // program terminates and shutdowsn the UI
+    Thread.sleep(1000 * 30 * 1)
   }
 
 }
