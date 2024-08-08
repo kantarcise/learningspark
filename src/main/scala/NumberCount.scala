@@ -6,21 +6,26 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 // Define the case class for the number counts
 case class NumberCount(value: Int, count: Long)
 
-// Only difference from WordCount is that we are
-// counting Numbers now!
-
-// We can make this application fail, if we are not careful.
-// Check line 56 for that!
-
-// To run this example, open a terminal and type `nc -lk 9999`
-// After that, you can run this code in IDE.
-// start typing numbers in terminal to see the number count!
+/**
+ * In this application, only difference from WordCount
+ * is that we are counting Numbers!
+ *
+ * We can make this application fail, if we are not careful.
+ * Check line 56 for that!
+ *
+ * To run this example, open a terminal and type `nc -lk 9999`
+ * (which will make a simple tcp server)
+ *
+ * After that, you can run this code in IDE.
+ *
+ * Start typing numbers in terminal to see the number count!
+ */
 object NumberCount {
   def main(args: Array[String]): Unit = {
 
     val spark: SparkSession = SparkSession
       .builder
-      .appName("StructuredNetworkNumberCount")
+      .appName("Structured Network Number Count")
       .master("local[*]")
       .getOrCreate()
 
@@ -51,7 +56,7 @@ object NumberCount {
 
     // Split the lines into numbers
     val numbers: Dataset[Int] = lines
-      .flatMap(_.split(" "))
+      .flatMap(number => number.split(" "))
       // .flatMap(numStr => Some(numStr.toInt))
       // if we run it like that, when we enter a string
       // in the terminal the application will crash
@@ -71,8 +76,6 @@ object NumberCount {
       // Map to NumberCount case class
       .map { case (num, count) => NumberCount(num, count) }
 
-    // let's define a checkpoint
-    val checkpointDir = ""
     // Start running the query that
     // prints the running counts to the console
     val query: StreamingQuery = numberCounts
@@ -82,9 +85,27 @@ object NumberCount {
       //.trigger(Trigger.ProcessingTime("1 second"))
       //.trigger(Trigger.AvailableNow())
       //.trigger(Trigger.Continuous(500))
+      // we can define a checkpoint for our StreamingQuery
       //.option("checkpointLocation", checkpointDir)
       .format("console")
       .start()
+
+    // Lets start a separate thread to print the last progress
+    // this looks richer than the information on UI
+    val progressThread = new Thread(new Runnable {
+      def run(): Unit = {
+        while (true) {
+          val progress = query.lastProgress
+          if (progress != null) {
+            println(progress)
+          }
+          Thread.sleep(10000) // Sleep for 10 seconds
+        }
+      }
+    })
+
+    progressThread.setDaemon(true)
+    progressThread.start()
 
     query.awaitTermination()
 
