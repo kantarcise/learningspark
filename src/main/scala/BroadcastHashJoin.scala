@@ -3,27 +3,27 @@ package learningSpark
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.broadcast
 
-/*
-  Join operations are a common type of transformation in big data analytics in which
-  two data sets, in the form of tables or DataFrames, are merged over a common
-  matching key.
-
-  Similar to relational databases, the Spark DataFrame and Dataset APIs
-  and Spark SQL offer a series of join transformations: inner joins, outer joins, left
-  joins, right joins, etc.
-
-  All of these operations trigger a large amount of data movement across Spark executors.
+/**
+ * Join operations are a common type of transformation in big data
+ * analytics in which two data sets, in the form of tables
+ * or DataFrames, are merged over a common matching key.
+ *
+ * Similar to relational databases, the Spark DataFrame & Dataset APIs,
+ * Spark SQL offer a series of join transformations:
+ * inner joins, outer joins, left joins, right joins, etc.
+ *
+ * All of these operations trigger a large amount of data
+ * movement across Spark executors.
  */
 object BroadcastHashJoin {
   def main(args: Array[String]): Unit = {
 
     val spark: SparkSession = SparkSession
       .builder
-      .appName("Joins")
+      .appName("Broadcast Hash Join!")
       .master("local[*]")
       .getOrCreate()
 
-    // verbose = False
     spark.sparkContext.setLogLevel("ERROR")
 
     // A common use case is when you have a common set of keys between two DataFrames,
@@ -39,6 +39,11 @@ object BroadcastHashJoin {
     // In this code we are forcing Spark to do a broadcast join, but it will
     //  resort to this type of join by default if the size of the smaller data set
     //  is below the spark.sql.autoBroadcastJoinThreshold
+
+    // 10485760b - which is 10 MB
+    println(spark.conf.get("spark.sql.autoBroadcastJoinThreshold"))
+
+    // let's join two dataframes with broadcast join!
     val joinedDF = playersDF.join(broadcast(clubsDF), "club_name")
 
     // see physical plan
@@ -50,7 +55,7 @@ object BroadcastHashJoin {
     joinedDF.show()
 
     // lets see the size of clubsDF
-    getSizeOfDataframe(spark, clubsDF)
+    getSizeOfDataframe(clubsDF)
 
     // You can also see the size on storage tab in UI
     // 6.5 KiB approximately
@@ -58,8 +63,8 @@ object BroadcastHashJoin {
 
   }
 
-  /*
-    Return two dataframes that are made from just Sequences.
+  /**
+   * Return two dataframes that are made from just Sequences.
    */
   def getDataframes(spark: SparkSession):(DataFrame, DataFrame) = {
     import spark.implicits._
@@ -116,18 +121,19 @@ object BroadcastHashJoin {
     (players, clubs)
   }
 
-  /*
-    Broadcast has join is recommended when:
-      When one data set is much smaller than the other (and within the
-      default config of 10 MB, or more if you have sufficient memory)
-
-    How can we see the size of a dataframe in memory?
-
-    With this method! After you call this, you can check out the WebUI
-    and the Storage tab will show you the on heap memory usage!
+  /**
+   * Broadcast has join is recommended when:
+   * When one data set is much smaller than the other (and within the
+   * default config of 10 MB, or more if you have sufficient memory)
+   *
+   * How can we see the size of a dataframe in memory?
+   *
+   * With this method! After you call this, you can check out the WebUI
+   * and the Storage tab will show you the on heap memory usage!
    */
-  def getSizeOfDataframe(spark: SparkSession, df: DataFrame): Unit = {
+  def getSizeOfDataframe(df: DataFrame): Unit = {
     df.cache()
-    df.count() // Trigger action to cache the DataFrame
+    // Trigger action to cache the DataFrame
+    df.count()
   }
 }
