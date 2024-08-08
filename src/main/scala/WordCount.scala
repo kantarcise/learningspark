@@ -6,9 +6,16 @@ import org.apache.spark.sql.streaming._
 // Define the case class for the word counts
 case class WordCount(value: String, count: Long)
 
-// to run this example, open a terminal and type `nc -lk 9999`
-// After that, you can run this code in IDE.
-// start typing words in terminal to see the word count!
+/**
+ * Welcome to the World of Streaming with Spark!
+ *
+ * To run this example, open a terminal and type `nc -lk 9999`
+ *
+ * After that, you can run this code in IDE.
+ *
+ * Simply, start typing words in terminal to see
+ * the word count!
+ */
 object WordCount {
   def main(args: Array[String]): Unit = {
 
@@ -35,7 +42,7 @@ object WordCount {
     // Split the lines into words
     val words: Dataset[String] = linesDS
       // split by whitespace
-      .flatMap(_.split(" "))
+      .flatMap(word => word.split(" "))
 
     // Dataframe API
     // Generate running word count
@@ -50,6 +57,8 @@ object WordCount {
       // Count occurrences
       .count()
       // Map to WordCount case class
+      // we have a string and long at the moment,
+      // we want to map them!
       .map { case (word, count) => WordCount(word, count) }
 
     // We can add a custom listener to Spark!
@@ -62,21 +71,23 @@ object WordCount {
     val query: StreamingQuery = wordCounts
       .writeStream
       // we are doing a stateful operation
-      // meaning the count can / will update a previously generated result
+      // meaning the count can / will update a previously
+      // generated result
       // so append mode will not work.
       // if you try you will get the error:
-      // Append output mode not supported when there are streaming
-      // aggregations on streaming DataFrames/DataSets without watermark
+      //    Append output mode not supported when there are streaming
+      //    aggregations on streaming DataFrames/DataSets
+      //    without watermark
       .outputMode("complete")
       .format("console")
       .start()
 
-    // aside from the information on UI, we have
+    // Aside from the information on UI, we have
     // query.lastProgress, here is a method on it
     // Call the method to print progress every 10 seconds
     // printProgress(query, 10000)
-    query.awaitTermination()
 
+    query.awaitTermination()
   }
 
   // Method to print lastProgress periodically
