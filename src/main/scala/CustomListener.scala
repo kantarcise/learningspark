@@ -1,6 +1,7 @@
 package learningSpark
 
-import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
+import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent,
+  QueryStartedEvent, QueryTerminatedEvent}
 import org.apache.spark.sql.streaming._
 
 /** We can use this class to setup a custom
@@ -9,8 +10,6 @@ import org.apache.spark.sql.streaming._
 class CustomListener extends StreamingQueryListener {
   override def onQueryStarted(event: QueryStartedEvent): Unit = {
     println("Query started: " + event.id)
-    // println("Query: " + event.name)
-
   }
 
   override def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
@@ -18,7 +17,7 @@ class CustomListener extends StreamingQueryListener {
   }
 
   /**
-    Adjust this progress method based on your needs!
+   * Adjust this progress method based on your needs!
    */
   override def onQueryProgress(event: QueryProgressEvent): Unit = {
     // println("Query made progress: " + event.progress)
