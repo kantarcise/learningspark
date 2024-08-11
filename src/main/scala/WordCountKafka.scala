@@ -3,10 +3,13 @@ package learningSpark
 import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.streaming._
 
-// to be able to use this application, we need a
-// Kafka Cluster running
-// For that we are using docker-compose
-// check out the `readme.md` inside /docker!
+/**
+ * To be able to use this application, we need a
+ * Kafka Cluster running
+ *
+ * For that we are using docker-compose
+ * check out the `readme.md` inside /docker!
+ */
 object WordCountKafka {
   def main(args: Array[String]): Unit = {
 
@@ -14,7 +17,7 @@ object WordCountKafka {
       .builder
       .appName("StructuredKafkaWordCount")
       // intentional.
-      // This one works when we compile it intO a jar
+      // This one works when we compile it into a jar
       // and use spark-submit instead of running
       // it in IDE
       // .master("local[*]")
@@ -56,21 +59,6 @@ object WordCountKafka {
       .option("checkpointLocation", "/tmp/spark_checkpoint_1")
       .start()
 
-    // Call the method to print progress every 10 seconds
-    // printProgress(query, 10000)
-
     query.awaitTermination()
-  }
-
-  // Method to print lastProgress periodically
-  def printProgress(query: StreamingQuery, interval: Long): Unit = {
-    new Thread(new Runnable {
-      def run(): Unit = {
-        while (true) {
-          println(query.lastProgress)
-          Thread.sleep(interval)
-        }
-      }
-    }).start()
   }
 }
