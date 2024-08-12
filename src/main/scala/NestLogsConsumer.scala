@@ -8,6 +8,14 @@ import org.apache.spark.sql.types._
 /**
  * Consume the logs and run an aggregation!
  *
+ * Start by running the NestKafkaProducer app!
+ *
+ * For that, you can get a jar and submit it
+ * with spark-submit, while you have a Kafka instance running.
+ *
+ * Then when you submit this application, you will see
+ * the results on console!
+ *
  * Inspired from :
  * https://www.databricks.com/blog/2017/04/26/processing-data-in-apache-kafka-with-structured-streaming-in-apache-spark-2-2.html
  */
@@ -26,7 +34,7 @@ object NestLogsConsumer {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder()
-      .appName("Kafka Consumer with Streaming")
+      .appName("Kafka Consumer with Streaming - Nest")
       .master("local[*]")
       .getOrCreate()
 
