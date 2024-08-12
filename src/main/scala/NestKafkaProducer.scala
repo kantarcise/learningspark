@@ -2,19 +2,21 @@ package learningSpark
 
 import org.apache.spark.sql.streaming.Trigger
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Dataset, Encoders, Row, SparkSession}
+import org.apache.spark.sql.{Dataset, SparkSession}
 
 import scala.util.Random
 import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneOffset}
 
 /**
- * Let's try out Kafka for a simplified
- * schema for Nest Thermostats.
+ * Let's try out Kafka for Nest Thermostats.
  *
- * * This is a great example to discover out Rate Source!
- * *
- * * https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#input-sources
+ * We will need a Kafka Instance, you can refer to
+ * the /localSparkDockerKafka folder.
+ *
+ * This is a great example to discover out Rate Source!
+ *
+ * https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#input-sources
  */
 object NestKafkaProducer {
 
@@ -40,7 +42,7 @@ object NestKafkaProducer {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession
       .builder
-      .appName("Kafka Producer with Streaming")
+      .appName("Kafka Producer with Streaming - Nest")
       .master("local[*]")
       .getOrCreate()
 
@@ -48,10 +50,10 @@ object NestKafkaProducer {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // Create a streaming DataFrame using the rate source
+    // Make a streaming DataFrame using the rate source
     val rateDF = spark.readStream
       .format("rate")
-      .option("rowsPerSecond", "100")
+      .option("rowsPerSecond", "20")
       .load()
 
     // Generate random data with the specified schema
