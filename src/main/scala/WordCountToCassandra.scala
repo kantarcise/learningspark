@@ -1,8 +1,14 @@
 package learningSpark
 
-import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.streaming._
 
+/** Just the the WordCount which counts words
+ * from a socket, this application uses the same source
+ * but the sink will be a Cassandra Instance!
+ *
+ * This is a great demonstration for foreachBatch() function.
+ */
 object WordCountToCassandra {
   def main(args: Array[String]): Unit = {
 
