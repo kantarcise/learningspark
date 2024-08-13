@@ -20,7 +20,7 @@ In this directory (where the readme.md you reading is), open a terminal and run:
 docker compose up
 ```
 
-Depending on whether or not you have the images in your local system, this may take some time. No worries!
+Depending on whether you have the images in your local system, this may take some time. No worries!
 
 In a new terminal, run:
 
