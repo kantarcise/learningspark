@@ -3,7 +3,12 @@ package learningSpark
 import org.apache.spark.sql.{SparkSession, Dataset}
 import org.apache.spark.sql.streaming.Trigger
 
-// How about using a PosgtreSQL Sink?
+/**
+ * How about using a PosgtreSQL Sink?
+ *
+ * Check out the readme in localSparkDockerPostgreSQL
+ * to start a PosgtreSQL instance with docker.
+ */
 object WordCountToPostgres {
 
   def main(args: Array[String]): Unit = {
@@ -48,6 +53,7 @@ object WordCountToPostgres {
     // Write the word counts to PostgreSQL using foreach
     val query = wordCounts
       .writeStream
+      .queryName("Word Count to PostgreSQL")
       .foreach(customForeachWriter)
       .outputMode("update")
       .option("checkpointLocation", "/tmp/spark_checkpoint_3")
