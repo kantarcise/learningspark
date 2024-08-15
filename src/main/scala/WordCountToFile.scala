@@ -6,6 +6,9 @@ import org.apache.spark.sql.{Dataset, SparkSession}
  * but this time, write the results into a file!
  *
  * Thanks to foreachBatch, we can write into multiple files.
+ *
+ * Do not forget to run `nc -lk 9999` to open a tcp server
+ * before running the app!
  */
 object WordCountToFile {
 
@@ -51,7 +54,7 @@ object WordCountToFile {
       .queryName("Write into Multiple Files")
       // we are using the defined method for foreachBatch
       .foreachBatch{{ (batchDS: Dataset[WordCount], batchId: Long) =>
-        writeCountsToMultipleLocations(batchDS, // batchId,
+        writeCountsToMultipleLocations(batchDS, batchId,
           pathOne, pathTwo, writeToSingleFile = true)
       }}
       // Use "complete" mode to keep the running count
@@ -74,16 +77,19 @@ object WordCountToFile {
    * we use writeToSingleFile.
    *
    * @param wordCountsDS: the streaming dataset micro batch
+   * @param batchId: The Id of the batch
    * @param pathOne: first file path to be written into
    * @param pathTwo: second file path to be written into
    * @param writeToSingleFile: whether or not writing into single file.
    * */
   def writeCountsToMultipleLocations(wordCountsDS: Dataset[WordCount],
-                                     // batchId: Long,
+                                     batchId: Long,
                                      pathOne: String,
                                      pathTwo: String,
                                      writeToSingleFile: Boolean) {
 
+    // We can keep track of the micro batches
+    println(s"Batch $batchId came!")
     // you can see the whole batch! A single sentence before you press enter!
     // wordCountsDS.show()
 
