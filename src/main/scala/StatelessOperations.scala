@@ -1,19 +1,25 @@
 package learningSpark
 
 import org.apache.spark.sql.execution.streaming.MemoryStream
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.streaming.Trigger
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 
-// output mode cannot be `complete` - only `append` or `update`
-// Complete mode is not supported because storing the ever-growing result
-// data is usually costly.
-// This is in sharp contrast with stateful transformations.
+/**
+ * Let's discover stateless operations!
+ *
+ * In stateless transformations, output mode cannot
+ * be `complete` - only `append` or `update`
+ *
+ * Complete mode is not supported because storing the
+ * ever-growing result data is usually costly.
+ *
+ * This is in sharp contrast with stateful transformations.
+ */
 object StatelessOperations {
-
   def main(args: Array[String]): Unit = {
 
     val spark: SparkSession = SparkSession
@@ -27,11 +33,12 @@ object StatelessOperations {
     import spark.implicits._
 
     // make a memory stream to test the Stateless Operations
-    val memoryStream: MemoryStream[EcommerceCustomer] = new MemoryStream[EcommerceCustomer](id = 1, spark.sqlContext)
+    val memoryStream: MemoryStream[EcommerceCustomer] = new
+        MemoryStream[EcommerceCustomer](id = 1, spark.sqlContext)
 
     // Add sample data to memory stream
     // this adds the data all at once.
-    // for sample data checkout addDataPeriodicallyToMemoryStream
+    // for sample data -> checkout addDataPeriodicallyToMemoryStream
     // memoryStream.addData(sampleData)
 
     // Add sample data every 5 seconds - one by one!
@@ -51,6 +58,7 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val queryFirst = selectedColumns
       .writeStream
+      .queryName("Stream to Console")
       // only two modes possible, append and update
       // if you try complete, the code will error:
       // Complete output mode not supported when there are
@@ -60,6 +68,7 @@ object StatelessOperations {
       .trigger(Trigger.ProcessingTime("3 seconds"))
       .start()
 
+    // let's filter and explode the dataset
     // type information as a hint
     val filteredData: Dataset[EcommerceCustomer] = filterData(customerStream)
     val explodedData: Dataset[EcommerceCustomerWithCategory] = explodeData(filteredData)
@@ -67,12 +76,14 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val querySecond= explodedData
       .writeStream
+      .queryName("Stream 2 to Console")
       // only two modes possible, append and update
       .outputMode("append")
       .format("console")
       .trigger(Trigger.ProcessingTime("3 seconds"))
       .start()
 
+    // let's map and flatmap the dataset
     // type information as a hint
     val mappedData: Dataset[EcommerceCustomer] = mapData(filteredData)
     val flatMappedData : Dataset[EcommerceCustomer] = flatMapData(mappedData)
@@ -80,6 +91,7 @@ object StatelessOperations {
     // Write the output to the console with a 3-second trigger period
     val queryThird = flatMappedData
       .writeStream
+      .queryName("Stream 3 to Console")
       // only two modes possible, append and update
       .outputMode("append")
       .format("console")
@@ -95,44 +107,93 @@ object StatelessOperations {
     Await.result(addDataFuture, Duration.Inf)
   }
 
-  // just to demonstrate select() being stateless - Dataframe Version
-  // def selectColumns(df: DataFrame): DataFrame = {
-  //  df.select("Email", "AvgSessionLength", "TimeonApp", "TimeonWebsite")
-  // }
-
-  // this is using Dataframe method select,
-  // just to demonstrate.
+  /**
+   * Select some columns from a Dataset, this is stateless.
+   *
+   * Because we are using typed transformations with Datasets,
+   * we have a map() instead of select()
+   *
+   * @param ds: input dataset
+   * @return
+   */
   def selectColumns(ds: Dataset[EcommerceCustomer]): Dataset[CustomerTimeSpent] = {
     import ds.sparkSession.implicits._
-    // this is mixing Dataframe and Dataset API, so not optimum, performance wise
-    ds.select(
-      col("Email"),
-      col("AvgSessionLength"),
-      col("TimeonApp"),
-      col("TimeonWebsite")
-    ).as[CustomerTimeSpent]
+
+    ds.map { customer =>
+      CustomerTimeSpent(
+        Email = customer.Email,
+        AvgSessionLength = customer.AvgSessionLength,
+        TimeonApp = customer.TimeonApp,
+        TimeonWebsite = customer.TimeonWebsite
+      )
+    }
   }
 
-  // filter the streaming dataset
+  /** We can demonstrate select() being stateless - Dataframe Version
+   *
+   * @param df: input Dataframe
+   * @return
+   */
+  def selectColumnsDataframeVersion(df: DataFrame): DataFrame = {
+    df.select("Email", "AvgSessionLength", "TimeonApp", "TimeonWebsite")
+  }
+
+  /**
+   * Filter the streaming dataset, stateless.
+   * @param ds: input dataset
+   * @return
+   */
   def filterData(ds: Dataset[EcommerceCustomer]): Dataset[EcommerceCustomer] = {
    ds.filter(customer => customer.AvgSessionLength.getOrElse(0.0) > 30)
   }
 
-  // demonstrate explode being stateless
+  /**
+   * Let's see how explode() is stateless.
+   *
+   * But in Dataset API, we should use typed transformations only
+   * so we do not use explode() we use flatMap!
+   *
+   * @param ds: input dataset.
+   * @return
+   */
   def explodeData(ds: Dataset[EcommerceCustomer]): Dataset[EcommerceCustomerWithCategory] = {
     import ds.sparkSession.implicits._
-    // this does not seem so useful (business logic wise), think of it just as an example
-    ds.withColumn("SpendingCategory", explode(array(lit("Low"), lit("Medium"), lit("High"))))
-      .as[EcommerceCustomerWithCategory]
+    // this does not seem so useful (business logic wise),
+    // think of it just as an example
+    val categories = Seq("Low", "Medium", "High")
+
+    ds.flatMap { customer =>
+      categories.map { category =>
+        EcommerceCustomerWithCategory(
+          Email = customer.Email,
+          Address = customer.Address,
+          Avatar = customer.Avatar,
+          AvgSessionLength = customer.AvgSessionLength,
+          TimeonApp = customer.TimeonApp,
+          TimeonWebsite = customer.TimeonWebsite,
+          LengthofMembership = customer.LengthofMembership,
+          YearlyAmountSpent = customer.YearlyAmountSpent,
+          SpendingCategory = category
+        )
+      }
+    }
   }
 
-  // dataframe version
-  // def explodeData(df: DataFrame): DataFrame = {
-  //  df.withColumn("SpendingCategory", explode(array(lit("Low"), lit("Medium"), lit("High"))))
-  // }
+  /**
+   * Dataframe version is simply, .explode()!
+   * @param df: input Dataframe
+   * @return
+   */
+  def explodeDataDataframeVersion(df: DataFrame): DataFrame = {
+    df
+      .withColumn("SpendingCategory", explode(array(lit("Low"), lit("Medium"), lit("High"))))
+  }
 
-
-  // show that map is stateless
+  /**
+   * map is another method for Dataset's which is stateless!
+   * @param ds: input dataset
+   * @return
+   */
   def mapData(ds: Dataset[EcommerceCustomer]): Dataset[EcommerceCustomer] = {
     import ds.sparkSession.implicits._
 
@@ -151,31 +212,66 @@ object StatelessOperations {
     )
   }
 
-  // show that flatmap is stateless
+  /**
+   * Dataframe version is simply making a new Column!
+   * @param df: input Dataframe
+   * @return
+   */
+  def mapDataDataframeVersion(df: DataFrame): DataFrame = {
+    df.withColumn("AdjustedIncome", col("Income") * 1.1)
+  }
+
+
+  /**
+   * Let's also demonstrate how flatMap works and
+   * how it is stateless.
+   * @param ds: input dataset
+   * @return
+   */
   def flatMapData(ds: Dataset[EcommerceCustomer]): Dataset[EcommerceCustomer] = {
     import ds.sparkSession.implicits._
 
+    // For each EcommerceCustomer object, flatMap generates
+    // a sequence (Seq) of two EcommerceCustomer objects
     ds.flatMap(customer => {
       Seq(
-        EcommerceCustomer(customer.Email, customer.Address, customer.Avatar, customer.AvgSessionLength, customer.TimeonApp, customer.TimeonWebsite, customer.LengthofMembership, customer.YearlyAmountSpent),
-        EcommerceCustomer(customer.Email, customer.Address, customer.Avatar, customer.AvgSessionLength, customer.TimeonApp, customer.TimeonWebsite, customer.LengthofMembership, customer.YearlyAmountSpent.map(_ * 0.3))
+        EcommerceCustomer(customer.Email, customer.Address, customer.Avatar,
+          customer.AvgSessionLength, customer.TimeonApp,
+          customer.TimeonWebsite, customer.LengthofMembership,
+          customer.YearlyAmountSpent),
+        EcommerceCustomer(customer.Email, customer.Address, customer.Avatar,
+          customer.AvgSessionLength, customer.TimeonApp,
+          customer.TimeonWebsite, customer.LengthofMembership,
+          customer.YearlyAmountSpent.map(_ * 0.3))
       )
     })
   }
 
-  // Dataframe Version
-  // def mapData(df: DataFrame): DataFrame = {
-  //  df.withColumn("AdjustedIncome", col("Income") * 1.1)
-  //}
+  /**
+   * Dataframe version of the flatMap method!
+   * @param df: input Dataframe
+   * @return
+   */
+  def flatMapDataDataframeVersion(df: DataFrame): DataFrame = {
+    // First DataFrame: identical to the input
+    val originalDF = df
 
-  // Dataframe Version
-  // def flatMapData(df: DataFrame): DataFrame = {
-  //  df.withColumn("ReducedIncome", col("AdjustedIncome") * 0.9)
-  // }
+    // Second DataFrame: YearlyAmountSpent is 30% of the original value
+    val modifiedDF = df
+      .withColumn("YearlyAmountSpent", col("YearlyAmountSpent") * 0.3)
 
-  /*
-  Instead of adding the sample data into a MemoryStream all at once,
-  add it incrementally.
+    // Combine both DataFrames using union
+    originalDF.union(modifiedDF)
+  }
+
+
+  /**
+   * Instead of adding the sample data into a MemoryStream all at once,
+   * add it incrementally.
+   *
+   * @param memoryStream: Memory Stream to add the data to.
+   * @param interval: interval as the data addition period
+   * @return
    */
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[EcommerceCustomer],
                                         interval: FiniteDuration): Future[Unit] = Future {
@@ -201,8 +297,13 @@ object StatelessOperations {
 
   }
 
-  /* We can generate even more data from sample data
-  and of course, save it to our filesystem
+
+  /**
+   * We can generate even more data from sample data
+   * and of course, save it to our filesystem
+   *
+   * @param jsonFilePath: File path for json.
+   * @param spark: The SparkSession that is working on the data.
    */
   def generateAndSaveData(jsonFilePath: String, spark: SparkSession): Unit = {
     import spark.implicits._
