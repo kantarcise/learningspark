@@ -5,7 +5,9 @@ import org.apache.spark.sql.streaming.{OutputMode, Trigger}
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.scalatest.funsuite.AnyFunSuite
 
-
+/**
+ * Let's test our approach!
+ */
 class WordCountToFileTest extends AnyFunSuite {
 
   test("Word count streaming job writes correct output") {
@@ -43,7 +45,7 @@ class WordCountToFileTest extends AnyFunSuite {
           pathOne, pathTwo, writeToSingleFile = true)
       }
       .outputMode(OutputMode.Complete())
-      .option("checkpointLocation", "/tmp/spark_checkpoint_test")
+      .option("checkpointLocation", "/tmp/spark_test_checkpoint")
       .trigger(Trigger.ProcessingTime("10 seconds"))
       .start()
 
