@@ -57,6 +57,7 @@ object AirbnbBaselineModel {
     // Calculate the RMSE for the average price prediction
     val rmse = regressionMeanEvaluator
       .evaluate(predDF)
-    println(f"The RMSE for predicting the average price is: $rmse%1.2f")
+
+    println(f"\nThe RMSE for predicting the average price is: $rmse%1.2f")
   }
 }
