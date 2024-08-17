@@ -18,7 +18,7 @@ object DeltaLakeTimeTravel {
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
-      .builder()
+      .builder
       .appName("Delta Lake Time Travel")
       .master("local[*]")
       .config("spark.sql.extensions",
@@ -44,6 +44,7 @@ object DeltaLakeTimeTravel {
     val deltaTable = DeltaTable
       .forPath(spark, nums_delta_path)
 
+    println("\n Here is the history of the deltaTable\n")
     deltaTable
       .history
       .select("version", "timestamp", "operation")
@@ -68,7 +69,7 @@ object DeltaLakeTimeTravel {
    */
   def queryDifferentVersionsDeltaTable(spark: SparkSession,
                                        deltaPath: String): Unit = {
-    println("Final version of DF:\n")
+    println("After all the Processing on Dataframe, Final version of DF:\n")
     spark
       .read
       .format("delta")
@@ -100,7 +101,6 @@ object DeltaLakeTimeTravel {
       .show()
   }
 
-
   /**
    * We can query previous versioned snapshots of a table
    * by using the DataFrameReader options
@@ -127,9 +127,7 @@ object DeltaLakeTimeTravel {
       .option("timestampAsOf", LocalDateTime.now().minusSeconds(5).toString)
       .load(deltaPath)
       .show()
-
   }
-
 
   /**
    * Make some transformations on a Dataframe and
@@ -144,6 +142,7 @@ object DeltaLakeTimeTravel {
 
     import spark.implicits._
 
+    println("\nMake a simple Dataframe and make some transformations on it!\n")
     val firstDF = spark
       .range(0,3)
 
@@ -172,9 +171,7 @@ object DeltaLakeTimeTravel {
       .mode("overwrite")
       .format("delta")
       .save(deltaPath)
-
   }
-
 
   /**
    * Clean up the Delta table and delete the directory.
@@ -196,5 +193,4 @@ object DeltaLakeTimeTravel {
       println(s"Directory $deltaPath does not exist")
     }
   }
-
 }
