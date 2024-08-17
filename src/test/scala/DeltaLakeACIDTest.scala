@@ -61,6 +61,7 @@ class DeltaLakeACIDTest extends AnyFunSuite with Eventually {
     val checkpointDir = "/tmp/loanCheckpoint_acid"
     val streamingQuery = loansStreamDS
       .writeStream
+      .queryName("Loan Stream to Delta Testing ACID")
       .format("delta")
       .option("checkpointLocation", checkpointDir)
       .outputMode("append")
