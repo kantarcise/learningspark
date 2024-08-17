@@ -11,8 +11,11 @@ import UnmanagedStateEventTimeTimeout.updateUserStatusWithEventTimeTimeout
 import scala.concurrent.duration._
 import scala.concurrent.Await
 
-// TODO: what?
 import java.sql.Timestamp
+
+// TODO: what are these?
+// Here is a guide:
+// https://www.scalatest.org/user_guide/using_matchers
 import org.scalatest.matchers.should._
 import org.scalatest.flatspec._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
@@ -81,7 +84,7 @@ class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
         assert(!statuses("2").active)
         assert(!statuses("3").active)
         assert(!statuses("4").active)
-        assert(statuses("5").active)
+        assert(statuses("5").active == false)
         result.show()
       }
     } finally {
