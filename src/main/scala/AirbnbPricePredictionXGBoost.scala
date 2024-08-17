@@ -19,7 +19,8 @@ import ml.dmlc.xgboost4j.scala.spark.{XGBoostRegressor, XGBoostRegressionModel}
 object AirbnbPricePredictionXGBoost {
   def main(args: Array[String]): Unit = {
     // Initialize Spark session
-    val spark = SparkSession.builder()
+    val spark = SparkSession
+      .builder()
       .appName("Spark ML Pipeline with XGBoost")
       .master("local[*]")
       .getOrCreate()
@@ -62,13 +63,18 @@ object AirbnbPricePredictionXGBoost {
 
     // Identify numeric columns
     // val numericCols = trainDF.dtypes.collect {
-    //   case (field, dataType) if dataType == "DoubleType" && field != "price" && field != "label" => field
+    //   case (field, dataType) if dataType == "DoubleType" &&
+    //   field != "price" &&
+    //   field != "label" => field
     // }
 
     // or
     val numericCols = trainDF
       .dtypes
-      .filter{ case (field, dataType) => dataType == "DoubleType" && field != "price" && field != "label"}
+      .filter{ case (field, dataType) =>
+        dataType == "DoubleType" &&
+          field != "price" &&
+          field != "label"}
       .map(_._1)
 
     val assemblerInputs = indexOutputCols ++ numericCols
