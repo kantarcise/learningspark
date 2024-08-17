@@ -34,7 +34,7 @@ object UnmanagedStateEventTimeTimeout {
   case class UserStatus(userId: String, var active: Boolean) {
     /**
      * Updates the user's active status based on the action.
-     * @param action
+     * @param action: the UserAction to base the status on.
      */
     def updateWith(action: UserAction): Unit = {
       active = action.action match {
@@ -88,6 +88,7 @@ object UnmanagedStateEventTimeTimeout {
     // Start the streaming query and print to console
     val query = latestStatuses
       .writeStream
+      .queryName("Latest Status of Users to Console")
       .outputMode("update")
       .format("console")
       .start()
@@ -97,7 +98,6 @@ object UnmanagedStateEventTimeTimeout {
     // Wait for the data adding to finish (it won't, but in a real
     // use case you might want to manage this better)
     Await.result(addDataFuture, Duration.Inf)
-
   }
 
 
