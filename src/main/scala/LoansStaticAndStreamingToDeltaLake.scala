@@ -110,6 +110,7 @@ object LoansStaticAndStreamingToDeltaLake {
     // Write the streaming Dataset to Delta Lake
     loansStreamDS
       .writeStream
+      .queryName("Loans Streaming into Delta")
       .format("delta")
       .option("checkpointLocation", checkpointDir)
       .trigger(Trigger.ProcessingTime("5 seconds"))
