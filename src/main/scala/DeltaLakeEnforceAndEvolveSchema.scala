@@ -37,6 +37,9 @@ object DeltaLakeEnforceAndEvolveSchema {
       (3L, 3000, 3000.0, "TX")
     ).toDF("loan_id", "funded_amnt", "paid_amnt", "addr_state")
 
+    println("Initial Schema:\n")
+    initialLoans.printSchema()
+
     // Write the initial DataFrame to Delta Lake
     initialLoans
       .write
@@ -59,8 +62,10 @@ object DeltaLakeEnforceAndEvolveSchema {
 
     // Error message:
     // A schema mismatch detected when writing to the Delta table
-
     */
+
+    println("An update happened in the Dataframe, new Schema:\n")
+    loanUpdates.printSchema()
 
     // After you run the code that failed, you can use:
     loanUpdates
@@ -77,10 +82,10 @@ object DeltaLakeEnforceAndEvolveSchema {
       .load(deltaPath)
 
     // Show the schema and data
+    println("Now when we read back the Dataframe, the final schema is:\n")
     deltaTable.printSchema()
     deltaTable.show()
 
     spark.stop()
-
   }
 }
