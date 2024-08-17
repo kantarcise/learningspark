@@ -311,7 +311,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Also, why not use a `CrossValidator` to find a better performing model? [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model! 
 
-- **Model Deployment Options with MLlib**: Deploying machine learning models means something different for every organization and use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate which mode of model deployment is suitable for the task at hand—be it batch, streaming, real-time 
+- **Model Deployment Options with MLlib**: Deploying machine learning models means something different for every organization and use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate which mode of model deployment is suitable for the task at hand—be it batch, streaming, real-time:
 
 |                         | Throughput | Latency Usage               | Example application       | 
 |-------------------------|------------|-----------------------------|---------------------------| 
@@ -327,11 +327,11 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - **How often will you retrain the model?**: Unlike libraries like sklearn or TensorFlow, MLlib does not support online updates or warm starts. If you’d like to retrain your model to incorporate the latest data, you’ll have to retrain the entire model from scratch, rather than getting to leverage the existing parameters. In terms of the frequency of retraining, some people will set up a regular job to retrain the model (e.g., once a month), while others will actively monitor the model drift to identify when they need to retrain.
 
-    - **How will you version the model?**: You can use the MLflow Model Registry to keep track of the models you are using and control how they are transitioned to/from staging, production, and archived
+    - **How will you version the model?**: You can use the MLflow Model Registry to keep track of the models you are using and control how they are transitioned to/from staging, production, and archived.
 
 - **Streaming**: Instead of waiting for an hourly or nightly job to process your data and generate predictions, Structured Streaming can continuously perform inference on incoming data. While this approach is more costly than a batch solution as you have to continually pay for compute time (and get lower throughput), you get the added benefit of generating predictions more frequently so you can act on them sooner. Streaming solutions in general are more complicated to maintain and monitor than batch solutions, but they offer lower latency.
 
-- In [AirbnbPricePredictionStreaming](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionStreaming.scala) we will simulate a streaming data streaming in a directory of Parquet files. We will use a model that we saved in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) and see how our model performs in a Streaming Application!
+- In [AirbnbPricePredictionStreaming](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionStreaming.scala) we will simulate a streaming data streaming in a directory of Parquet files. We will use a model that we saved in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) and see how our model performs in a Streaming Application! It might be a good opportunity to check out Spark Web UI to see how Streaming Query is doing! 🐴
 
 - **Near Real-Time**: If your use case requires predictions on the order of hundreds of milliseconds to seconds, you could build a prediction server that uses MLlib to generate the predictions. While this is not an ideal use case for Spark because you are processing very small  amounts of data, you’ll get lower latency than with streaming or batch solutions.
 
@@ -347,7 +347,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - **How can we leverage Spark for non-MLlib models?**: A common use case is to build a scikit-learn or TensorFlow model on a single machine, perhaps on a subset of your data, but perform distributed inference on the entire data set using Spark.
 
-TIP: If the workers cached the model weights after loading it for the first time, subsequent calls of the same UDF with the same model loading will become significantly faster. For more information, check page 337.
+    - **TIP**: If the workers cached the model weights after loading it for the first time, subsequent calls of the same UDF with the same model loading will become significantly faster. For more information, check page 337.
 
 - **Distributed Hyperparameter Tuning**: Even if you do not intend to do distributed inference or do not need MLlib’s distributed training capabilities, you can still leverage Spark for distributed hyperparameter tuning. `joblib` and `Hyperopt`, check out page 338.
 
