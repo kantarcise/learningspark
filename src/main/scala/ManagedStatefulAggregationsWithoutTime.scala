@@ -25,7 +25,6 @@ object ManagedStatefulAggregationsWithoutTime {
     val spark = SparkSession
       .builder()
       .appName("Stateful Operations Without Time")
-      // if you want to run it in IDE
       .master("local[*]")
       .getOrCreate()
 
@@ -33,7 +32,7 @@ object ManagedStatefulAggregationsWithoutTime {
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Create a custom aggregator for finding the minimum temperature
+    // Make a custom aggregator for finding the minimum temperature
     // An Aggregator is a typed class that performs aggregation operations.
     val minTemperatureAggregator: TypedColumn[DeviceIoTData, Double] = new
 
@@ -103,7 +102,7 @@ object ManagedStatefulAggregationsWithoutTime {
         MemoryStream[DeviceIoTData](id = 1, spark.sqlContext)
 
     // Add sample data every 5 seconds - one by one!
-    val addDataFuture = addDataPeriodicallyToMemoryStream(memoryStream, 5.seconds)
+    val addDataFuture = addDataPeriodicallyToMemoryStream(memoryStream, 2.seconds)
 
     // Make a streaming Dataset from the memory stream
     val sensorStream: Dataset[DeviceIoTData] = memoryStream
@@ -147,6 +146,7 @@ object ManagedStatefulAggregationsWithoutTime {
 
     val query = runningCount
       .writeStream
+      .queryName("Count to Console")
       // Append output mode not supported when there
       // are streaming aggregations on streaming
       // DataFrames/DataSets without watermark;
@@ -159,6 +159,7 @@ object ManagedStatefulAggregationsWithoutTime {
 
     val querySecond = runningCountOfCountries
       .writeStream
+      .queryName("Count of Countries to Console")
       .outputMode("complete")
       .format("console")
       .option("truncate" , false)
@@ -169,6 +170,7 @@ object ManagedStatefulAggregationsWithoutTime {
 
     val queryThird = minTemperatureByCountry
       .writeStream
+      .queryName("Min Temp to Console")
       .outputMode("complete")
       .format("console")
       .option("truncate" , false)
