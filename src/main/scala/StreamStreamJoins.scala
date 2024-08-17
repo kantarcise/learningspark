@@ -12,7 +12,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
 
-
 /**
  * Now that we have 2 streaming Dataframes, we will
  * have 2 MemoryStreams with 2 different methods.
@@ -57,7 +56,7 @@ object StreamStreamJoins {
 
     // Because this joining is expensive and
     // Structured Streaming will buffer all non matched
-    // Clicks and Impressions, in it's the state
+    // Clicks and Impressions, in it's the state,
     // let's use watermarking!
     val joinedStream = joinTwoStreamingDataframesWithWatermark(
       // impressionStream, clickStream, "inner")
@@ -69,6 +68,7 @@ object StreamStreamJoins {
 
     val query = joinedStream
       .writeStream
+      .queryName("Joined stream to Console")
       .outputMode("append")
       .format("console")
       .option("truncate", false)
@@ -130,9 +130,7 @@ object StreamStreamJoins {
       Click("c1d2e3f4-5a6b-7c8d-9e0f-1a2b3c4d5e6f", Timestamp.valueOf("2024-07-09 12:53:48.973"), "USA"),
       Click("zjleics9-1c2d-3e4f-5a6b-7c8d9e0f1a2b", Timestamp.valueOf("2024-07-09 12:59:47.789"), "TUN"),
       Click("6561z26w-8c9d-0e1a-2b3c-4d5e6f7a8b9c", Timestamp.valueOf("2024-07-09 13:44:50.444"), "BRA"),
-
     )
-
     sampleData.foreach { record =>
       memoryStream.addData(record)
       Thread.sleep(interval.toMillis)
