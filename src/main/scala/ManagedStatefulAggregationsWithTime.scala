@@ -33,69 +33,78 @@ We solve that with Watermarks! :)
  * whole stream, you want aggregations over data bucketed by time windows.
  *
  * Continuing with our sensor example, say each sensor is expected
- * to send at most one reading per minute and we want to detect if any
+ * to send readings in regular intervals and we want to detect if any
  * sensor is reporting an unusually high number of times.
+ *
+ * We will use two rateStreams for this!
+ *
+ * Let's also use this opportunity to learn about RateStream!
+ * https://jaceklaskowski.gitbooks.io/spark-structured-streaming/content/spark-sql-streaming-RateStreamSource.html
  */
 object ManagedStatefulAggregationsWithTime {
+
+  case class RateStream(timestamp: Timestamp, value: Long)
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
-      .builder()
+      .builder
       .appName("Aggregations With Time")
       .master("local[*]")
       .getOrCreate()
 
-    import  spark.implicits._
+    import spark.implicits._
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Initialize MemoryStream
-    val sensorMemoryStream = new
-        MemoryStream[SimpleSensorWithTime](1, spark.sqlContext)
+    // Make a DataFrame representing a RateStream
+    val primaryRateStream = spark
+      .readStream
+      .format("rate")
+      .option("rowsPerSecond", 1)
+      .load()
+      .as[RateStream]
 
-    // Add sample data every 3 seconds - one by one!
-    val addDataFuture = addDataPeriodicallyToMemoryStream(
-      sensorMemoryStream, 3.seconds)
+    // Secondary rate stream simulating a
+    // malfunctioning sensor (device 1)
+    // with a rampUpTime of 10 seconds
+    val malfunctioningRateStream = spark
+      .readStream
+      .format("rate")
+      // Device 1 sends data 5 times per second
+      .option("rowsPerSecond", 5)
+      .option("rampUpTime", 10)
+      .load()
+      .as[RateStream]
+      .map(seq => SimpleSensorWithTimestamp(1, 80, seq.timestamp))
 
-    val sensorStreamWithTimeDS = sensorMemoryStream.toDS()
+    // val simpleSensorStream : Dataset[SimpleSensorWithTimestamp] =
+    //   mapRateStreamToSensors(primaryRateStream)
 
-    // Convert the timestamp from Long to Timestamp using the map operation and new case class
-    val sensorStreamWithTimestamp: Dataset[SimpleSensorWithTimestamp] = sensorStreamWithTimeDS
-      .map { s => SimpleSensorWithTimestamp(
-        s.device_id,
-        s.temp,
-        new Timestamp(s.timestamp * 1000))}
+    // Map both rate streams to sensor data
+    val simpleSensorStream: Dataset[SimpleSensorWithTimestamp] =
+      mapRateStreamToSensors(primaryRateStream)
+        .union(malfunctioningRateStream)
 
-    // Perform aggregation, tumblingWindow
-    // Our window will be {2016-03-20 05:20:00, 2016-03-20 05:25:00}
-    // As a result of this streaming Dataframe, we can clearly see
-    // the sensor 3 is not acting normally!
-    val aggregatedStreamTumbling : DataFrame = sensorStreamWithTimestamp
-      // five-minute windows as a dynamically computed grouping column.
+    // Perform aggregation, tumbling window
+    val aggregatedStreamTumbling: DataFrame = simpleSensorStream
       .groupBy(window($"eventTime", "5 minute"), $"device_id")
       .count()
 
-    // perform aggregation, sliding window
-    // Our window will be {2016-03-20 05:18:00, 2016-03-20 05:23:00}
-    // to {2016-03-20 05:24:00, 2016-03-20 05:29:00} - 3 minute sliding
-    // some events will be in multiple groups!
-    val aggregatedStreamSliding : DataFrame = sensorStreamWithTimestamp
-      // compute counts corresponding to 5-minute
-      // windows sliding every 3 minutes,
+    // Perform aggregation, sliding window
+    val aggregatedStreamSliding: DataFrame = simpleSensorStream
       .groupBy(window(
-        timeColumn =  $"eventTime",
-        windowDuration =  "5 minute",
-        slideDuration =  "3 minute"), $"device_id")
+        timeColumn = $"eventTime",
+        windowDuration = "5 minute",
+        slideDuration = "3 minute"), $"device_id")
       .count()
 
     // Start the streaming query and print to console
-    val query = aggregatedStreamTumbling
+    val query: StreamingQuery = aggregatedStreamTumbling
       .writeStream
       .outputMode("complete")
       .format("console")
-      // we can see the print out in full
-      .option("truncate" , false)
+      .option("truncate", false)
       .start()
 
     val querySecond: StreamingQuery = aggregatedStreamSliding
@@ -105,20 +114,43 @@ object ManagedStatefulAggregationsWithTime {
       .option("truncate", false)
       .start()
 
-    // In final batch, we will see in the Tumbling Windows that
-    // sensor 3 is acting unnatural :)
     query.awaitTermination()
     querySecond.awaitTermination()
+  }
 
-    // Wait for the data adding to finish (it won't, but in a real
-    // use case you might want to manage this better)
-    Await.result(addDataFuture, Duration.Inf)
+  /** Using a rate stream, map each batch
+   * to SimpleSensorWithTimestamp
+   *
+   * @param rs:  The RateStream streaming Dataset
+   * @return
+   */
+  def mapRateStreamToSensors(rs: Dataset[RateStream]
+                            ): Dataset[SimpleSensorWithTimestamp] ={
+
+    import rs.sparkSession.implicits._
+
+    val start = 20
+    val r = new scala.util.Random
+
+    rs
+      .map( seq =>
+      SimpleSensorWithTimestamp(
+        // sensors 1, 2, 3
+        (seq.value % 3 + 1).toInt,
+        start + r.nextInt(80),
+        seq.timestamp)
+    )
   }
 
   /**
-   Add generated data on time interval, to an existing MemoryStream.
-
-   This simulates a real streaming scenario where data arrives continuously.
+   * Add generated data on time interval, to an existing MemoryStream.
+   * This simulates a real streaming scenario where data arrives continuously.
+   *
+   * We can use a Memory stream an completely control the data.
+   *
+   * @param memoryStream: The memory stream to add the data
+   * @param interval: the interval
+   * @return
    */
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[SimpleSensorWithTime],
                                         interval: FiniteDuration): Future[Unit] = Future {
@@ -150,5 +182,4 @@ object ManagedStatefulAggregationsWithTime {
       Thread.sleep(interval.toMillis)
     }
   }
-
 }
