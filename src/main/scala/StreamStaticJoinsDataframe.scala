@@ -55,6 +55,7 @@ object StreamStaticJoinsDataframe {
 
     val query = joinedStream
       .writeStream
+      .queryName("Joined Stream to Console")
       .outputMode("append")
       .format("console")
       .option("truncate", false)
@@ -107,7 +108,6 @@ object StreamStaticJoinsDataframe {
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[Click],
                                         interval: FiniteDuration): Future[Unit] = Future {
 
-
     val sampleData: Seq[Click] = Seq(
       Click("eebc1f79-03df-4b17-8124-f4875a0e1f65", Timestamp.valueOf("2024-07-09 12:35:00"), "USA"),
       Click("yrhh4w5j-6d1b-48b1-9a92-1f2a334b8a2c", Timestamp.valueOf("2024-07-09 12:37:00"), "USA"),
@@ -125,6 +125,5 @@ object StreamStaticJoinsDataframe {
       memoryStream.addData(record)
       Thread.sleep(interval.toMillis)
     }
-
   }
 }
