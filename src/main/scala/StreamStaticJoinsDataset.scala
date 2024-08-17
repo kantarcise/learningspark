@@ -10,7 +10,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
 
-
 /** Structured Streaming supports joining a streaming
  * Dataset with another static or streaming Dataset.
  *
@@ -54,6 +53,7 @@ object StreamStaticJoinsDataset{
     // Start the streaming query and print to console
     val query = joinedStream
       .writeStream
+      .queryName("Joined Click and Impressions to Console")
       .outputMode("append")
       .format("console")
       .option("truncate", false)
@@ -64,7 +64,6 @@ object StreamStaticJoinsDataset{
     // Wait for the data adding to finish (it won't, but in a real
     // use case you might want to manage this better)
     Await.result(addDataFuture, Duration.Inf)
-
   }
 
   /** Let's suppose we are an advertisement company that shows
