@@ -1,14 +1,18 @@
 package learningSpark
 
-import org.apache.spark.sql.{SparkSession, DataFrame}
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
-import org.apache.spark.ml.regression.{RandomForestRegressor, RandomForestRegressionModel}
+import org.apache.spark.ml.regression.{RandomForestRegressionModel, RandomForestRegressor}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.sql.functions._
 import org.mlflow.tracking._
 
+import scala.util.Random
+
 /**
+ * Let's log some models with MlFlow!
+ *
  * Logging is done with MlflowClient
  * https://www.mlflow.org/docs/latest/java_api/org/mlflow/tracking/MlflowClient.html
  *
@@ -52,8 +56,8 @@ object MlflowSimple {
     val mlflowClient = new MlflowClient(trackingUri)
 
     // Start an MLflow run
-    // WARN: This
-    val experimentId = mlflowClient.createExperiment("random-forest2")
+    val random_string = Random.nextString(3)
+    val experimentId = mlflowClient.createExperiment(s"random-forest-${random_string}")
     val runInfo = mlflowClient.createRun(experimentId)
     val runId = runInfo.getRunId
 
@@ -101,9 +105,10 @@ object MlflowSimple {
         .repartition(1)
         .write
         .option("header", "true")
-        .csv(s"/tmp/feature-importance$runId.csv")
+        .csv(s"/tmp/feature-importance-$runId.csv")
 
-      mlflowClient.logArtifact(runId, new java.io.File(s"/tmp/feature-importance-$runId.csv"))
+      mlflowClient.logArtifact(runId,
+        new java.io.File(s"/tmp/feature-importance-$runId.csv"))
     } finally {
       mlflowClient.setTerminated(runId)
     }
