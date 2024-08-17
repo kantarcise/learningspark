@@ -260,7 +260,6 @@ object AirbnbPricePredictionIntermediate {
     pipelineModel
   }
 
-
   /**
    * Builds a linear regression model to predict the
    * price on the log scale.
@@ -349,7 +348,7 @@ object AirbnbPricePredictionIntermediate {
       .overwrite()
       .save(pipelinePath)
 
-    println(s"Model saved to $pipelinePath.")
+    println(s"\nModel saved to $pipelinePath.")
 
     // Load the saved model
     val savedPipelineModel = PipelineModel.load(pipelinePath)
@@ -357,6 +356,4 @@ object AirbnbPricePredictionIntermediate {
     // loaded correctly
     println("Model loaded successfully from disk.")
   }
-
 }
-
