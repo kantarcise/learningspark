@@ -2,7 +2,7 @@ package learningSpark
 
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, Encoder, SparkSession}
 
 import java.sql.Timestamp
 import scala.concurrent.duration._
@@ -98,6 +98,8 @@ object StreamStaticJoinsDataset{
     spark
       .read
       .schema(impressionsSchema)
+      // instead of defining the schema we could
+      // .schema(implicitly[Encoder[Impression]].schema)
       .option("header", "true")
       .format("csv")
       .load(impressionsFilePath)
