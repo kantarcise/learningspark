@@ -52,6 +52,7 @@ class StreamStaticJoinsDataframeTest extends AnyFunSuite with Eventually {
     // Start the streaming query and collect results to memory
     val query: StreamingQuery = joinedStream
       .writeStream
+      .queryName("Joined Stream within Memory")
       .outputMode("append")
       .format("memory")
       .queryName("joinedStream")
