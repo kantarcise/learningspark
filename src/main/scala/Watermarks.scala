@@ -17,13 +17,18 @@ import java.sql.Timestamp
  *
  * This limits the total amount of state that the engine has to
  * maintain to compute the results of the query :)
+ *
+ * In our application we will have watermarked Datasets
+ * and a simulated data which will arrive later than our watermark
+ *
+ * They will be dropped as we expect!
  */
 object Watermarks {
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
-      .builder()
+      .builder
       .appName("Watermarks")
       .master("local[*]")
       .getOrCreate()
@@ -32,7 +37,7 @@ object Watermarks {
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    // with the help of listener, we can see information like
+    // with the help of CustomListener, we can see information like
     // numRowsDroppedByWatermark
     spark.streams.addListener(new CustomListener)
 
@@ -69,12 +74,14 @@ object Watermarks {
        .count()
 
     // In the book, it says this about the `update` mode:
-    //      This is the most useful and efficient mode to
-    //      run queries with streaming aggregations.
-    // this query will drop 8 rows, because every instance is
+    //      - This is the most useful and efficient mode to
+    // run queries with streaming aggregations.
+
+    // This query will drop 8 rows, because every instance is
     // in a single window
-    val query = aggregatedStreamTumbling
+    val query: StreamingQuery = aggregatedStreamTumbling
       .writeStream
+      .queryName("Tumbling Window Stream")
       // TODO: in complete mode, watermarks doesn't work. Why?
       //  The answer in the book, end of page 245!
       .outputMode("update")
@@ -86,6 +93,7 @@ object Watermarks {
     // this query will drop 16 rows, because of sliding window
     val querySecond: StreamingQuery = aggregatedStreamSliding
       .writeStream
+      .queryName("Sliding Window Stream")
       .outputMode("update")
       .format("console")
       .option("truncate", false)
@@ -125,7 +133,7 @@ object Watermarks {
       SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:06:00")),
       SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:07:00")),
       SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:08:00")),
-      SimpleSensorWithTimestamp(420, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:09:00")),
+      SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:09:00")),
       SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:10:00")),
       SimpleSensorWithTimestamp(4, 20 + r.nextInt(61), Timestamp.valueOf("2022-01-01 09:11:00")),
     )
