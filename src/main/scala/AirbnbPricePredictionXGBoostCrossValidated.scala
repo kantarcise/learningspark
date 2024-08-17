@@ -16,7 +16,8 @@ import ml.dmlc.xgboost4j.scala.spark.{XGBoostRegressor, XGBoostRegressionModel}
 object AirbnbPricePredictionXGBoostCrossValidated {
   def main(args: Array[String]): Unit = {
     // Initialize Spark session
-    val spark = SparkSession.builder()
+    val spark = SparkSession
+      .builder
       .appName("Spark ML Pipeline with XGBoost")
       .master("local[*]")
       .getOrCreate()
@@ -54,7 +55,9 @@ object AirbnbPricePredictionXGBoostCrossValidated {
 
     // Identify numeric columns
     val numericCols = trainDF.dtypes.collect {
-      case (field, dataType) if dataType == "DoubleType" && field != "price" && field != "label" => field
+      case (field, dataType) if dataType == "DoubleType" &&
+        field != "price" &&
+        field != "label" => field
     }
     val assemblerInputs = indexOutputCols ++ numericCols
 
@@ -78,7 +81,8 @@ object AirbnbPricePredictionXGBoostCrossValidated {
       .setFeaturesCol("features")
 
     // Build pipeline
-    val pipeline = new Pipeline().setStages(Array(stringIndexer, vecAssembler, xgboost))
+    val pipeline = new Pipeline()
+      .setStages(Array(stringIndexer, vecAssembler, xgboost))
 
     // Hyperparameter tuning
     val paramGrid = new ParamGridBuilder()
