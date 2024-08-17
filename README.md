@@ -248,54 +248,16 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - Then we move onto timeouts, and how we can use them to expire state that has not been updated for a while. First [UnmanagedStateProcessingTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStatefulOperations.scala) will show us how we can use ProcessingTime for out timeouts, in a similar structure with `UnmanagedStatefulOperations`. Because we are using the `case classes` with same name (`UserAction`, `UserStatus`), we will see how we can scope them into our object. Overall, this type of timeouts are easy to undertand, but there are a lot of downsides for using them. Check out [25th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras) for more information.
 
-    - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
+    - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we will see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages! 
+    
+    - We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
     - `flatMapGroupsWithState()`, gives us even more flexibility than `mapGroupsWithState()`. In [UnmanagedStateWithFlatMapGroupsWithState](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateWithFlatMapGroupsWithState.scala) we will discover how we can use `flatMapGroupsWithState()` in a similar fashion with the example applications we did before! We will make use of `org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode}`, especially `OutputMode`.
 
 
 #### Chapter 9 - Building Reliable Data Lakes with Apache Spark 🐢 
 
-- Expressing the processing logic only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can query the processed data and get insights from it. The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline.
-
-- Here is the short history:
-
-    - **Ideal Storage**: An ideal Storage solution should be scalable and performent, supports ACID transactions, supports diverse data formats, supports diverse workloads and should be open.
-
-    - **Databases?**: Databases was the most reliable solution for decades, with their strict schema and SQL queries. SQL workloads are divided into 2, **Online transaction processing (OLTP) workloads** (Like bank account transactions, high-concurrency, low-latency, simple queries) and **Online analytical processing (OLAP)** (like periodic reporting, complex queries (aggregates and joins), require high-throughput scans over many records).
-
-    - **Spark Designed for ? 🤔**: Spark is primarily designed for **OLAP**.
-
-    - **Limitations of Databases**: Growth in data size (advent of big data, global trend to measure and collect everything), Growth in the diversity of analytics (a need for deeper insights, ML - DL).
-
-    - **Issues with Databases**: Databases are extremely expensive to scale out and Databases do not support non–SQL based analytics very well.
-
-    - **Data Lakes**:  In contrast to most databases, a data lake is a distributed storage solution that runs on commodity hardware and easily scales out horizontally. The data lake architecture, unlike that of databases, decouples the distributed storage system from the distributed compute system. This allows each system to scale out as needed by the workload. Furthermore, the data is saved as files with open formats, such that any processing engine can read and write them using standard APIs.
-
-    - **How to build as Datalake?**:  Organizations build their data lakes by independently choosing the following: **Storage system** ([HDFS](https://www.databricks.com/glossary/hadoop-distributed-file-system-hdfs) on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
-
-    - **The advantage of Data Lakes?**: The flexibility (the ability to choose the storage system, open data format, and processing engine that are best suited to the workload at hand) is the biggest advantage of data lakes over databases.
-
-    - **Spark is great with Datalakes, why?**: Spark Support for diverse workloads, support for diverse file formats, support for diverse filesystems.
-
-    - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the lack of transactional guarantees: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
-
-    - **Is there a better way? 🤔**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
-
-    - **Lakehouses: The Next Step 🎉**: **Combines the best** elements **of data lakes** and **data warehouses** for OLAP workloads. 
-
-        - **1️⃣ Transaction support**: Similar to Databases, **ACID** guarantees in concurrent workloads.
-
-        - **2️⃣ Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
-
-        - **3️⃣ Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access **all types of data** needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
-
-        - **4️⃣ Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
-        
-        - **5️⃣ Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and *slowly changing dimension* (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
-
-        - **6️⃣ Data governance**: Lakehouses provide the tools with which you can reason about **data integrity** and audit all the data changes for policy compliance.
-
-    - **Current selection of Lakehouses?**: Currently, there are a few open source systems, such as **Apache Hudi**, **Apache Iceberg**, and **Delta Lake**, that can be used to build lakehouses with these properties (more information page 272). 
+- Expressing the processing logic only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can query the processed data and get insights from it. The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline. To learn more about the history of storage solutions, see [53th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras)
 
 - We focus on **Delta Lake**! It is hosted by the Linux Foundation, built by the original creators of Apache Spark. It is called Delta Lake because of its analogy to streaming. Streams flow into the sea to create deltas—this is where all of the sediments accumulate, and thus where the valuable crops are grown. Jules S. Damji (one of our coauthors) came up with this!
 
@@ -306,13 +268,15 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In [LoansStaticToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticToDeltaLake.scala) we will see a simple example of how we can load a static data into Delta Lake and query from the view we've made.
 
-- As with static DataFrames, we can easily modify our existing Structured Streaming jobs to write to and read from a Delta Lake table by setting the format to **"delta"**. [LoansStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStreamingToDeltaLake.scala) will help us understand making a streaming Dataframe and writing the data into Delta Lake. We will use two different `MemoryStream[LoanStatus]` and write into the same table. After the write process, we will read the data back and see it in the console! Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we will test the ACID guarantees Delta Lake provides, with a small scale.
+- As with static DataFrames, we can easily modify our existing Structured Streaming jobs to write to and read from a Delta Lake table by setting the format to **"delta"**. [LoansStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStreamingToDeltaLake.scala) will help us understand making a streaming Dataframe and writing the data into Delta Lake. We will use two different `MemoryStream[LoanStatus]` and write into the same table. After the write process, we will read the data back and see it in the console! 
 
-- In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we pretty much can do it all (static - static & stream - stream & stream)!
+- Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we will test the ACID guarantees Delta Lake provides, with a small scale.
 
-- [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to enforce or merge a schema when we are working with a Dataframe.
+- In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we can pretty much do it all (static - static & stream - stream & stream)!
 
-- [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data.
+- [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to **enforce** or **merge** a schema when we are working with a Dataframe.
+
+- [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data. We will work on a Delta Table with `DeltaTable.forpath(spark, deltaPath)`. This is a long one, and a better example for decomposition. 👨‍💻
 
 - [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is from outside of the book, just to demonstrate all the cool things that we can do!
 
@@ -325,7 +289,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - We will start our journey of setting up Machine Learning Pipelines with a small step, in [AirbnbPricePredictionSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionSimple.scala) we will see how we can setup an incredibly simple `LinearRegression` pipeline. We will make a train/test split from our cleansed data and train a model after. We will see how we can use `VectorAssembler()` to put features into vectors, with `prepareFeatures()`.
 
-- [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, using `R Formula` and `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
+- [AirbnbPricePredictionIntermediate](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala) will help us understand log based prediction for categories like `price`, using `R Formula` and the option to `save/load` for models so that we have Reusability. Checking out the methods `modelWithOneHotEncoding` and `betterModelWithLogScale` might be really helpful. Of course, we will need a measurement metric for deciding the performance of a model, and `evaluateModelRMSE()` & `evaluateModelR2()` will help us there.
 
 - When we use RMSE for evaluating the performance of a model, we need a baseline. A simple baseline example is given in [AirbnbBaselineModel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionIntermediate.scala).
 
@@ -339,11 +303,11 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - To be able to run the following applications, you can use a docker container! 🐤 For details and step by step tutorial, see [the readme](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerMlflow/readme.md)
 
-- With [MlflowSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowSimple.scala) we will discover how we can use MLFlow to track and monitor our deployments for our ML Applications in Spark.
+- With [MlflowSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowSimple.scala) we'll discover how we can use MLFlow to track and monitor our deployments for our ML Applications in Spark.
 
-- With [MlflowWithContext](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowWithContext.scala) we can log tags, metrics and artifacts with using the `ActiveRun` only! Also, we will keep using the same experiment and submit new runs as we rerun the application!
+- With [MlflowWithContext](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowWithContext.scala) we can log tags, metrics and artifacts with using the `ActiveRun` only! Also, we will keep using the same experiment (`random-forest-experiment`) and submit new runs as we rerun the application!
 
-- An extra example that is not in the book but in the [dbc, Chapter 11](https://github.com/databricks/LearningSparkV2/tree/master/notebooks) (To open the dbc, make a Databricks Community Edition Account and import the dbc into your workspace.) shows us how we can use `XGBoost` with Spark! In [AirbnbPricePredictionXGBoost](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoost.scala) we will simply make a pipeline with `XGBoostRegressor` from `import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor`. We need an addition in our `build.sbt` for this external library!
+- **You found another gift!:** An extra example that is not in the book but in the [dbc, Chapter 11](https://github.com/databricks/LearningSparkV2/tree/master/notebooks) (To open the dbc, make a Databricks Community Edition Account and import the dbc into your workspace.) shows us how we can use `XGBoost` with Spark! In [AirbnbPricePredictionXGBoost](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoost.scala) we will simply make a pipeline with `XGBoostRegressor` from `import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor`. We need an addition in our `build.sbt` for this external library!
 
 - Also, why not use a `CrossValidator` to find a better performing model? [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model! 
 
@@ -695,6 +659,46 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 51) **Cross Validator Inside Pipeline or Vice Versa ??**:  There’s another trick we can use to speed up model training: putting the cross-validator inside the pipeline (e.g., `Pipeline(stages=[..., cv])`) instead of putting the pipeline inside the cross-validator (e.g., `CrossValidator(estimator=pipeline, ...)`). Every time the cross-validator evaluates the pipeline, it runs through every step of the pipeline for each model, even if some of the steps don’t change, such as the StringIndexer. By reevaluating every step in the pipeline, we are learning the same StringIndexer mapping over and over again, even though it’s not changing. If instead we put our cross-validator inside our pipeline, then we won’t be reevaluating the StringIndexer (or any other estimator) each time we try a different model.
 
 52) **Logging - Configuring Logging Programmatically**: Spark gives us the ability to configure logging as we please. Since Spark 3.3, Spark migrates its log4j dependency from 1.x to 2.x, [here is the link](https://spark.apache.org/docs/latest/core-migration-guide.html#upgrading-from-core-32-to-33). We can configure the `log4j2.properties` file under our spark conf, which is typically at `/usr/local/spark/conf`, but for now, this is confusing for me. Main reason for this is that the `log4j2.properties` file effects all of the Spark. Instead, we can configure logging programmatically! To see an example of this, check out [MnmCandiesDatasetWithLogger](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDatasetWithLogger.scala).
+
+53) **Here is the short history of Storage Solutions**:
+
+    - **Ideal Storage**: An ideal Storage solution should be scalable and performent, supports ACID transactions, supports diverse data formats, supports diverse workloads and should be open.
+
+    - **Databases?**: Databases was the most reliable solution for decades, with their strict schema and SQL queries. SQL workloads are divided into 2, **Online transaction processing (OLTP) workloads** (Like bank account transactions, high-concurrency, low-latency, simple queries) and **Online analytical processing (OLAP)** (like periodic reporting, complex queries (aggregates and joins), require high-throughput scans over many records).
+
+    - **Spark Designed for ? 🤔**: Spark is primarily designed for **OLAP**.
+
+    - **Limitations of Databases**: Growth in data size (advent of big data, global trend to measure and collect everything), Growth in the diversity of analytics (a need for deeper insights, ML - DL).
+
+    - **Issues with Databases**: Databases are extremely expensive to scale out and Databases do not support non–SQL based analytics very well.
+
+    - **Data Lakes**:  In contrast to most databases, a data lake is a distributed storage solution that runs on commodity hardware and easily scales out horizontally. The data lake architecture, unlike that of databases, decouples the distributed storage system from the distributed compute system. This allows each system to scale out as needed by the workload. Furthermore, the data is saved as files with open formats, such that any processing engine can read and write them using standard APIs.
+
+    - **How to build as Datalake?**:  Organizations build their data lakes by independently choosing the following: **Storage system** ([HDFS](https://www.databricks.com/glossary/hadoop-distributed-file-system-hdfs) on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
+
+    - **The advantage of Data Lakes?**: The flexibility (the ability to choose the storage system, open data format, and processing engine that are best suited to the workload at hand) is the biggest advantage of data lakes over databases.
+
+    - **Spark is great with Datalakes, why?**: Spark Support for diverse workloads, support for diverse file formats, support for diverse filesystems.
+
+    - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the lack of transactional guarantees: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
+
+    - **Is there a better way? 🤔**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
+
+    - **Lakehouses: The Next Step 🎉**: **Combines the best** elements **of data lakes** and **data warehouses** for OLAP workloads. 
+
+        - **1️⃣ Transaction support**: Similar to Databases, **ACID** guarantees in concurrent workloads.
+
+        - **2️⃣ Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
+
+        - **3️⃣ Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access **all types of data** needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
+
+        - **4️⃣ Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
+        
+        - **5️⃣ Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and *slowly changing dimension* (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
+
+        - **6️⃣ Data governance**: Lakehouses provide the tools with which you can reason about **data integrity** and audit all the data changes for policy compliance.
+
+    - **Current selection of Lakehouses?**: Currently, there are a few open source systems, such as **Apache Hudi**, **Apache Iceberg**, and **Delta Lake**, that can be used to build lakehouses with these properties (more information page 272). 
 
 ## Offer
 
