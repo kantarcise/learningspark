@@ -8,38 +8,38 @@ import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 
-// Represents a user action
-case class UserAction(userId: String, action: String)
-
-// Represents the status of a user
-case class UserStatus(userId: String, var active: Boolean) {
-  /**
-   * Updates the user's active status based on the action.
-   * @param action
-   */
-  def updateWith(action: UserAction): Unit = {
-    active = action.action match {
-      case "move" => true
-      case "idle" => false
-      case _ => active
-    }
-  }
-}
-
 /**
  * In this example, we will learn about how we can manage
  * the state ourselves, with help of
- * mapGroupsWithState
+ * mapGroupsWithState()
  *
- * For more details, check page 254
+ * For more details, check page 254.
  */
 object UnmanagedStatefulOperations {
+
+  // Represents a user action
+  case class UserAction(userId: String, action: String)
+
+  // Represents the status of a user
+  case class UserStatus(userId: String, var active: Boolean) {
+    /**
+     * Updates the user's active status based on the action.
+     * @param action: The UserAction
+     */
+    def updateWith(action: UserAction): Unit = {
+      active = action.action match {
+        case "move" => true
+        case "idle" => false
+        case _ => active
+      }
+    }
+  }
 
   def main(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
-      .appName("Unmanaged Stateful Operations")
+      .appName("Unmanaged State Processing Time Timeouts")
       .master("local[*]")
       .getOrCreate()
 
@@ -56,7 +56,7 @@ object UnmanagedStatefulOperations {
       userActionMemoryStream,
       1.seconds)
 
-    val userActions: Dataset[UserAction] =userActionMemoryStream
+    val userActions: Dataset[UserAction] = userActionMemoryStream
       .toDS()
 
     // when we run this query, we will see these
@@ -77,6 +77,7 @@ object UnmanagedStatefulOperations {
     // Start the streaming query and print to console
     val query = latestStatuses
       .writeStream
+      .queryName("Latest Status of Users to Console")
       .outputMode("update")
       .format("console")
       .start()
@@ -102,7 +103,7 @@ object UnmanagedStatefulOperations {
   def updateUserStatus(userId: String,
                        newActions: Iterator[UserAction],
                        state: GroupState[UserStatus]): UserStatus = {
-    // Get the current state or create a new state if none exists
+    // Get the current state or make a new state if none exists
     val userStatus = state
       .getOption
       .getOrElse(
@@ -140,5 +141,4 @@ object UnmanagedStatefulOperations {
       Thread.sleep(interval.toMillis)
     }
   }
-
 }
