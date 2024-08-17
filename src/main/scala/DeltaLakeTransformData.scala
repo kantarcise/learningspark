@@ -137,7 +137,6 @@ object DeltaLakeTransformData {
     // Display data after delete
     println("Updated Data After Delete:\n")
     deltaTable.toDF.show()
-
   }
 
   /**
@@ -162,7 +161,6 @@ object DeltaLakeTransformData {
   def upsertChangeDataLoansDeltaTable(spark: SparkSession,
                                       deltaPath: String,
                                       deltaTable: DeltaTable): Unit = {
-
     // Display original data
     println("Original Data before Upsert Change Data:\n")
     deltaTable.toDF.show()
@@ -226,7 +224,6 @@ object DeltaLakeTransformData {
   def deduplicateDataWhileInsertDeltaTable(spark: SparkSession,
                                            deltaPath: String,
                                            deltaTable: DeltaTable): Unit = {
-
     // Display original data
     println("Original Data before adding Historical Data:\n")
     deltaTable.toDF.show()
@@ -275,7 +272,6 @@ object DeltaLakeTransformData {
       .history(3)
       .select("version", "timestamp", "operation", "operationParameters")
       .show(false)
-
   }
 
   /**
@@ -288,7 +284,6 @@ object DeltaLakeTransformData {
    */
   def queryingPreviousSnapshotsDeltaTable(spark: SparkSession,
                                           deltaPath: String): Unit = {
-
     println("DeltaTable after a Timestamp:\n")
     // let's see an example of read after a timestamp
     spark
@@ -309,6 +304,5 @@ object DeltaLakeTransformData {
       .option("versionAsOf", "2")
       .load(deltaPath)
       .show(10, truncate = false)
-
   }
 }
