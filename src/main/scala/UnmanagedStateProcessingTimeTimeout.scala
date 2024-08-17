@@ -95,6 +95,7 @@ object UnmanagedStateProcessingTimeTimeout {
     // Start the streaming query and print to console
     val query = latestStatuses
       .writeStream
+      .queryName("Latest States as they are Updated to Console")
       .outputMode("update")
       .format("console")
       .start()
@@ -161,8 +162,8 @@ object UnmanagedStateProcessingTimeTimeout {
   /**
    * This method adds the sample data within it to a MemoryStream.
    *
-   * @param memoryStream
-   * @param interval
+   * @param memoryStream: Memory Stream to add the data.
+   * @param interval: the interval to add the data into.
    * @return
    */
   def addDataPeriodicallyToUserActionMemoryStream(memoryStream: MemoryStream[UserAction],
