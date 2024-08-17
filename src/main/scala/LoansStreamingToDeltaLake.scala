@@ -86,6 +86,7 @@ object LoansStreamingToDeltaLake {
 
     val query = loansStreamDSFirst
       .writeStream
+      .queryName("Loans First Dataset into Delta")
       // .outputMode("update")
       .format("delta")
       .option("checkpointLocation", checkpointDirFirst)
@@ -93,6 +94,7 @@ object LoansStreamingToDeltaLake {
 
     val querySecond = loanStreamDSSecond
       .writeStream
+      .queryName("Loans Second Dataset into Delta")
       .format("delta")
       .option("checkpointLocation", checkpointDirSecond)
       .start(deltaPath)
