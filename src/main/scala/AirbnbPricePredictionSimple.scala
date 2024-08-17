@@ -66,7 +66,6 @@ object AirbnbPricePredictionSimple {
     (testDF, trainDF)
   }
 
-
   /**
    * After we have split our data into training and test sets, let’s
    * prepare the data to build a linear regression model predicting
@@ -92,7 +91,7 @@ object AirbnbPricePredictionSimple {
       .transform(trainDF)
 
     // let's see the effect! we now have a features column!
-    println("With a VectorAssembler, now we have a features column" +
+    println("With a VectorAssembler, now we have a features column " +
       "which is a Vector type!\n")
     vecTrainDF
       .select("bedrooms", "features", "price")
@@ -155,7 +154,6 @@ object AirbnbPricePredictionSimple {
     (lr, lrModel)
   }
 
-
   /**
    * If we want to apply our model to our test set, then we need to
    * prepare that data in the same way as the training set
@@ -209,5 +207,4 @@ object AirbnbPricePredictionSimple {
       .select("bedrooms", "features", "price", "prediction")
       .show(10)
   }
-
 }
