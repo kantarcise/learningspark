@@ -144,9 +144,9 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 #### Chapter 4 - Spark SQL and DataFrames: Introduction to Built-in Data Sources
 
-- In Chapter 4 we will discover about Spark SQL, which is literally [SQL](https://aws.amazon.com/what-is/sql/#:~:text=Structured%20query%20language%20(SQL)%20is,relationships%20between%20the%20data%20values.) stuff. 
+- In Chapter 4 we will discover about Spark SQL, which is how we can use [SQL](https://aws.amazon.com/what-is/sql/#:~:text=Structured%20query%20language%20(SQL)%20is,relationships%20between%20the%20data%20values.) in Spark. 
 
-- We'll use a data about [Flight Delays](https://github.com/kantarcise/learningspark/blob/main/data/departuredelays.csv), a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) will help us discover discover more about, views & tables, union Dataframes, using `when().when().when().when().otherwise()` instead of using multiple unions, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))` 
+- We'll use a data about [Flight Delays](https://github.com/kantarcise/learningspark/blob/main/data/departuredelays.csv), a CSV file. [FlightDelays](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelays.scala) will help us discover more about, views & tables, union Dataframes, using `when().when().when().when().otherwise()` instead of using multiple unions, `explain()` to see the plans, and a sneak peak to `freqItems` -> `df.stat.freqItems(Seq("origin"))`. 
 
 - Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala) so that we can use typed transformations.
 
