@@ -20,10 +20,12 @@ class CustomListener extends StreamingQueryListener {
    * Adjust this progress method based on your needs!
    */
   override def onQueryProgress(event: QueryProgressEvent): Unit = {
-    // println("Query made progress: " + event.progress)
-    // we can see what are we interested in,
-    // let's only see numRowsDroppedByWatermark
-    println("Query made progress: numRowsDroppedByWatermark: " +
-      event.progress.stateOperators(0).numRowsDroppedByWatermark)
+    // Check if there are any state operators before accessing them
+    if (event.progress.stateOperators.nonEmpty) {
+      println("Query made progress: numRowsDroppedByWatermark: " +
+        event.progress.stateOperators(0).numRowsDroppedByWatermark)
+    } else {
+      println("Query made progress: No state operators in this query.")
+    }
   }
 }
