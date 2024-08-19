@@ -150,7 +150,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Also, the [Dataset version](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysDataset.scala) simply requires a case class like [Flights](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Flights.scala) so that we can use typed transformations.
 
-- On mocked data, you can see our techniques tested in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala).
+- On mocked data, we can test our business logic (all the calculations we've done) in [FlightDelaysTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysTest.scala).
 
 #### Chapter 5 - Spark SQL and DataFrames: Interacting with External Data Sources
 
