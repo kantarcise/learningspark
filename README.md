@@ -2,6 +2,8 @@
 
 All the exercises from the book "[Learning Spark](https://pages.databricks.com/rs/094-YMS-629/images/LearningSpark2.0.pdf)", solved with Dataframes and Datasets, no stone unturned.
 
+![learningspark header image](learning_spark.png)
+
 ## Why ?
 
 There are a lot of sources on Spark, like [LearningApacheSpark](https://github.com/runawayhorse001/LearningApacheSpark) or [learning-spark](https://github.com/databricks/learning-spark) from Databricks and it's [second version](https://github.com/databricks/LearningSparkV2/tree/master). Sadly, they are not recently updated. 
