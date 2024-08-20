@@ -154,13 +154,13 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 #### Chapter 5 - Spark SQL and DataFrames: Interacting with External Data Sources
 
-- In this chapter, we again work on Flight Delay data, but we will discover different things! With [FlightDelaysAdvanced](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvanced.scala) we will learn about making Tables - `createOrReplaceTempView`, getting rid of `expr()` and understanding it's use case (`expr()` function to use SQL syntax anywhere a column would be specified.). 
+- In this chapter, we work on Flight Delay data again, but this time we'll discover different features of Spark! With [FlightDelaysAdvanced](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvanced.scala) we will learn about making Tables - `createOrReplaceTempView`, understanding the use case of `expr()` (`expr()` function to use SQL syntax anywhere a column would be specified) and how **not** to use it. 
 
-- We will see about casting types, like `.withColumn("delay", $"delay".cast(IntegerType))`, filtering multiple things like `filter($"a" === 1 && $"b" === 2)`, `.startsWith("")`, joins (inner join), `.isin("a", "b", "c")`, window functions. We will see functions like `dense_rank`, `drop - rename - pivot`. A different type cas is also waiting us, strings to time -> `02190925 - 02-19 09:25 am` , `.withColumn("month", $"date".substr(0, 2).cast(IntegerType))`.
+- We will see about casting types, like `.withColumn("delay", $"delay".cast(IntegerType))`, filtering multiple things like `filter($"a" === 1 && $"b" === 2)`, `.startsWith("")`, joins (inner join), `.isin("a", "b", "c")`, window functions. We will see functions like `dense_rank`, `drop - rename - pivot`. A common type cast will also be waiting to be discovered, strings to time -> `02190925 - 02-19 09:25 am` , `.withColumn("month", $"date".substr(0, 2).cast(IntegerType))`.
 
-- The `main()` methods are getting really long at this point. If you want some help decomposing the code, you can see an example at [FlightDelaysAdvancedDecomposed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvancedDecomposed.scala). Tests for such decomposed code are at [FlightDelaysAdvancedTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysAdvancedTest.scala).
+- The `main()` methods for our applications are getting really long at this point. If you want some help decomposing the code, you can see an example at [FlightDelaysAdvancedDecomposed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FlightDelaysAdvancedDecomposed.scala). Tests for such decomposed code are at [FlightDelaysAdvancedTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/FlightDelaysAdvancedTest.scala).
 
-- Finally, we will see a simple example to understand windowing, with [SimpleWindowing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleWindowing.scala).
+- Before closing the chapter, we'll see a simple example to understand windowing, with [SimpleWindowing](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleWindowing.scala).
 
 #### Chapter 6 - Spark SQL and Datasets
 
