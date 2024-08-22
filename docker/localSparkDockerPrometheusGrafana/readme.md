@@ -163,6 +163,6 @@ In this command, change the master `host:port` according to your setup.
 
 - Select Prometheus, give the server url as `http://prometheus:9090/` and **save & test**, all the way down in the page. 
 
-- Now we can make a Dashboard using Spark endpoints! With the help of an LLM, you can design your own dashboard, or import the [one we have here]() as a starter!
+- Now we can make a Dashboard using Spark endpoints! With the help of an LLM, you can design your own dashboard, or import the [one we have here](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerPrometheusGrafana/Spark%20Basic%20Dashboard%20Standalone-1724352834222.json) as a starter!
 
 Have fun visualizing! 🎉
