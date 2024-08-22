@@ -1,0 +1,42 @@
+global:
+  scrape_interval: 15s
+
+# A scrape configuration containing exactly one
+scrape_configs:
+  # The job name is added as a label
+  # `job=<job_name>` to any time series scraped from this config.
+  - job_name: 'prometheus'
+
+    # Override the global default and scrape
+    # targets from this job every 5 seconds.
+    scrape_interval: 5s
+
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Scrape from spark master.
+  - job_name: 'spark-master'
+    metrics_path: '/metrics/master/prometheus/'
+    static_configs:
+      # this should be your Local IP!
+      - targets: ['192.168.5.10:8080']
+
+  # Scrape from spark worker
+  - job_name: 'spark-worker'
+    metrics_path: '/metrics/prometheus/'
+    static_configs:
+      # this should be your Local IP!
+      - targets: ['192.168.5.10:8081']
+
+  #  https://spark.apache.org/docs/3.5.2/monitoring.html#metrics
+  - job_name: "spark-driver"
+    metrics_path: '/metrics/driver/prometheus/'
+    static_configs:
+      # this should be your Local IP!
+      - targets: ['192.168.5.10:4040']
+
+  - job_name: "spark-executor"
+    metrics_path: '/metrics/executors/prometheus/'
+    static_configs:
+      # this should be your Local IP!
+      - targets: ['192.168.5.10:4040']
