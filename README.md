@@ -164,7 +164,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 #### Chapter 6 - Spark SQL and Datasets
 
-- In Chapter 6, we will try to understand the dynamics of Memory Management for Datasets and DataFrames. For that, we have some mocked data which will help us with the DSL vs Lambda usage (typed vs untyped transformations really), with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala).
+- In Chapter 6, we'll try to understand the dynamics of **Memory Management** for Datasets and DataFrames. For that, we have some mocked data which will help us with the DSL vs Lambda usage in our Applications (typed vs untyped transformations really), with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala).
 
 - Before closing, we will have a small Dataset Workout on Internet Usage data which is made on fly (in the code), and we'll practice what we have learned so far, with [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala).
 
@@ -256,6 +256,8 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - `flatMapGroupsWithState()`, gives us even more flexibility than `mapGroupsWithState()`. In [UnmanagedStateWithFlatMapGroupsWithState](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateWithFlatMapGroupsWithState.scala) we will discover how we can use `flatMapGroupsWithState()` in a similar fashion with the example applications we did before! We will make use of `org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode}`, especially `OutputMode`.
 
+
+- Apart from the Spark Web UI, is there a way we can monitor our Spark applications? Yes! Prometheus and Grafana are two increadible tools which can help us here. With []() we will have a Structured Streaming Application that will be monitored by the two. To setup Prometheus and Grafana check out [the readme](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerPrometheusGrafana/readme.md). For more information about monitoring and metrics, you can check out [monitoring](https://spark.apache.org/docs/3.5.2/monitoring) and [metrics](https://spark.apache.org/docs/3.5.2/monitoring.html#metrics). This part was inspired from this wonderful [blog post](https://dzlab.github.io/bigdata/2020/07/03/spark3-monitoring-1/).
 
 #### Chapter 9 - Building Reliable Data Lakes with Apache Spark 🐢 
 
