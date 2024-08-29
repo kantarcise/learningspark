@@ -166,7 +166,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In Chapter 6, we'll try to understand the dynamics of **Memory Management** for Datasets and DataFrames. For that, we have some mocked data which will help us with the DSL vs Lambda usage in our Applications (typed vs untyped transformations really), with [DSLVersusLambda](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DSLVersusLambda.scala).
 
-- Before closing, we will have a small Dataset Workout on Internet Usage data which is made on fly (in the code), and we'll practice what we have learned so far, with [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala).
+- Before closing, we'll have a small Dataset Workout on Internet Usage data, which is made on fly (within the code) and we'll practice what we have learned so far, with [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala).
 
 - For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala).  If you follow the code, you will get an answer to the question: "What is a Trait?".
 
