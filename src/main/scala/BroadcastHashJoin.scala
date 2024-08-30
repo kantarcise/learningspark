@@ -41,7 +41,11 @@ object BroadcastHashJoin {
     //  is below the spark.sql.autoBroadcastJoinThreshold
 
     // 10485760b - which is 10 MB
+    println("\nThe autoBroadcastJoinThreshold is:\n")
     println(spark.conf.get("spark.sql.autoBroadcastJoinThreshold"))
+    println("\nWhich is 10 Mb\n")
+
+    println("Let's join two Dataframes!\n")
 
     // let's join two dataframes with broadcast join!
     val joinedDF = playersDF.join(broadcast(clubsDF), "club_name")
@@ -65,8 +69,10 @@ object BroadcastHashJoin {
 
   /**
    * Return two dataframes that are made from just Sequences.
+   *
+   * @param spark: the SparkSession.
    */
-  def getDataframes(spark: SparkSession):(DataFrame, DataFrame) = {
+  def getDataframes(spark: SparkSession): (DataFrame, DataFrame) = {
     import spark.implicits._
 
     val players: DataFrame = Seq(
@@ -130,10 +136,12 @@ object BroadcastHashJoin {
    *
    * With this method! After you call this, you can check out the WebUI
    * and the Storage tab will show you the on heap memory usage!
+   *
+   * @param df: a Dataframe
    */
   def getSizeOfDataframe(df: DataFrame): Unit = {
     df.cache()
-    // Trigger action to cache the DataFrame
+    // Trigger an action to cache the DataFrame
     df.count()
   }
 }
