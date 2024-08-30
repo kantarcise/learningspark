@@ -36,12 +36,13 @@ object ConfigurationsAndCaching {
 
     spark.sparkContext.setLogLevel("ERROR")
 
-    println("You can print a single configuration \n")
+    println("\nYou can print a single configuration: \n")
 
     printConfig(spark, "spark.sql.join.preferSortMergeJoin")
     printConfig(spark, "spark.driver.host")
+    printConfig(spark, "spark.dynamicAllocation.enabled")
 
-    println("Or you can print them all \n")
+    println("Or you can print them all: \n")
 
     // Lets see all configurations
     printConfigs(spark)
@@ -83,11 +84,14 @@ object ConfigurationsAndCaching {
 
   /**
    * Print all configurations for a SparkSession.
-   * While printing to the console, you can change the color easily!
+   * While printing to the console, you can change the color
+   * of the text easily!
+   *
+   * @param spark : The Spark Session
    */
-  def printConfigs(session: SparkSession) = {
+  def printConfigs(spark: SparkSession): Unit = {
     // Get conf
-    val conf = session.conf.getAll
+    val conf = spark.conf.getAll
     println()
 
     // Print them
@@ -99,10 +103,13 @@ object ConfigurationsAndCaching {
   }
 
   /** Print a single configuration about a Spark Session.
+   *
+   * @param spark: The Spark Session
+   * @param key: The configuration key to be printed
    */
-  def printConfig(session: SparkSession, key:String) = {
+  def printConfig(spark: SparkSession, key:String): Unit = {
     // get conf
-    val v = session.conf.getOption(key)
+    val v = spark.conf.getOption(key)
     println(s"${key} -> ${v}\n")
   }
 
@@ -117,6 +124,8 @@ object ConfigurationsAndCaching {
    * Likewise, values supplied on the command line will supersede
    * settings in the configuration file, provided they are not
    * overwritten in the application itself.
+   * @param spark: The Spark Session
+   *
    */
   def getSetProperties(spark: SparkSession): Unit  = {
     // To set or modify an existing configuration
@@ -144,7 +153,7 @@ object ConfigurationsAndCaching {
 
   /**
    * Let's you see all the sql configurations.
-   * @param spark
+   * @param spark the SparkSession
    */
   def seeSparkSQLConfigs(spark: SparkSession): Unit = {
     println("\nLet's see all spark.sql configurations:\n")
@@ -180,21 +189,23 @@ object ConfigurationsAndCaching {
    * Enabling dynamic resource allocation allows Spark to achieve better
    * utilization of resources, freeing executors when not in use and
    * acquiring new ones when needed.
+   *
+   * @param spark the SparkSession
    */
   def sparkDynamicAllocation(spark: SparkSession): Unit = {
 
-    println("Let's see the dynamicAllocation configurations: \n")
+    println("\nLet's see the dynamicAllocation configurations: \n")
 
-    println("Is dynamicAllocation enabled ? " +
+    println("Is dynamicAllocation enabled ? - " +
       spark.conf.get("spark.dynamicAllocation.enabled"))
 
-    println("What is minExecutors set to ? " +
+    println("What is minExecutors set to ? - " +
       spark.conf.get("spark.dynamicAllocation.minExecutors"))
 
-    println("What is schedulerBacklogTimeout set to ? " +
+    println("What is schedulerBacklogTimeout set to ? - " +
       spark.conf.get("spark.dynamicAllocation.schedulerBacklogTimeout"))
 
-    println("What is maxExecutors set to ? " +
+    println("What is maxExecutors set to ? - " +
       spark.conf.get("spark.dynamicAllocation.maxExecutors"))
 
     println("What is executorIdleTimeout ? " +
@@ -218,6 +229,8 @@ object ConfigurationsAndCaching {
    * • DataFrames that are too big to fit in memory
    * • An inexpensive transformation on a DataFrame not requiring frequent
    * use, regardless of size
+   *
+   * @param spark the SparkSession
    */
   def effectOfCache(spark: SparkSession): Unit = {
     import spark.implicits._
@@ -226,10 +239,10 @@ object ConfigurationsAndCaching {
     df.cache() // Cache the data
 
     val (res, tm) = timer(df.count())
-    println(s"\nBefore Caching: Count=${res} and time=${tm} milliseconds")
+    println(s"\nBefore Caching: Count = ${res} and time = ${tm} milliseconds")
 
     val (res2, tm2) = timer(df.count())
-    println(s"\nAFTER Caching: Count=${res2} and time=${tm2} milliseconds")
+    println(s"\nAFTER Caching: Count = ${res2} and time = ${tm2} milliseconds")
 
     // the manual way - you can delete it if you want
 
@@ -251,6 +264,7 @@ object ConfigurationsAndCaching {
 
   /**
    * Lets discover about the effects for persisting Dataframes.
+   * @param spark the SparkSession
    */
   def effectOfPersist(spark: SparkSession): Unit = {
     import spark.implicits._
@@ -267,23 +281,24 @@ object ConfigurationsAndCaching {
     println(s"\nAFTER Persisting: Count=${res2} and time=${tm2} milliseconds")
 
 
+    /*
     // the manual way - you can delete it if you want
-
-    // val startTime = System.nanoTime()
-    // println(s"Count of DF, {df.count()}") // Materialize the cache
-    // val endTime = System.nanoTime()
-    // val timeDifference = (endTime - startTime)  / 1e9d
-    // println(f"Duration before Persisting : $timeDifference%.3f seconds\n")
+    val startTime = System.nanoTime()
+    println(s"Count of DF, {df.count()}") // Materialize the cache
+    val endTime = System.nanoTime()
+    val timeDifference = (endTime - startTime)  / 1e9d
+    println(f"Duration before Persisting : $timeDifference%.3f seconds\n")
     // 0.101 seconds
 
     // this is actually slower ?
-    // val startTimeSecond = System.nanoTime()
-    // println(s"Count of DF, {df.count()}") // Now reading from disk?
-    // val endTimeSecond = System.nanoTime()
-    // val timeDifferenceSecond = (endTimeSecond - startTimeSecond)  / 1e9d
-    // println(f"Duration AFTER Persisting : $timeDifferenceSecond%.3f seconds\n")
+    val startTimeSecond = System.nanoTime()
+    println(s"Count of DF, {df.count()}") // Now reading from disk?
+    val endTimeSecond = System.nanoTime()
+    val timeDifferenceSecond = (endTimeSecond - startTimeSecond)  / 1e9d
+    println(f"Duration AFTER Persisting : $timeDifferenceSecond%.3f seconds\n")
     // 0.111 seconds
 
+    */
     // unpersist after
     df.unpersist()
 
@@ -291,7 +306,7 @@ object ConfigurationsAndCaching {
 
   /**
    * Just like Dataframes/Datasets, we can cache tables!
-   * @param spark
+   * @param spark: the SparkSession
    */
   def cacheATable(spark: SparkSession): Unit = {
     import spark.implicits._
@@ -309,7 +324,7 @@ object ConfigurationsAndCaching {
   /**
    * For more on partitioning, check out:
    * https://spark.apache.org/docs/latest/sql-performance-tuning.html
-   * @param spark
+   * @param spark: the SparkSession
    */
   def setPartition(spark: SparkSession): Unit = {
     val numDF = spark
@@ -340,5 +355,4 @@ object ConfigurationsAndCaching {
     val delta = endTime - startTime
     (result, delta/1000000d)
   }
-
 }
