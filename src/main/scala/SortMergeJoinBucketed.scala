@@ -1,14 +1,19 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.storage.StorageLevel._
-import org.apache.spark.sql.SaveMode
+
 import scala.util.Random
 
-/** Can we optimize SortMergeJoin ?
+/**
+ * Make sure you delete the folders inside
+ * spark-warehouse before running the app.
+ *
+ * Can we optimize SortMergeJoin ?
  *
  * Yes!
+ *
  * We can eliminate the Exchange step from the previous example
  * if we made partitioned buckets for common sorted
  * keys or columns on which we want to perform frequent
@@ -21,7 +26,8 @@ import scala.util.Random
  * operation and go straight to WholeStageCodegen.
  */
 object SortMergeJoinBucketed {
-  // curried function to benchmark any code or function
+
+  // a function to benchmark any code or function
   def benchmark(name: String)(f: => Unit) {
     val startTime = System.nanoTime
     f
@@ -31,33 +37,53 @@ object SortMergeJoinBucketed {
       " seconds")
   }
 
-  // main class setting the configs
-  def main(args: Array[String]): Unit ={
-
-    val spark = SparkSession.builder
+  /**
+   * Make a Spark Session which is configured to use
+   * SortMergeJoin.
+   * @return
+   */
+  def createSparkSession(): SparkSession = {
+    SparkSession.builder
       .appName("SortMergeJoinBucketed")
-      // default is true
-      // .config("spark.sql.codegen.wholeStage", true)
-      .config("spark.sql.join.preferSortMergeJoin", true)
+      .config("spark.sql.join.preferSortMergeJoin", value = true)
       .config("spark.sql.autoBroadcastJoinThreshold", -1)
-      // The default value is 200, for a 12 core machine
       .config("spark.sql.shuffle.partitions", 24)
       .master("local[*]")
-      .getOrCreate ()
+      .getOrCreate()
+  }
 
+  /**
+   * Generate two different maps and return them.
+   *
+   * @return
+   */
+  def initializeData(): (Map[Int, String], Map[Int, String]) = {
+    // we can make empty Maps than append keys to them!
+    val states = scala.collection.mutable.Map[Int, String]()
+    val items = scala.collection.mutable.Map[Int, String]()
+    states += (0 -> "AZ", 1 -> "CO", 2 -> "CA",
+      3 -> "TX", 4 -> "NY", 5 -> "MI")
+    items += (0 -> "SKU-0", 1 -> "SKU-1", 2 -> "SKU-2",
+      3 -> "SKU-3", 4 -> "SKU-4", 5 -> "SKU-5")
+    (states.toMap, items.toMap)
+  }
+
+  /**
+   * Using the Random Value Generator,
+   * generate two different Dataframes.
+   *
+   * @param spark: the SparkSession
+   * @param states: State Codes
+   * @param items: Different Items
+   * @param rnd: the Random Value Generator
+   * @return
+   */
+  def createDataFrames(spark: SparkSession,
+                       states: Map[Int, String],
+                       items: Map[Int, String],
+                       rnd: Random) = {
     import spark.implicits._
 
-    spark.sparkContext.setLogLevel("ERROR")
-
-    var states = scala.collection.mutable.Map[Int, String]()
-    var items = scala.collection.mutable.Map[Int, String]()
-    // seed
-    val rnd = new Random(42)
-
-    // initialize states and items purchased
-    states += (0 -> "AZ", 1 -> "CO", 2-> "CA", 3-> "TX", 4 -> "NY", 5-> "MI")
-    items += (0 -> "SKU-0", 1 -> "SKU-1", 2-> "SKU-2", 3-> "SKU-3", 4 -> "SKU-4", 5-> "SKU-5")
-    // create dataframes
     val usersDF = (0 to 100000)
       .map(id =>
         (id,
@@ -71,31 +97,42 @@ object SortMergeJoinBucketed {
         (r,
           r,
           rnd.nextInt(100000),
-          10 * r* 0.2d,
+          10 * r * 0.2d,
           states(rnd.nextInt(5)),
           items(rnd.nextInt(5))))
       .toDF("transaction_id", "quantity", "users_id",
         "amount", "state", "items")
 
-    // cache them on Disk only so we can see the
-    // difference in size in the storage UI
+    (usersDF, ordersDF)
+  }
+
+  /**
+   * Persist given dataframes to Disk.
+   * @param usersDF: users Dataframe
+   * @param ordersDF: orders Dataframe
+   */
+  def persistDataFrames(usersDF: DataFrame, ordersDF: DataFrame): Unit = {
     usersDF.persist(DISK_ONLY)
     ordersDF.persist(DISK_ONLY)
+  }
 
-    // buckets are tables, which we will save in Parquet format.
-
-    // let's make five buckets, each DataFrame for their respective columns
-
-    // make bucket and table for uid
+  /**
+   * Use bucketing on the dataframes and save
+   * them as Tables.
+   * @param spark: the SparkSession
+   * @param usersDF: the users Dataframe
+   * @param ordersDF: orders Dataframe
+   */
+  def createBuckets(spark: SparkSession,
+                    usersDF: DataFrame,
+                    ordersDF: DataFrame): Unit = {
     spark.sql("DROP TABLE IF EXISTS UsersTbl")
     usersDF.orderBy(asc("uid"))
       .write.format("parquet")
       .mode(SaveMode.Overwrite)
-      // should be equal to number of cores I have on my PC
       .bucketBy(12, "uid")
       .saveAsTable("UsersTbl")
 
-    // make bucket and table for users_id
     spark.sql("DROP TABLE IF EXISTS OrdersTbl")
     ordersDF.orderBy(asc("users_id"))
       .write.format("parquet")
@@ -103,29 +140,47 @@ object SortMergeJoinBucketed {
       .mode(SaveMode.Overwrite)
       .saveAsTable("OrdersTbl")
 
-    // cache tables in memory so that we can see the
-    // difference in size in the storage UI
     spark.sql("CACHE TABLE UsersTbl")
     spark.sql("CACHE TABLE OrdersTbl")
-    spark.sql("SELECT * from OrdersTbl LIMIT 20")
+  }
 
-    // read data back in
+  /**
+   * Join two data Dataframes based on user id key!
+   *
+   * @param spark: the SparkSession
+   * @return
+   */
+  def joinDataFrames(spark: SparkSession): DataFrame = {
+    import spark.implicits._
+
     val usersBucketDF = spark.table("UsersTbl")
     val ordersBucketDF = spark.table("OrdersTbl")
 
-    // Now do the join on the bucketed DataFrames
     val joinUsersOrdersBucketDF = ordersBucketDF
       .join(usersBucketDF, $"users_id" === $"uid")
 
-    println("Joined Dataframe made after bucketing!\n")
-    joinUsersOrdersBucketDF.show(false)
-
-    // we can see that now we have skipped the Exchange!
-    joinUsersOrdersBucketDF.explain()
-
-    // uncomment to view the SparkUI otherwise the
-    // program terminates and shutdowsn the UI
-    Thread.sleep(1000 * 30 * 1)
+    joinUsersOrdersBucketDF
   }
 
+  def main(args: Array[String]): Unit = {
+    val spark = createSparkSession()
+    spark.sparkContext.setLogLevel("ERROR")
+
+    val (states, items) = initializeData()
+
+    val rnd = new Random(42)
+    val (usersDF, ordersDF) = createDataFrames(spark, states, items, rnd)
+
+    persistDataFrames(usersDF, ordersDF)
+    createBuckets(spark, usersDF, ordersDF)
+
+    val joinUsersOrdersBucketDF = joinDataFrames(spark)
+
+    println("\nJoined Dataframe made after bucketing!\n")
+    joinUsersOrdersBucketDF.show(false)
+
+    joinUsersOrdersBucketDF.explain()
+
+    Thread.sleep(1000 * 30 * 1)
+  }
 }
