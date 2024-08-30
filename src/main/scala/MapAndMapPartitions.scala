@@ -85,10 +85,9 @@ object MapAndMapPartitions {
       .range(1 * 10000000)
       .toDF("id")
       .withColumn("square", $"id" * $"id")
-      //
       .repartition(12)
 
-    println("\n Here is a simple Dataframe:\n")
+    println("\nHere is a simple Dataframe:\n")
     df.show(5)
 
     println("\nBenchmarking Map Function:\n")
@@ -97,16 +96,15 @@ object MapAndMapPartitions {
     benchmark("map function") {
       df
         .map(r => (funcForSquareRoot(r.getLong(1))))
-        .show(10)
     }
 
-    println("\nBenchmarking Map Partition Function:")
+    println("\nBenchmarking Map Partition Function:\n")
     // Benchmark MapPartition function
     benchmark("mapPartition function") {
       df
         .mapPartitions(
           iterator => {
-            val conn = getConnection("/tmp/sqrt.txt")
+            val conn = getConnection("/tmp/sqrt2.txt")
 
             val result = iterator
               .map(data=>{funcMapPartions(conn, data.getLong(1))})
@@ -116,8 +114,6 @@ object MapAndMapPartitions {
             result.iterator
           }
         )
-        .toDF()
-        .show(10)
     }
     println("\nThe mapPartitions approach is expected to be more " +
       "efficient due to fewer connections being opened and closed.")
