@@ -168,23 +168,23 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Before closing, we'll have a small Dataset Workout on Internet Usage data, which is made on fly (within the code) and we'll practice what we have learned so far, with [InternetUsage](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/InternetUsage.scala).
 
-- For the tests of InternetUsage, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala).  If you follow the code, you will get an answer to the question: "What is a Trait?".
+- For the tests of `InternetUsage`, we can use a concept called Traits to enrich our skillset, which [can be seen here](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/InternetUsageTest.scala).  If you follow the code, you will get an answer to the possible question you have: ***"What is a Trait?"***.
 
 #### Chapter 7 - Optimizing and Tuning Spark Applications
 
-- After all the code we have written, are there some tricks we can learn to make our apps more efficient? Turns out, there are a lot of them! 🎉
+- Now that we've written all this code, are there any tips to make our apps run more efficiently? Absolutely! There are plenty of strategies to explore! 🎉
 
-- In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about printing Configurations, dynamicAllocation, setting configurations on the fly, seeing spark.sql configs,  caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code!
+- In [ConfigurationsAndCaching](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ConfigurationsAndCaching.scala) we'll discover about setting/getting Configurations, dynamicAllocation, `spark.sql` configs, caching/persisting, and partioning tuning! There is also a wonderful method called `timer` that can be used to time some part of code!
 
-- Then we move onto some Joins! The book covered 2 different join strategies of Spark and give an example to optimize one of them. If you are confused about join types and join strategies, [this note](https://github.com/kantarcise/learningspark/blob/main/reading/SparkJoinStrategies.md) might be a goldmine, thanks to GPT-4o!
+- Then we move onto some Joins! The book covered 2 different join strategies of Spark and give an example to optimize one of them. **Join Strategies** and **Join Types** are different things, the difference is explained [in this note](https://github.com/kantarcise/learningspark/blob/main/reading/SparkJoinStrategies.md), thanks to GPT-4o!
 
-- In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this joining is feasible (and also the fastest). 🥳
+- In [BroadcastHashJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/BroadcastHashJoin.scala) we will generate some Dataframes on the fly and try to understand why this join strategy is feasible (and also the fastest). 🥳
 
-- In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will use the default joining strategy for Spark. When we inspect the UI, we'll detect an **Exchange** that we can get rid of with [`buckets`](https://spark.apache.org/docs/3.5.1/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrameWriter.bucketBy.html?highlight=bucketby)!
+- In [SortMergeJoin](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoin.scala) we will use **the default** joining strategy for Spark. When we inspect the UI, we'll detect an **Exchange** that we can get rid of with [`buckets`](https://spark.apache.org/docs/3.5.1/api/python/reference/pyspark.sql/api/pyspark.sql.DataFrameWriter.bucketBy.html?highlight=bucketby)!
 
-- With `bucketBy` method of `DataFrameWriter`, we will see how we can optimize a Sort Merge Join, in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
+- With `bucketBy` method of `DataFrameWriter`, we'll see how we can optimize a Sort Merge Join, in [SortMergeJoinBucketed](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SortMergeJoinBucketed.scala).
 
-- **Secret 💎** - There is an application about MapAndMapPartitions in the books github page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), we will see the effect of opening and closing a FileWriter! Again, feel free to use the `benchmark` method in your applications!
+- **Secret 💎** - There is an application about MapAndMapPartitions in the books Github Page, but it is not in the book. [Here is our implementation](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MapAndMapPartitions.scala), which will show us the effect of opening and closing a `FileWriter`! Again, feel free to use the `benchmark` method in your applications!
 
 #### Chapter 8 - Structured Streaming
 
