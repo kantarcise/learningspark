@@ -1,12 +1,12 @@
 package learningSpark
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SparkSession, DataFrame}
 import scala.util.Random
 
 /** This application is heavily inspired
  * from the books example.
  *
- * You can check out Page 190.
+ * You can check out Page 190 in LearningSpark.
  */
 object SortMergeJoin {
 
@@ -15,7 +15,7 @@ object SortMergeJoin {
    * @param name: Name of method
    * @param f: method
    */
-  def benchmark(name: String)(f: => Unit) {
+  def benchmark(name: String)(f: => Unit): Unit = {
     val startTime = System.nanoTime
     f
     val endTime = System.nanoTime
@@ -24,82 +24,112 @@ object SortMergeJoin {
       " seconds")
   }
 
-  def main(args: Array[String] ): Unit = {
-
-    val spark = SparkSession
+  /**
+   * Make a spark Session which is setup to use SortMergeJoin
+   * @param appName: Application Name
+   * @param master: The master selection
+   * @return
+   */
+  def createSparkSession(appName: String, master: String): SparkSession = {
+    SparkSession
       .builder
-      .appName("Learning More About Sort Merge Join")
-      .config("spark.sql.join.preferSortMergeJoin", true)
-      // Specifying a value of -1 in spark.sql.autoBroadcastJoinThreshold
-      // will cause Spark to always resort to a shuffle sort merge join
+      .appName(appName)
+      .config("spark.sql.join.preferSortMergeJoin", value = true)
       .config("spark.sql.autoBroadcastJoinThreshold", -1)
-      // The default value is 200, for a 12 core machine
       .config("spark.sql.shuffle.partitions", 24)
-      .master(master = "local[*]")
+      .master(master)
       .getOrCreate()
+  }
 
+  /**
+   * Generate two different maps and return them.
+   * @return
+   */
+  def initializeData(): (Map[Int, String], Map[Int, String]) = {
+    val states = Map(0 -> "AZ", 1 -> "CO", 2 -> "CA",
+      3 -> "TX", 4 -> "NY", 5 -> "MI")
+    val items = Map(0 -> "SKU-0", 1 -> "SKU-1", 2 -> "SKU-2",
+      3 -> "SKU-3", 4 -> "SKU-4", 5 -> "SKU-5")
+    (states, items)
+  }
+
+  /**
+   * Using the Random Value Generator,
+   * generate two different Dataframes.
+   *
+   * @param spark: the SparkSession
+   * @param states: State Codes
+   * @param items: Different Items
+   * @param rnd: the Random Value Generator
+   * @return
+   */
+  def createDataFrame(spark: SparkSession,
+                      states: Map[Int, String],
+                      items: Map[Int, String],
+                      rnd: Random): (DataFrame, DataFrame) = {
     import spark.implicits._
 
-    spark.sparkContext.setLogLevel("ERROR")
-
-    var states = scala.collection.mutable.Map[Int, String]()
-    var items = scala.collection.mutable.Map[Int, String]()
-    // seed
-    val rnd = new Random(42)
-
-    // let's check the configuration.
-    println(spark.conf.get("spark.sql.shuffle.partitions"))
-    println(spark.conf.get("spark.sql.join.preferSortMergeJoin"))
-
-    // initialize states and items purchased
-    // they are MutableMaps with int keys and string values.
-    // When making Dataframes, we will choose randomly from them
-    states += (0 -> "AZ", 1 -> "CO", 2-> "CA",
-      3-> "TX", 4 -> "NY", 5-> "MI")
-    items += (0 -> "SKU-0", 1 -> "SKU-1", 2-> "SKU-2",
-      3-> "SKU-3", 4 -> "SKU-4", 5-> "SKU-5")
-
-    // make the dataframes
     val usersDF = (0 to 100000)
-      // using the index, generate data with map
       .map(id =>
         (id,
           s"user_${id}",
           s"user_${id}@dreamers.com",
-          states(rnd.nextInt(5))))
+          states(rnd.nextInt(6))))
       .toDF("uid", "login", "email", "user_state")
 
     val ordersDF = (0 to 100000)
-      // using the index, generate data with map
       .map(r =>
-          (r,
-            r,
-            rnd.nextInt(100000),
-            10 * r* 0.2d,
-            states(rnd.nextInt(5)),
-            items(rnd.nextInt(5))))
-        .toDF("transaction_id", "quantity", "users_id",
-          "amount", "state", "items")
+        (r,
+          r,
+          rnd.nextInt(100000),
+          10 * r * 0.2d,
+          states(rnd.nextInt(6)),
+          items(rnd.nextInt(6))))
+      .toDF("transaction_id", "quantity", "users_id",
+        "amount", "state", "items")
 
-    // lets see how they look
-    println("Here are our users and orders Dataframes\n:")
+    (usersDF, ordersDF)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val spark = createSparkSession(
+      "Learning More About Sort Merge Join", "local[*]")
+
+    spark.sparkContext.setLogLevel("ERROR")
+
+    import spark.implicits._
+
+    val (states, items) = initializeData()
+
+    // let's check the configuration.
+    println("\nspark.sql.shuffle.partitions is set to: " +
+      spark.conf.get("spark.sql.shuffle.partitions"))
+    println("spark.sql.join.preferSortMergeJoin is set to: " +
+      spark.conf.get("spark.sql.join.preferSortMergeJoin"))
+
+    val rnd = new Random(42)
+    val (usersDF, ordersDF) = createDataFrame(spark, states, items, rnd)
+
+    println("\nHere are our users and orders Dataframes:\n")
     usersDF.show(10)
     ordersDF.show(10)
 
-    // Do a Sort Merge Join!
-    val usersOrdersDF = ordersDF.join(usersDF, $"users_id" === $"uid")
+    benchmark("Sort Merge Join") {
+      val usersOrdersDF = ordersDF.join(usersDF, $"users_id" === $"uid")
 
-    println("Result of the Sort Merge Join\n")
-    usersOrdersDF.show(truncate = false)
-    usersOrdersDF.cache()
+      println("Result of the Sort Merge Join:\n")
+      usersOrdersDF.show(truncate = false)
+      usersOrdersDF.cache()
 
-    println("Let's double check that we are using SortMergeJoin\n:")
-    usersOrdersDF.explain()
-    // usersOrdersDF.explain("formated")
+      println("Let's double check that we are using SortMergeJoin: \n")
+      usersOrdersDF.explain()
+    }
 
-    // uncomment to view the SparkUI
+    // Uncomment to view the SparkUI
     // if you open the UI, IT shows three stages for the
     // entire job: the Exchange and Sort operations happen in the final stage
-    Thread.sleep(1000 * 60 * 3)
+    // Thread.sleep(1000 * 60 * 3)
+
+    spark.stop()
   }
 }
