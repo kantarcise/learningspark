@@ -16,12 +16,12 @@ case class WordCount(value: String, count: Long)
  * Simply, start typing words in terminal to see
  * the word count!
  */
-object WordCount {
+object WordCountApp {
   def main(args: Array[String]): Unit = {
 
     val spark: SparkSession = SparkSession
       .builder
-      .appName("StructuredNetworkWordCount")
+      .appName("Structured Network WordCount")
       .master("local[*]")
       .getOrCreate()
 
@@ -75,19 +75,20 @@ object WordCount {
       // generated result
       // so append mode will not work.
       // if you try you will get the error:
-      //    Append output mode not supported when there are streaming
-      //    aggregations on streaming DataFrames/DataSets
-      //    without watermark
+      // Append output mode not supported when there are streaming
+      // aggregations on streaming DataFrames/DataSets
+      // without watermark
       .outputMode("complete")
       .format("console")
       .start()
 
     // Aside from the information on UI, we have
     // query.lastProgress, here is a method on it
+    
     // Call the method to print progress every 10 seconds
     // printProgress(query, 10000)
-
     query.awaitTermination()
+
   }
 
   // Method to print lastProgress periodically
