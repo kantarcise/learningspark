@@ -190,11 +190,11 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In Chapter 8, we will see the basics of Spark's Structured Streaming! 🏂
 
-- In [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) we will have an Streaming application up an running while discovering `flatMap`. 
+- In [WordCountApp](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) we will have an Streaming application up and running while discovering `flatMap`.
 
-- With [NumberCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NumberCount.scala) we discover the value of `try/catch` blocks in the code, while working with Dataset API. We will also discover a simple and powerful mechanism about monitorting Streaming Queries, with `query.lastProgress`.
+- With [NumberCountApp](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/NumberCount.scala) we discover the value of `try/catch` blocks in the code, while working with Dataset API. We will also discover a simple and powerful mechanism about monitorting Streaming Queries, with `query.lastProgress`.
 
-- The test [WordCountTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountTest.scala) will give us a simple testing blueprint for streaming applications! 
+- The [WordCountTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/WordCountTest.scala) will give us a simple testing blueprint for streaming applications! 
 
 - We can also write a [CustomListener](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/CustomListener.scala) to get more information about our `StreamingQuery`. We also have a method called `printProgress` method, demonstrated in [WordCount](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) that prints the `query.lastProgress` in a seperate Thread with defined periods, which might be useful.
 
