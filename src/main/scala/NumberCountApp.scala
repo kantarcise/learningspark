@@ -17,7 +17,7 @@ case class NumberCount(value: Int, count: Long)
  * After that, you can run this code in your IDE.
  * Start typing numbers in the terminal to see the number count!
  */
-object NumberCount {
+object NumberCountApp {
 
   def main(args: Array[String]): Unit = {
     val spark: SparkSession = SparkSession
