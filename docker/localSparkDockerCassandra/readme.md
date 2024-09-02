@@ -2,7 +2,7 @@
 
 ## What is going on ?
 
-For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToCassandra.scala), we need a Cassandra Instance up an running to test our approach.
+For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToCassandra.scala), we need a Cassandra Instance up and running to test our approach.
 
 Let's use docker-compose.
 
@@ -91,3 +91,5 @@ Depending on the words you typed, you should see something like:
     this |     2
     test |     4
 ```
+
+Voila!
