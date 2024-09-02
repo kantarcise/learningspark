@@ -60,8 +60,16 @@ object WordCountToCassandra {
 
     query.awaitTermination()
   }
-  // Define the function to write to Cassandra
-  def writeCountsToCassandra(wordCountsDS: Dataset[WordCount], batchId: Long): Unit = {
+
+  /**
+   * The method which will be used in foreachBatch, for
+   * writing the results to
+   * Cassandra Service.
+   * @param wordCountsDS: the Dataset of WordCount
+   * @param batchId: Current Batch ID
+   */
+  def writeCountsToCassandra(wordCountsDS: Dataset[WordCount],
+                             batchId: Long): Unit = {
     val keyspaceName = "spark_keyspace"
     val tableName = "wordcount"
 
