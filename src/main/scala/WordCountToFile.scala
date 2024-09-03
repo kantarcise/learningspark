@@ -3,7 +3,7 @@ package learningSpark
 import org.apache.spark.sql.{Dataset, SparkSession}
 
 /** Let's count some words again,
- * but this time, write the results into a file!
+ * but this time, let's write the results into a file!
  *
  * Thanks to foreachBatch, we can write into multiple files.
  *
@@ -16,7 +16,7 @@ object WordCountToFile {
 
     val spark: SparkSession = SparkSession
       .builder
-      .appName("WordCountToCassandra")
+      .appName("Word Count To File")
       .master("local[*]")
       .getOrCreate()
 
