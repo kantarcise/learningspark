@@ -30,8 +30,8 @@ object WordCountToPostgres {
     // Instantiate the CustomForeachWriter
     val customForeachWriter = new CustomForeachWriter(url, user, password)
 
-    // Make a dataset representing the stream of input
-    // lines from connection to localhost:9999
+    // A stream of input lines from
+    // connection to localhost:9999
     val linesDS: Dataset[String] = spark
       .readStream
       .format("socket")
@@ -50,7 +50,8 @@ object WordCountToPostgres {
       .count()
       .map { case (word, count) => WordCount(word, count) }
 
-    // Write the word counts to PostgreSQL using foreach
+    // Write the word counts to a PostgreSQL table
+    // using foreach
     val query = wordCounts
       .writeStream
       .queryName("Word Count to PostgreSQL")
