@@ -2,7 +2,7 @@
 
 ## What is going on ?
 
-For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToPostgres.scala), we need a PostgreSQL Instance up an running to test our approach.
+For [this application](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCountToPostgres.scala), we need a PostgreSQL Instance up and running to test our approach.
 
 Let's use docker-compose.
 
