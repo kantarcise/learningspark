@@ -24,7 +24,7 @@ object StatelessOperations {
 
     val spark: SparkSession = SparkSession
       .builder
-      .appName("StatelessOperations")
+      .appName("Stateless Operations")
       .master("local[*]")
       .getOrCreate()
 
@@ -69,7 +69,7 @@ object StatelessOperations {
       .start()
 
     // let's filter and explode the dataset
-    // type information as a hint
+    // type annotations as a hint
     val filteredData: Dataset[EcommerceCustomer] = filterData(customerStream)
     val explodedData: Dataset[EcommerceCustomerWithCategory] = explodeData(filteredData)
 
@@ -108,7 +108,8 @@ object StatelessOperations {
   }
 
   /**
-   * Select some columns from a Dataset, this is stateless.
+   * Select some columns from a Dataset.
+   * This is a stateless method.
    *
    * Because we are using typed transformations with Datasets,
    * we have a map() instead of select()
@@ -294,9 +295,7 @@ object StatelessOperations {
       memoryStream.addData(record)
       Thread.sleep(interval.toMillis)
     }
-
   }
-
 
   /**
    * We can generate even more data from sample data
