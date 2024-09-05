@@ -15,8 +15,10 @@ import org.apache.spark.sql.expressions.Aggregator
 // import org.apache.spark.sql.expressions.scalalang.typed
 
 /**
-There are some Stateful Aggregations which are done without timing.
-This is an example application to demonstrate.
+ * There are some Stateful Aggregations which are
+ * done without timing.
+ *
+ * This is an example application to demonstrate.
  */
 object ManagedStatefulAggregationsWithoutTime {
 
@@ -153,7 +155,7 @@ object ManagedStatefulAggregationsWithoutTime {
       // .outputMode("append")
       .outputMode("complete")
       .format("console")
-      .option("truncate" , false)
+      .option("truncate", value = false)
       .trigger(Trigger.ProcessingTime("1 seconds"))
       .start()
 
@@ -162,7 +164,7 @@ object ManagedStatefulAggregationsWithoutTime {
       .queryName("Count of Countries to Console")
       .outputMode("complete")
       .format("console")
-      .option("truncate" , false)
+      .option("truncate", value = false)
       // if we do not configure it
       // default trigger is just micro batches
       // .trigger(Trigger.ProcessingTime("1 seconds"))
@@ -173,12 +175,17 @@ object ManagedStatefulAggregationsWithoutTime {
       .queryName("Min Temp to Console")
       .outputMode("complete")
       .format("console")
-      .option("truncate" , false)
+      .option("truncate", value = false)
       .start()
 
-    query.awaitTermination()
-    querySecond.awaitTermination()
-    queryThird.awaitTermination()
+    // Await all terminations with error handling
+    try {
+      Seq(query, querySecond, queryThird).foreach(_.awaitTermination())
+    } catch {
+      case e: Exception =>
+        println(s"Error occurred in streaming queries: ${e.getMessage}")
+      // Optionally, log the error or handle it accordingly
+    }
 
     // Wait for the data adding to finish (it won't, but in a real
     // use case you might want to manage this better)
