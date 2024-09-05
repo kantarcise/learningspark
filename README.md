@@ -216,13 +216,13 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Also, [StatelessOperations](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StatelessOperations.scala) has a use case of `MemoryStream` to generate data on fly and make a streaming Dataset with it, check out `addDataPeriodicallyToMemoryStream(memoryStream, interval)` method. Another thing we'll discover is `.outputMode("")` and how it works in stateless aggregations. For more information see [16th and 17th items in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
-- Stateful Operations are divided into two groups (Managed and Unmanaged - page 237). 
+- Stateful Operations are divided into two groups (**Managed** and **Unmanaged** - page 237). 
 
-- **Managed Stateful Operations** are divided into three -> Streaming aggregations, Stream–stream joins, Streaming deduplication. We will start with Streaming aggregations:
+- **Managed Stateful Operations** are divided into three -> ***Streaming aggregations***, ***Stream–Stream joins***, ***Streaming deduplication***. We will start with Streaming aggregations:
 
     - Streaming Aggretations:
 
-    - ***First***, we try to understand managed stateful operations that does not use **Time** in [ManagedStatefulAggregationsWithoutTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithoutTime.scala) which uses a `MemoryStream` to generate a stream and shows us a lot of different types of aggregations in Structured Streaming. `allTypesOfAggregations(df: Dataframe)` is a great place to discover all kinds of aggregations. 
+    - ***First***, we try to understand managed stateful operations that does not use **Time** in [ManagedStatefulAggregationsWithoutTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithoutTime.scala) which uses a `MemoryStream` to generate a stream and shows us a lot of different types of aggregations in Structured Streaming. `allTypesOfAggregations(df: Dataframe)` is a great place to discover all kinds of aggregations.
 
     - ***Second***, we will see stateful operations which **do** depend on time, with a tumbling and sliding window in [ManagedStatefulAggregationsWithTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithTime.scala). This time we are using a [RateStream](https://jaceklaskowski.gitbooks.io/spark-structured-streaming/content/spark-sql-streaming-RateStreamSource.html) which is made for testing situations just like these where we simulate a real stream, and we are working with case classes [SimpleSensorWithTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleSensorWithTime.scala) and [SimpleSensorWithTimestamp](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/SimpleSensorWithTimestamp.scala). We do a simple timestamp conversion too; with `map()` we convert a type of Dataset into a different Dataset! 
 
