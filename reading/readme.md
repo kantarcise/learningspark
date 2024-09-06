@@ -9,3 +9,5 @@
 - [OptionTypeAndSome](https://github.com/kantarcise/learningspark/blob/main/reading/OptionTypeAndSome.md) Wait, what even is an `Option` type? 🤔
 
 - [TypedVSUntypedTransformations](https://github.com/kantarcise/learningspark/blob/main/reading/TypedVSUntypedTransformations.md) - In Scala, which one should we choose ?  🐤 - 🐦
+
+- [WindowingAndWatermarks](https://github.com/kantarcise/learningspark/blob/main/reading/WindowingAndWatermarks.md) How does windowing work (really) and why do we have a thing called **watermarks**? 🥳
