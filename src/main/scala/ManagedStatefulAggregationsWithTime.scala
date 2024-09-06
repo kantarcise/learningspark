@@ -4,11 +4,11 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.functions.window
 import org.apache.spark.sql.streaming.StreamingQuery
+
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
-
 import java.sql.Timestamp
 
 /** As the event time moves forward, new groups are automatically
@@ -104,18 +104,19 @@ object ManagedStatefulAggregationsWithTime {
       .writeStream
       .outputMode("complete")
       .format("console")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .start()
 
     val querySecond: StreamingQuery = aggregatedStreamSliding
       .writeStream
       .outputMode("complete")
       .format("console")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .start()
 
-    query.awaitTermination()
-    querySecond.awaitTermination()
+    // instead of multiple awaitTermination()
+    // we can use this for all streams.
+    spark.streams.awaitAnyTermination()
   }
 
   /** Using a rate stream, map each batch
