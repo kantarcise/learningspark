@@ -82,12 +82,12 @@ object Watermarks {
     val query: StreamingQuery = aggregatedStreamTumbling
       .writeStream
       .queryName("Tumbling Window Stream")
-      // TODO: in complete mode, watermarks doesn't work. Why?
+      // TODO: In complete mode, watermarks doesn't work. Why?
       //  The answer in the book, end of page 245!
       .outputMode("update")
       .format("console")
       // we can see the print out in full
-      .option("truncate" , false)
+      .option("truncate" , value = false)
       .start()
 
     // this query will drop 16 rows, because of sliding window
@@ -96,7 +96,7 @@ object Watermarks {
       .queryName("Sliding Window Stream")
       .outputMode("update")
       .format("console")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .start()
 
     // in the console, we will see
