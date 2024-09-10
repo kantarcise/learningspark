@@ -66,7 +66,7 @@ object WatermarksWithSocket {
     resultDF
       .writeStream
       .outputMode("update")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .option("numRows", 10)
       .format("console")
       .start()
