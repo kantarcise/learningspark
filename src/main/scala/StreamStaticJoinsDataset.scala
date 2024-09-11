@@ -56,7 +56,7 @@ object StreamStaticJoinsDataset{
       .queryName("Joined Click and Impressions to Console")
       .outputMode("append")
       .format("console")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .start()
 
     query.awaitTermination()
@@ -82,12 +82,13 @@ object StreamStaticJoinsDataset{
   def readStaticDataset(spark: SparkSession) : Dataset[Impression] = {
     import spark.implicits._
 
-    val impressionsSchema = new StructType()
-      .add("adId", StringType, true)
-      .add("impressionTime", TimestampType, true)
-      .add("userId", StringType, true)
-      .add("clicked", BooleanType, true)
-      .add("deviceType", StringType, true)
+    val impressionsSchema = StructType(Seq(
+      StructField("adId", StringType, nullable = true),
+      StructField("impressionTime", TimestampType, nullable = true),
+      StructField("userId", StringType, nullable = true),
+      StructField("clicked", BooleanType, nullable = true),
+      StructField("deviceType", StringType, nullable = true)
+    ))
 
     // Define the data path as a val
     val impressionsFilePath: String = {
