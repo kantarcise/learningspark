@@ -46,19 +46,25 @@ object StreamStaticJoinsDataframe {
     // Perform the join operation (inner equi-join)
     // Now using `join` instead of `joinWith` - from Untyped transformations
     val joinedStream = clickStream
-      .join(impressionsDF, Seq("adId"))
+      // there are 9 different versions of join !
+      // we can use this simple one, because adId exist on both of them.
+      .join(impressionsDF, usingColumn = "adId")
+      // this would also work
+      // .join(impressionsDF, Seq("adId"))
       // we can also select
       // Left outer join when the left side is a streaming DataFrame
       // Right outer join when the right side is a streaming DataFrame
       // https://stackoverflow.com/a/38578
       // .join(impressionsDF, Seq("adId"), "leftOuter")
 
+    joinedStream.printSchema()
+
     val query = joinedStream
       .writeStream
       .queryName("Joined Stream to Console")
       .outputMode("append")
       .format("console")
-      .option("truncate", false)
+      .option("truncate", value = false)
       .start()
 
     query.awaitTermination()
@@ -76,12 +82,14 @@ object StreamStaticJoinsDataframe {
    * @return impressionsDF : Dataframe
    */
   def readStaticDataFrame(spark: SparkSession): DataFrame = {
-    val impressionsSchema = new StructType()
-      .add("adId", StringType, true)
-      .add("impressionTime", TimestampType, true)
-      .add("userId", StringType, true)
-      .add("clicked", BooleanType, true)
-      .add("deviceType", StringType, true)
+
+    val impressionsSchema = StructType(Seq(
+      StructField("adId", StringType, nullable = true),
+      StructField("impressionTime", TimestampType, nullable = true),
+      StructField("userId", StringType, nullable = true),
+      StructField("clicked", BooleanType, nullable = true),
+      StructField("deviceType", StringType, nullable = true)
+    ))
 
     // Define the data path as a val
     val impressionsFilePath: String = {
@@ -95,7 +103,6 @@ object StreamStaticJoinsDataframe {
       .option("header", "true")
       .format("csv")
       .load(impressionsFilePath)
-
   }
 
   /**
