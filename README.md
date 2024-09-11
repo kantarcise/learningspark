@@ -220,7 +220,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - **Managed Stateful Operations** are divided into three -> ***Streaming aggregations***, ***Stream–Stream joins***, ***Streaming deduplication***. We will start with Streaming aggregations:
 
-    - Streaming Aggretations:
+    - **Streaming Aggretations**:
 
     - ***First***, we try to understand managed stateful operations that does not use **Time** in [ManagedStatefulAggregationsWithoutTime](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/ManagedStatefulAggregationsWithoutTime.scala) which uses a `MemoryStream` to generate a stream and shows us a lot of different types of aggregations in Structured Streaming. `allTypesOfAggregations(df: Dataframe)` is a great place to discover all kinds of aggregations.
 
@@ -228,9 +228,9 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - ***Third*** we'll discover how we can prevent unbounded state, with [Watermarks](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/Watermarks.scala)! We'll see how using a watermark effects the streaming Dataframe, with `numRowsDroppedByWatermark`.  We also have an example, [WatermarksWithSocket](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WatermarksWithSocket.scala) where our incoming data is from a socket - we use `.format("socket")` to make a streaming Dataframe.
 
-    - Streaming Joins:
+    - **Streaming Joins**:
 
-    - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataset.scala) we will join a static Dataset with a streaming one and see the results! We will do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation). 
+    - We will discover how Spark joins a static Dataframe/Dataset with a streaming one! 😮 In [StreamStaticJoinsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataset.scala) we'll join a static Dataset with a Streaming one and see the results! We'll do the same in [StreamStaticJoinsDataframe](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStaticJoinsDataframe.scala) for Dataframes! We will understand the simple but important distinction between `join()` and `joinWith()`, as they are part of Dataframe/Dataset API (Untyped Transformation / Typed Transformation). 
     
     - We can also discover how to test such application, in [StreamStaticJoinsDataframeTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStaticJoinsDataframeTest.scala). This test will show us the option to use `format("memory")` for a `StreamingQuery`!
 
@@ -238,7 +238,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
     
     - We will test out `leftouter` joining in our test [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala).
 
-    - Streaming deduplication:
+    - **Streaming Deduplication**:
 
     - We can deduplicate (drop duplicate) records in data streams using a unique identifier in the events. This is exactly same as deduplication on static using a unique identifier column. In [StreamingDeduplicationWithoutWatermark](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamingDeduplication.scala) we will see how a `guid` can be dropped when it's repeated in the upcoming batches, for a streaming Dataframe. 
     
