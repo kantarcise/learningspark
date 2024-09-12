@@ -17,7 +17,6 @@ import scala.concurrent.duration.FiniteDuration
  * have 2 MemoryStreams with 2 different methods.
  */
 object StreamStreamJoins {
-
   def main(args: Array[String]) : Unit = {
     val spark = SparkSession
       .builder
@@ -161,10 +160,10 @@ object StreamStreamJoins {
    *
    * Result will have 2 instances joined!
    *
-   * @param df1: Dataframe Left
-   * @param df2: Dataframe Right
+   * @param impressionsDF: Dataframe Left
+   * @param clicksDF: Dataframe Right
    * @param typeOfJoin: String  Type of Joining wanted
-   * @return: Dataframe - the joined Dataframe
+   * @return impressionsWithWatermark: Joined Dataframe
    */
   def joinTwoStreamingDataframesWithWatermark(impressionsDF: DataFrame,
                                               clicksDF: DataFrame,
