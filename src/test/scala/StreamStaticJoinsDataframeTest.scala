@@ -9,7 +9,7 @@ import org.scalatest.concurrent.Eventually
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
-/** We are using the Eventually trait from ScalaTest
+/** We are using the Eventually Trait from ScalaTest
  * to repeatedly execute a block of code until it either
  * succeeds or a specified timeout is reached.
  *
@@ -62,7 +62,7 @@ class StreamStaticJoinsDataframeTest extends AnyFunSuite with Eventually {
       // Wait for the data adding to finish
       Await.result(addDataFuture, Duration.Inf)
 
-      // Check the data
+      // Check the data with given intervals
       eventually(timeout(30.seconds), interval(2.seconds)) {
         val result = spark.sql("SELECT * FROM joinedStream")
         // 3 instances should be joined
