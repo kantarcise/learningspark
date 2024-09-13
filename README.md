@@ -236,7 +236,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - Our approach is clearly not suitable when both sources of data are changing rapidly. For that, we need stream–stream joins, and we see our first example in [StreamStreamJoins](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamStreamJoins.scala). In this application, we will explore what types of joins (inner, outer, etc.) are supported, and how to use **watermarks** to limit the state stored for stateful joins. 🥳
     
-    - We will test out `leftouter` joining in our test [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala).
+    - We can test out `leftouter` joining in [StreamStreamJoinsTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/StreamStreamJoinsTest.scala).
 
     - **Streaming Deduplication**:
 
