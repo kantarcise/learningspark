@@ -242,7 +242,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - We can deduplicate (drop duplicate) records in data streams using a unique identifier in the events. This is exactly same as deduplication on Static Dataframe using a unique identifier column. In [StreamingDeduplicationWithoutWatermark](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/StreamingDeduplication.scala) we will see how a `guid` can be dropped when it's repeated in the upcoming batches, for a Streaming Dataframe. 
     
-    - There is also deduplication using both the `guid` and the `eventTime` columns with a watermark which bounds the amount of the state the query has to maintain, in [StreamingDeduplicationWithWatermark]. For more information, check out the [related part in Structed Streaming Guide](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#streaming-deduplication). 🥳
+    - There is also deduplication using both the `guid` and the `eventTime` columns with a watermark which bounds the amount of the state the query has to maintain, in [StreamingDeduplicationWithWatermark]. For more information, check out the [related part in Structed Streaming Guide](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html#streaming-deduplication) (Seriously Recommended to Discover about Streaming In General). 🥳
 
 - **Unmanaged stateful operations** are where we define our own custom state cleanup logic.
 
