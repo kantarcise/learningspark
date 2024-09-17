@@ -10,9 +10,10 @@ import scala.concurrent.{Await, Future}
 import java.util.concurrent.{Executors, ScheduledExecutorService, TimeUnit}
 
 /**
- * In the preceding example of tracking active user sessions, as
- * more users become active, the number of keys in the state
- * will keep increasing, and so will the memory used by the state.
+ * In the preceding example (UnmanagedStatefulOperations) of tracking
+ * active user sessions, as more users become active, the number of
+ * keys in the state will keep increasing, and so will the memory
+ * used by the state.
  *
  * Now, in a real-world scenario, users are likely not going to stay
  * active all the time.
@@ -40,9 +41,10 @@ object UnmanagedStateProcessingTimeTimeout {
 
   // Represents the status of a user
   case class UserStatus(userId: String, var active: Boolean) {
+
     /**
      * Updates the user's active status based on the action.
-     * @param action
+     * @param action The `UserAction` instance containing the user's action.
      */
     def updateWith(action: UserAction): Unit = {
       active = action.action match {
@@ -54,7 +56,7 @@ object UnmanagedStateProcessingTimeTimeout {
 
     /**
      * Marks the user as inactive.
-     * @return UserStatus with active set to false
+     * @return The updated `UserStatus` with `active` set to `false`.
      */
     def asInactive(): UserStatus = {
       this.active = false
@@ -63,6 +65,171 @@ object UnmanagedStateProcessingTimeTimeout {
   }
 
   def main(args: Array[String]): Unit = {
+    implicit val spark: SparkSession = createSparkSession()
+    spark.sparkContext.setLogLevel("WARN")
+
+    val userActionMemoryStream = initializeMemoryStream()
+    val addDataFuture = addDataPeriodically(userActionMemoryStream, 2.seconds)
+
+    val userActions = userActionMemoryStream.toDS()
+    val latestStatuses = computeLatestStatuses(userActions)
+    val query = startStreamingQuery(latestStatuses)
+
+    setupGracefulShutdown(query, spark)
+    scheduleApplicationTermination(30.seconds)
+
+    query.awaitTermination()
+    Await.result(addDataFuture, Duration.Inf)
+  }
+
+  /**
+   * Makes a SparkSession with the application name
+   * and master configuration.
+   *
+   * @return An implicit `SparkSession` instance.
+   */
+  def createSparkSession(): SparkSession = {
+    SparkSession
+      .builder
+      .appName("Unmanaged State Processing Time Timeouts")
+      .master("local[*]")
+      .getOrCreate()
+  }
+
+  /**
+   * Initializes a `MemoryStream` for `UserAction` data.
+   *
+   * @param spark An implicit `SparkSession`.
+   * @return A `MemoryStream` of `UserAction`.
+   */
+  def initializeMemoryStream()(
+    implicit spark: SparkSession): MemoryStream[UserAction] = {
+    import spark.implicits._
+    MemoryStream[UserAction](1, spark.sqlContext)
+  }
+
+  /**
+   * State update function with processing time timeout for `mapGroupsWithState`.
+   *
+   * @param userId     The key (user ID) for the group.
+   * @param newActions An iterator of `UserAction` for the group.
+   * @param state      The `GroupState` maintaining the `UserStatus`.
+   * @return The updated `UserStatus` for the user.
+   */
+  def updateUserStatusWithProcessingTimeTimeout(userId: String,
+                       newActions: Iterator[UserAction],
+                       state: GroupState[UserStatus]): UserStatus = {
+    if (!state.hasTimedOut) { // Was not called due to timeout
+      val userStatus = state.getOption.getOrElse(UserStatus(userId, active = false))
+      newActions.foreach { action => userStatus.updateWith(action) }
+      state.update(userStatus)
+      state.setTimeoutDuration("10 seconds") // Set timeout duration
+      userStatus
+
+    } else {
+      // get Throws a NoSuchElementException if the state is not set.
+      // val userStatus = state.get
+      // sp let's use this
+      val userStatus = state.getOption.getOrElse(UserStatus(userId, active = false))
+      // Remove state when timed out
+      state.remove()
+      // Return inactive user's status
+      userStatus.asInactive()
+    }
+  }
+
+  /**
+   * Adds sample `UserAction` data to the
+   * provided `MemoryStream` at specified intervals.
+   *
+   * @param memoryStream The `MemoryStream` to add data to.
+   * @param interval     The interval between data additions.
+   * @return A `Future` representing the asynchronous data addition task.
+   */
+  def addDataPeriodically(memoryStream: MemoryStream[UserAction],
+                          interval: FiniteDuration): Future[Unit] = Future {
+
+    // we will never send data from user 2 again
+    // so it should be dropped first!
+    val sampleData: Seq[UserAction] = Seq(
+      UserAction("1", "move"),
+      UserAction("2", "move"),
+      UserAction("3", "move"),
+      // user 1 become idle and user 2 - 3 is moving
+      UserAction("1", "idle"),
+      UserAction("4", "move"),
+      UserAction("3", "move"),
+    )
+
+    sampleData.foreach { record =>
+      memoryStream.addData(record)
+      Thread.sleep(interval.toMillis)
+    }
+  }
+
+  /**
+   * Computes the latest user statuses using `mapGroupsWithState` with processing time timeout.
+   *
+   * @param userActions The input `Dataset` of `UserAction`.
+   * @return A `Dataset` of `UserStatus` representing the latest statuses.
+   */
+  def computeLatestStatuses(userActions: Dataset[UserAction]): Dataset[UserStatus] = {
+    import userActions.sparkSession.implicits._
+
+    userActions
+      .groupByKey(_.userId)
+      .mapGroupsWithState(
+        GroupStateTimeout.ProcessingTimeTimeout)(
+        updateUserStatusWithProcessingTimeTimeout)
+  }
+
+  /**
+   * Starts the streaming query to write the latest user statuses to the console.
+   *
+   * @param latestStatuses The `Dataset` of `UserStatus` to be written.
+   * @return A `StreamingQuery` object representing the active streaming query.
+   */
+  def startStreamingQuery(latestStatuses: Dataset[UserStatus]): StreamingQuery = {
+    latestStatuses
+      .writeStream
+      .queryName("Latest States as they are Updated to Console")
+      .outputMode("update")
+      .format("console")
+      .start()
+  }
+
+  /**
+   * Sets up graceful shutdown of the streaming query and SparkSession on application termination.
+   *
+   * @param query The active `StreamingQuery`.
+   * @param spark The active `SparkSession`.
+   */
+  def setupGracefulShutdown(query: StreamingQuery, spark: SparkSession): Unit = {
+    Runtime.getRuntime.addShutdownHook(new Thread {
+      override def run(): Unit = {
+        println("Gracefully stopping the streaming query and SparkSession...")
+        query.stop()
+        spark.stop()
+      }
+    })
+  }
+
+  /**
+   * Schedules the application to terminate after a specified duration.
+   *
+   * @param delay The delay after which the application will terminate.
+   */
+  def scheduleApplicationTermination(delay: FiniteDuration): Unit = {
+    val scheduler: ScheduledExecutorService = Executors.newScheduledThreadPool(1)
+    scheduler.schedule(new Runnable {
+      def run(): Unit = {
+        println(s"Application will terminate after $delay.")
+        sys.exit(0)
+      }
+    }, delay.toSeconds, TimeUnit.SECONDS)
+  }
+
+  def mainNotDecomposed(args: Array[String]): Unit = {
 
     val spark = SparkSession
       .builder
@@ -79,7 +246,7 @@ object UnmanagedStateProcessingTimeTimeout {
         MemoryStream[UserAction](1, spark.sqlContext)
 
     // Add sample data every second - one by one
-    val addDataFuture = addDataPeriodicallyToUserActionMemoryStream(
+    val addDataFuture = addDataPeriodically(
       userActionMemoryStream,
       2.seconds)
 
@@ -90,7 +257,7 @@ object UnmanagedStateProcessingTimeTimeout {
       .groupByKey(userAction => userAction.userId)
       .mapGroupsWithState(
         GroupStateTimeout.ProcessingTimeTimeout)(
-        updateUserStatusWithProcessingTimeTimeout _)
+        updateUserStatusWithProcessingTimeTimeout)
 
     // Start the streaming query and print to console
     val query = latestStatuses
@@ -129,61 +296,5 @@ object UnmanagedStateProcessingTimeTimeout {
     // Wait for the data adding to finish (it won't, but in a real
     // use case you might want to manage this better)
     Await.result(addDataFuture, Duration.Inf)
-  }
-
-  /**
-   * A State Update Function with Processing Time Timeout.
-   *
-   * It can be used with mapGroupsWithState
-   * @param userId
-   * @param newActions
-   * @param state
-   * @return
-   */
-  def updateUserStatusWithProcessingTimeTimeout(userId: String,
-                       newActions: Iterator[UserAction],
-                       state: GroupState[UserStatus]): UserStatus = {
-    if (!state.hasTimedOut) { // Was not called due to timeout
-      val userStatus = state.getOption.getOrElse(UserStatus(userId, false))
-      newActions.foreach { action => userStatus.updateWith(action) }
-      state.update(userStatus)
-      state.setTimeoutDuration("10 seconds") // Set timeout duration
-      userStatus
-
-    } else {
-      val userStatus = state.get
-      // Remove state when timed out
-      state.remove()
-      // Return inactive user's status
-      userStatus.asInactive()
-    }
-  }
-
-  /**
-   * This method adds the sample data within it to a MemoryStream.
-   *
-   * @param memoryStream: Memory Stream to add the data.
-   * @param interval: the interval to add the data into.
-   * @return
-   */
-  def addDataPeriodicallyToUserActionMemoryStream(memoryStream: MemoryStream[UserAction],
-                                                  interval: FiniteDuration): Future[Unit] = Future {
-
-    // we will never send data from user 2 again
-    // so it should be dropped first!
-    val sampleData: Seq[UserAction] = Seq(
-      UserAction("1", "move"),
-      UserAction("2", "move"),
-      UserAction("3", "move"),
-      // user 1 become idle and user 2 - 3 is moving
-      UserAction("1", "idle"),
-      UserAction("4", "move"),
-      UserAction("3", "move"),
-    )
-
-    sampleData.foreach { record =>
-      memoryStream.addData(record)
-      Thread.sleep(interval.toMillis)
-    }
   }
 }
