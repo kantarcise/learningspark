@@ -26,8 +26,6 @@ import scala.concurrent.Await
 
 // Here is a guide:
 // https://www.scalatest.org/user_guide/using_matchers
-import org.scalatest.matchers.should._
-import org.scalatest.flatspec._
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
