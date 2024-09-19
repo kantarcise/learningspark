@@ -252,7 +252,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
     - In [UnmanagedStateEventTimeTimeout](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateEventTimeTimeout.scala) we'll see how **Event Time** is used for timeouts. The code looks mostly the same as `UnmanagedStateProcessingTimeTimeout`, it is a lot cleaner an there are great advantages for this approach 🥳 
     
-    - We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
+    - We test our approach in [UnmanagedStateEventTimeTimeoutTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/UnmanagedStateEventTimeTimeoutTest.scala) thanks to  `org/scalatest/matchers/should/Matchers` and `org.scalatest.concurrent.Eventually`. For more information, check out [26th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras).
 
     - `flatMapGroupsWithState()`, gives us even more flexibility than `mapGroupsWithState()`. In [UnmanagedStateWithFlatMapGroupsWithState](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/UnmanagedStateWithFlatMapGroupsWithState.scala) we will discover how we can use `flatMapGroupsWithState()` in a similar fashion with the example applications we did before! We will make use of `org.apache.spark.sql.streaming.{GroupState, GroupStateTimeout, OutputMode}`, especially `OutputMode`.
 
