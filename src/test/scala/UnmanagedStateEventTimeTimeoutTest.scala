@@ -11,9 +11,19 @@ import UnmanagedStateEventTimeTimeout.updateUserStatusWithEventTimeTimeout
 import scala.concurrent.duration._
 import scala.concurrent.Await
 
-import java.sql.Timestamp
+// In our tests we can use Matchers instead of simple assertions
 
-// TODO: what are these?
+// Why:
+// - The shouldBe syntax reads more like natural language, making the
+// test assertions easier to understand at a glance.
+// - The shouldBe syntax makes it easier to modify tests in the future
+// - scalaTest provides a variety of matchers (e.g., shouldEqual, shouldBe,
+// shouldContain) that can make your test assertions more
+// expressive and tailored to specific needs.
+// - If the assertion fails, shouldBe provides detailed error messages
+// that include both the expected and actual values.
+// - We rather not have double negatives
+
 // Here is a guide:
 // https://www.scalatest.org/user_guide/using_matchers
 import org.scalatest.matchers.should._
@@ -40,7 +50,7 @@ class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
 
     // Add sample data every second - one by one
     val addDataFuture = UnmanagedStateEventTimeTimeout
-      .addDataPeriodicallyToUserActionMemoryStream(userActionMemoryStream,
+      .addDataPeriodically(userActionMemoryStream,
         1.seconds)
 
     // let's use the scoped case class
@@ -78,13 +88,19 @@ class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
           .collect()
           .toMap
 
-        // Because of the EventTime Timeout, every users should
+        // Because of the EventTime Timeout, every user should
         // be inactive in the end
-        assert(!statuses("1").active)
-        assert(!statuses("2").active)
-        assert(!statuses("3").active)
-        assert(!statuses("4").active)
-        assert(statuses("5").active == false)
+        statuses("1").active shouldBe false
+        statuses("2").active shouldBe false
+        statuses("3").active shouldBe false
+        statuses("4").active shouldBe false
+        statuses("5").active shouldBe false
+        // assert(!statuses("1").active)
+        // assert(!statuses("2").active)
+        // assert(!statuses("3").active)
+        // assert(!statuses("4").active)
+        // this is also possible in syntax
+        // assert(statuses("5").active == false)
         result.show()
       }
     } finally {
