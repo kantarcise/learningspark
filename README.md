@@ -265,16 +265,18 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 #### Chapter 9 - Building Reliable Data Lakes with Apache Spark 🐢 
 
-- Expressing the processing logic only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can query the processed data and get insights from it. The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline. To learn more about the history of storage solutions, see [53th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras)
+- Expressing the processing logic, only solves half of the end-to-end problem of building a pipeline. Our goal is to build pipelines so that we can [query the processed data](https://aws.amazon.com/what-is/olap/?nc1=h_ls) and get insights from it. 
 
-- We focus on **Delta Lake**! It is hosted by the Linux Foundation, built by the original creators of Apache Spark. It is called Delta Lake because of its analogy to streaming. Streams flow into the sea to create deltas—this is where all of the sediments accumulate, and thus where the valuable crops are grown. Jules S. Damji (one of our coauthors) came up with this!
+- The choice of storage solution determines the end-to-end (i.e., from raw data to insights) robustness and performance of the data pipeline. To learn more about the history of storage solutions, see [53th item in Extras](https://github.com/kantarcise/learningspark?tab=readme-ov-file#extras). 😍
 
-- To build a lakehouse, we need to configure Apache Spark to link to the Delta Lake Library. We can either provide the package with cli as we are using `spark-shell` or submitting an application like `--packages io.delta:delta-spark_2.12:jar:3.2.0` or we can add the dependency in our `build.sbt` file, like `libraryDependencies += "io.delta" %% "delta-spark" % "3.2.0"`
+- We focus on **Delta Lake**! It is hosted by the Linux Foundation, built by the original creators of Apache Spark. It is called Delta Lake because of its analogy to streaming. Streams flow into the sea to make deltas, this is where all of the sediments accumulate, and thus where the valuable crops are grown. Jules S. Damji (one of our coauthors) came up with this!
+
+- To build a lakehouse, we need to configure Apache Spark to link to the Delta Lake Library. We can either provide the package with cli as we are using `spark-shell` or submitting an application like `--packages io.delta:delta-spark_2.12:jar:3.2.0` or we can add the dependency in our `build.sbt` file, like `libraryDependencies += "io.delta" %% "delta-spark" % "3.2.0"`. 🌊
 
 > [!IMPORTANT]
 > Please note that the Delta Lake on Spark Maven artifact has been renamed from `delta-core` (before 3.0) to `delta-spark` (3.0 and above). Because we are using Spark 3.5.0, we will use `delta-spark` 🥰 
 
-- In [LoansStaticToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticToDeltaLake.scala) we will see a simple example of how we can load a static data into Delta Lake and query from the view we've made.
+- In [LoansStaticToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticToDeltaLake.scala) we'll see a simple example of how we can load static data into Delta Lake and query from the view we've made.
 
 - As with static DataFrames, we can easily modify our existing Structured Streaming jobs to write to and read from a Delta Lake table by setting the format to **"delta"**. [LoansStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStreamingToDeltaLake.scala) will help us understand making a streaming Dataframe and writing the data into Delta Lake. We will use two different `MemoryStream[LoanStatus]` and write into the same table. After the write process, we will read the data back and see it in the console! 
 
