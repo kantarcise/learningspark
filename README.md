@@ -280,7 +280,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - We can easily modify our existing Structured Streaming jobs to write to and read from a Delta Lake table by setting the format to **"delta"**. [LoansStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStreamingToDeltaLake.scala) will help us understand making a streaming Dataframe and writing it into Delta Lake. We'll use two different `MemoryStream[LoanStatus]` and write into the same table. After the write process, we'll read the data back and see it in the console. 😌 
 
-- Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we will test the ACID guarantees Delta Lake provides, with a small scale.
+- Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we'll test the ACID guarantees Delta Lake provides. 🐦
 
 - In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we can pretty much do it all (static - static & stream - stream & stream)!
 
