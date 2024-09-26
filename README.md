@@ -282,7 +282,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Also, with [DeltaLakeACIDTest](https://github.com/kantarcise/learningspark/blob/main/src/test/scala/DeltaLakeACIDTest.scala) we'll test the ACID guarantees Delta Lake provides. 🐦
 
-- In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we will combine both static and streaming Dataset writes into a single DeltaLake table. This shows that we can pretty much do it all (static - static & stream - stream & stream)!
+- In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we'll combine static and streaming Dataset writes into a single DeltaLake table. This completes the picture, showing that we can pretty much do it all (static - static & stream - stream & stream)! 🥳
 
 - [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to **enforce** or **merge** a schema when we are working with a Dataframe.
 
