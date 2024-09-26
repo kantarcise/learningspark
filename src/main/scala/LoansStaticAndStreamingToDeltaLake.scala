@@ -4,8 +4,6 @@ import org.apache.spark.sql.{Dataset, SparkSession}
 import org.apache.spark.sql.execution.streaming.MemoryStream
 import org.apache.spark.sql.streaming.{StreamingQuery, Trigger}
 
-import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 /**
@@ -27,12 +25,17 @@ object LoansStaticAndStreamingToDeltaLake {
       .builder
       .appName("Static and Streaming to Delta Lake")
       .master("local[*]")
-      .config("spark.sql.extensions",
-        "io.delta.sql.DeltaSparkSessionExtension")
-      .config("spark.sql.catalog.spark_catalog",
-        "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+      .config(
+        "spark.sql.extensions",
+        "io.delta.sql.DeltaSparkSessionExtension"
+      )
+      .config(
+        "spark.sql.catalog.spark_catalog",
+        "org.apache.spark.sql.delta.catalog.DeltaCatalog"
+      )
       .getOrCreate()
 
+    // Set log level to ERROR to reduce verbosity
     spark.sparkContext.setLogLevel("ERROR")
 
     import spark.implicits._
@@ -40,46 +43,49 @@ object LoansStaticAndStreamingToDeltaLake {
     // Configure Delta Lake path
     val deltaPath = "/tmp/loans_delta_stream_and_static"
 
-    // Write static Dataset to Delta Lake
-    writeStaticData(spark, deltaPath)
+    try {
+      // Write static Dataset to Delta Lake
+      writeStaticData(spark, deltaPath)
 
-    // Initialize a MemoryStream for streaming data
-    val loanMemoryStream = new
-        MemoryStream[LoanStatus](1, spark.sqlContext)
+      // Initialize a MemoryStream for streaming data
+      val loanMemoryStream = MemoryStream[LoanStatus](1, spark.sqlContext)
 
-    // Add sample data to the MemoryStream at intervals
-    val addDataFuture = addDataPeriodicallyToMemoryStream(
-      loanMemoryStream, 1.seconds)
+      // Create a streaming Dataset from the MemoryStream
+      val loansStreamDS = loanMemoryStream.toDS()
 
-    // Create a streaming Dataset from the MemoryStream
-    val loansStreamDS = loanMemoryStream
-      .toDS()
+      // Write streaming Dataset to Delta Lake
+      val query = writeStreamingData(loansStreamDS, deltaPath)
 
-    // Write streaming Dataset to Delta Lake
-    val query = writeStreamingData(loansStreamDS, deltaPath)
+      // Add sample data to the MemoryStream at intervals
+      addDataPeriodicallyToMemoryStream(loanMemoryStream, 1.seconds)
 
-    // Await termination of the streaming query
-    query.awaitTermination(10000)
+      // Wait for the streaming query to process all data
+      query.processAllAvailable()
 
-    // Read back the data from Delta Lake and
-    // show it in the console
-    readAndShowDeltaTable(spark, deltaPath)
+      // Read back the data from Delta Lake and
+      // show it in the console
+      readAndShowDeltaTable(spark, deltaPath)
 
-    // Wait for the data adding to finish
-    Await.result(addDataFuture, Duration.Inf)
+      // Stop the streaming query
+      query.stop()
 
-    spark.stop()
+    } finally {
+      // Stop the Spark session to free resources
+      spark.stop()
+    }
   }
 
   /**
    * Writes static data to the Delta Lake table.
-   * @param spark Spark session
+   *
+   * @param spark     Spark session
    * @param deltaPath Delta Lake table path
    */
-  def writeStaticData(spark: SparkSession, deltaPath: String): Unit = {
+  def writeStaticData(spark: SparkSession,
+                      deltaPath: String): Unit = {
     import spark.implicits._
 
-    // Create a static Dataset
+    // Create a static Dataset with sample data
     val staticDS = spark.createDataset(
       Seq(
         LoanStatus(33, 500, 200, "TX"),
@@ -88,7 +94,7 @@ object LoansStaticAndStreamingToDeltaLake {
       )
     )
 
-    // Write the static Dataset to Delta Lake
+    // Write the static Dataset to Delta Lake in append mode
     staticDS
       .write
       .format("delta")
@@ -98,12 +104,14 @@ object LoansStaticAndStreamingToDeltaLake {
 
   /**
    * Writes streaming data to the Delta Lake table.
+   *
    * @param loansStreamDS Streaming Dataset
-   * @param deltaPath Delta Lake table path
+   * @param deltaPath     Delta Lake table path
    * @return StreamingQuery
    */
   def writeStreamingData(loansStreamDS: Dataset[LoanStatus],
-                         deltaPath: String): StreamingQuery = {
+                         deltaPath: String
+                        ): StreamingQuery = {
     // Checkpoint directory for streaming query
     val checkpointDir = "/tmp/loanCheckpointThird"
 
@@ -118,11 +126,14 @@ object LoansStaticAndStreamingToDeltaLake {
   }
 
   /**
-   * Reads data from the Delta Lake table and shows it in the console.
-   * @param spark Spark session
+   * Reads data from the Delta Lake table and
+   * shows it in the console.
+   *
+   * @param spark     Spark session
    * @param deltaPath Delta Lake table path
    */
-  def readAndShowDeltaTable(spark: SparkSession, deltaPath: String): Unit = {
+  def readAndShowDeltaTable(spark: SparkSession,
+                            deltaPath: String): Unit = {
     // Read data from Delta Lake
     val deltaTable = spark
       .read
@@ -130,29 +141,30 @@ object LoansStaticAndStreamingToDeltaLake {
       .load(deltaPath)
 
     // Show the data in the console
-    deltaTable.show(20)
+    deltaTable.show(20, truncate = false)
   }
 
   /**
    * Adds sample data to the MemoryStream at regular intervals.
-   * @param memoryStream MemoryStream
-   * @param interval Interval between data additions
-   * @return Future[Unit]
+   *
+   * @param memoryStream MemoryStream to add data to
+   * @param interval     Interval between data additions
    */
   def addDataPeriodicallyToMemoryStream(memoryStream: MemoryStream[LoanStatus],
-                                        interval: FiniteDuration): Future[Unit] = Future {
-    val r = new scala.util.Random
+                                        interval: FiniteDuration
+                                       ): Unit = {
+    val random = new scala.util.Random
 
-    // Sample data
+    // Sample data with random paid amounts
     val sampleData = Seq(
-      LoanStatus(1, 1000, r.nextInt(1000).toDouble, "CA"),
-      LoanStatus(2, 1000, r.nextInt(1000).toDouble, "CA"),
-      LoanStatus(3, 1000, r.nextInt(1000).toDouble, "CA"),
-      LoanStatus(4, 1000, r.nextInt(1000).toDouble, "CA"),
-      LoanStatus(5, 1000, r.nextInt(1000).toDouble, "CA")
+      LoanStatus(1, 1000, random.nextInt(1000).toDouble, "CA"),
+      LoanStatus(2, 1000, random.nextInt(1000).toDouble, "CA"),
+      LoanStatus(3, 1000, random.nextInt(1000).toDouble, "CA"),
+      LoanStatus(4, 1000, random.nextInt(1000).toDouble, "CA"),
+      LoanStatus(5, 1000, random.nextInt(1000).toDouble, "CA")
     )
 
-    // Add data to the MemoryStream one by one
+    // Add data to the MemoryStream one by one with delays
     sampleData.foreach { instance =>
       memoryStream.addData(instance)
       Thread.sleep(interval.toMillis)
