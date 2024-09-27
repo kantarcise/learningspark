@@ -284,7 +284,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In [LoansStaticAndStreamingToDeltaLake](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/LoansStaticAndStreamingToDeltaLake.scala) we'll combine static and streaming Dataset writes into a single DeltaLake table. This completes the picture, showing that we can pretty much do it all (static - static & stream - stream & stream)! 🥳
 
-- [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to **enforce** or **merge** a schema when we are working with a Dataframe.
+- [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to **enforce** or **merge** a schema when we are working with a Dataframe. A cool usage of `try-catch` is inside. 😉
 
 - [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data. We will work on a Delta Table with `DeltaTable.forpath(spark, deltaPath)`. This is a long one, and a better example for decomposition. 👨‍💻
 
