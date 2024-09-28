@@ -37,11 +37,11 @@ object DeltaLakeTransformData {
 
     performNullUpdateForClosedDeltaTable(spark, deltaPath, deltaTable)
 
-    deleteAllPaidLoansDeltaTable(spark, deltaPath, deltaTable)
+    deleteAllPaidLoansDeltaTable(deltaTable)
 
-    upsertChangeDataLoansDeltaTable(spark, deltaPath, deltaTable)
+    upsertChangeDataLoansDeltaTable(spark, deltaTable)
 
-    deduplicateDataWhileInsertDeltaTable(spark, deltaPath, deltaTable)
+    deduplicateDataWhileInsertDeltaTable(spark, deltaTable)
 
     operationHistoryDeltaTable(deltaTable)
 
@@ -119,23 +119,22 @@ object DeltaLakeTransformData {
    * Let's see an example where we delete the data on
    * all loans that have been fully paid off.
    *
-   * @param spark: the spark session
-   * @param deltaPath : path for Delta Table
-   * @param deltaTable: The table itself
+   * Deletes all loans from the Delta Table where the loan
+   * has been fully paid off.
+   *
+   * @param deltaTable The DeltaTable object representing the loans table
    */
-  def deleteAllPaidLoansDeltaTable(spark: SparkSession,
-                                   deltaPath: String,
-                                   deltaTable: DeltaTable): Unit = {
+  def deleteAllPaidLoansDeltaTable(deltaTable: DeltaTable): Unit = {
 
-    // Display original data
-    println("Original Data before Delete:\n")
+    // Display original data before the delete operation
+    println("=== Data Before Delete Operation ===")
     deltaTable.toDF.show()
 
-    deltaTable
-      .delete("funded_amnt == paid_amnt")
+    // Delete records where 'funded_amnt' equals 'paid_amnt'
+    deltaTable.delete(condition = expr("funded_amnt = paid_amnt"))
 
-    // Display data after delete
-    println("Updated Data After Delete:\n")
+    // Display data after the delete operation
+    println("=== Data After Delete Operation ===")
     deltaTable.toDF.show()
   }
 
@@ -154,12 +153,13 @@ object DeltaLakeTransformData {
    * For more information:
    * https://docs.delta.io/latest/concurrency-control.html
    *
+   * Performs an upsert (merge) operation to update
+   * existing loans and insert new loans.
+   *
    * @param spark: the spark session
-   * @param deltaPath : path for Delta Table
    * @param deltaTable: The table itself
    */
   def upsertChangeDataLoansDeltaTable(spark: SparkSession,
-                                      deltaPath: String,
                                       deltaTable: DeltaTable): Unit = {
     // Display original data
     println("Original Data before Upsert Change Data:\n")
@@ -167,14 +167,16 @@ object DeltaLakeTransformData {
 
     import spark.implicits._
 
-    // update on loan 2222222, which was the only instance
-    // and 2 new loans are going to be added
+    // Create a DataFrame with updates and new loans
     val loanUpdates = Seq(
+      // Update existing loan with 'loan_id' 2222222L
       (2222222L, 2500, 500.0, "CA", true),
+      // Insert new loans
       (787878L, 3000, 200.0, "AU", false),
-      (595959L, 1000, 400.0, "GN", false))
-      .toDF("loan_id", "funded_amnt", "paid_amnt", "addr_state", "closed")
+      (595959L, 1000, 400.0, "GN", false)
+    ).toDF("loan_id", "funded_amnt", "paid_amnt", "addr_state", "closed")
 
+    // Perform the merge (upsert) operation
     deltaTable
       .alias("t")
       .merge(loanUpdates.alias("s"), "t.loan_id = s.loan_id")
@@ -217,18 +219,20 @@ object DeltaLakeTransformData {
    * by running the following merge operation with only the
    * INSERT action (since the UPDATE action is optional):
    *
+   * Inserts historical data into the Delta Table while
+   * avoiding duplicates based on 'loan_id'.
+   *
    * @param spark: the spark session
-   * @param deltaPath : path for Delta Table
    * @param deltaTable: The table itself
    */
   def deduplicateDataWhileInsertDeltaTable(spark: SparkSession,
-                                           deltaPath: String,
                                            deltaTable: DeltaTable): Unit = {
-    // Display original data
-    println("Original Data before adding Historical Data:\n")
-    deltaTable.toDF.show()
 
     import spark.implicits._
+
+    // Display original data before inserting historical data
+    println("=== Data Before Inserting Historical Data ===")
+    deltaTable.toDF.show()
 
     // let's make some historical Updates
     // 2 already inserted, 2 new instances
@@ -242,11 +246,14 @@ object DeltaLakeTransformData {
     // Update the table, with recent favored approached
     deltaTable
       .alias("t")
-      .merge(historicalUpdates.alias("s"), "t.loan_id = s.loan_id")
+      .merge(source = historicalUpdates.alias("s"),
+        condition = "t.loan_id = s.loan_id"
+      )
       .whenNotMatched.insertAll()
       .execute()
 
-    println("Updated Data after adding Historical Data:\n")
+    // Display data after inserting historical data
+    println("=== Data After Inserting Historical Data ===")
     deltaTable.toDF.show()
   }
 
@@ -258,6 +265,9 @@ object DeltaLakeTransformData {
    * operation is automatically versioned!
    *
    * There are different ways to examine this history.
+   *
+   * Displays the operation history of the Delta Table, including
+   * versions and operations performed.
    */
   def operationHistoryDeltaTable(deltaTable: DeltaTable): Unit = {
 
@@ -281,9 +291,14 @@ object DeltaLakeTransformData {
    *
    *  For more information:
    *  https://delta.io/blog/2023-02-01-delta-lake-time-travel/
+   *
+   * Queries previous snapshots of the Delta Table using
+   * time travel features.
    */
   def queryingPreviousSnapshotsDeltaTable(spark: SparkSession,
                                           deltaPath: String): Unit = {
+
+    // Query the Delta Table as of a specific timestamp
     println("DeltaTable after a Timestamp:\n")
     // let's see an example of read after a timestamp
     spark
@@ -295,8 +310,8 @@ object DeltaLakeTransformData {
       .load(deltaPath)
       .show(10, truncate = false)
 
+    // Query the Delta Table as of a specific version
     println("After a Version Of:\n")
-    // query other version
     spark
       .read
       .format("delta")
