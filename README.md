@@ -286,7 +286,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - [DeltaLakeEnforceAndEvolveSchema](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeEnforceAndEvolveSchema.scala) will demonstrate the Delta Lake's ability to **enforce** or **merge** a schema when we are working with a Dataframe. A cool usage of `try-catch` is inside. 😉
 
-- [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is to show us variety of transformations that we can use on data. We will work on a Delta Table with `DeltaTable.forpath(spark, deltaPath)`. This is a long one, and a better example for decomposition. 👨‍💻
+- [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is there to show us variety of transformations that we can use on data. We'll work on a Delta Table with `DeltaTable.forpath(spark, deltaPath)`. This is a long one, and a better example for decomposition. 👨‍💻
 
 - [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is from outside of the book, just to demonstrate all the cool things that we can do!
 
