@@ -44,7 +44,11 @@ object DeltaLakeTimeTravel {
     val deltaTable = DeltaTable
       .forPath(spark, nums_delta_path)
 
-    println("\n Here is the history of the deltaTable\n")
+    println("\ndeltaTable.history is a Dataframe itself!")
+    println("Here is it's schema\n")
+    deltaTable.history.printSchema()
+
+    println("\nHere is a part of the history df\n")
     deltaTable
       .history
       .select("version", "timestamp", "operation")
@@ -66,6 +70,7 @@ object DeltaLakeTimeTravel {
    *
    * Thanks to DeltaLake!
    * @param spark: SparkSession
+   * @param deltaPath: path of DeltaTable
    */
   def queryDifferentVersionsDeltaTable(spark: SparkSession,
                                        deltaPath: String): Unit = {
@@ -111,7 +116,8 @@ object DeltaLakeTimeTravel {
    * @param spark: SparkSession
    * @param deltaPath: Path for DeltaTable
    */
-  def timeTravelDeltaTable(spark: SparkSession, deltaPath: String): Unit = {
+  def timeTravelDeltaTable(spark: SparkSession,
+                           deltaPath: String): Unit = {
 
     println("Most recent version\n")
     spark
@@ -124,7 +130,8 @@ object DeltaLakeTimeTravel {
     spark
       .read
       .format("delta")
-      .option("timestampAsOf", LocalDateTime.now().minusSeconds(5).toString)
+      .option("timestampAsOf",
+        LocalDateTime.now().minusSeconds(5).toString)
       .load(deltaPath)
       .show()
   }
@@ -137,8 +144,10 @@ object DeltaLakeTimeTravel {
    * TimeTravel in DeltaLake.
    *
    * @param spark: SparkSession
+   * @param deltaPath: Path for DeltaTable
    */
-  def transformData(spark: SparkSession, deltaPath: String): Unit = {
+  def transformData(spark: SparkSession,
+                    deltaPath: String): Unit = {
 
     import spark.implicits._
 
@@ -178,7 +187,8 @@ object DeltaLakeTimeTravel {
    * @param deltaTable: DeltaTable object
    * @param deltaPath: Path for DeltaTable
    */
-  def cleanupAfterAllProcessing(deltaTable: DeltaTable, deltaPath: String): Unit = {
+  def cleanupAfterAllProcessing(deltaTable: DeltaTable, 
+                                deltaPath: String): Unit = {
     // Deleting all data in the table
     deltaTable.delete()
 
