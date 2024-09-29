@@ -288,7 +288,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - [DeltaLakeTransformData](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTransformData.scala) is there to show us variety of transformations that we can use on data. We'll work on a Delta Table with `DeltaTable.forpath(spark, deltaPath)`. This is a long one, and a better example for decomposition. 👨‍💻
 
-- [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is from outside of the book, just to demonstrate all the cool things that we can do!
+- [DeltaLakeTimeTravel](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DeltaLakeTimeTravel.scala) this example is not from the book, it'll demonstrate some cool things that we can do with DeltaLake! 🌳
 
 
 #### Chapter 10 - Machine Learning with MLlib 🎩
