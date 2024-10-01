@@ -2,14 +2,15 @@ package learningSpark
 
 import org.apache.spark.sql._
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.regression.{LinearRegression, LinearRegressionModel}
+import org.apache.spark.ml.regression.LinearRegression
 import org.apache.spark.ml.{Pipeline, PipelineModel}
 
 /**
- * Now we can get to building an ML pipeline for our data.
+ * An example of building a simple ML pipeline using
+ * Spark MLlib to predict Airbnb prices.
  *
- * This application only uses a single
- * feature for LinearRegression to predict prices.
+ * This application uses a single feature, 'bedrooms', to
+ * train a Linear Regression model to predict prices.
  */
 object AirbnbPricePredictionSimple {
   def main(args: Array[String]): Unit = {
@@ -32,79 +33,76 @@ object AirbnbPricePredictionSimple {
       .read
       .parquet(airbnbFilePath)
 
-    // let's make the train/test splits
-    val (testDF, trainDF) = trainTestSplit(airbnbDF)
+    // Let's make the train/test splits
+    val (trainDF, testDF) = trainTestSplit(airbnbDF)
 
-    // Let's prepare the Features with Transformers
+    // Prepare the features with transformers
     val (vecAssembler, featureVectorDF) = prepareFeatures(trainDF)
 
-    // model
-    val (lr, model) = buildModelWithEstimators(featureVectorDF)
+    // Build the model with estimators
+    val lr = buildModelWithEstimators(featureVectorDF)
 
+    // Make and fit the inference pipeline
     val pipelineModel = inferencePipeline(trainDF, vecAssembler, lr)
 
+    // Apply the test data to the pipeline
     applyTestDataToPipeline(testDF, pipelineModel)
   }
 
   /**
-   * Generate the train test split from the original Dataframe.
+   * Splits the input DataFrame into training and test DataFrames.
    *
-   * The recommendation from the book is to split the data once, then
-   * write it out to it's own train/test folder so we don’t
-   * have these reproducibility issues (which arises when there are
-   * different number of executors in Spark Cluster).
+   * It's recommended to split the data once and reuse the
+   * same split for reproducibility, especially when working with
+   * different numbers of executors in a Spark cluster.
    *
-   * @param df: input dataframe
-   * @return (testDF, trainDF): Test and Train Datafranes
+   * @param df Input DataFrame to split.
+   * @return (trainDF, testDF): A tuple containing the training and test DataFrames.
    */
-  def trainTestSplit(df : DataFrame
-                    ): (DataFrame, DataFrame) = {
-    val Array(trainDF, testDF) = df.randomSplit(Array(.8, .2), seed=42)
+  def trainTestSplit(df: DataFrame): (DataFrame, DataFrame) = {
+    val Array(trainDF, testDF) = df.randomSplit(Array(0.8, 0.2), seed = 42)
     println(
       f"""There are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
-    (testDF, trainDF)
+    (trainDF, testDF)
   }
 
   /**
-   * After we have split our data into training and test sets, let’s
-   * prepare the data to build a linear regression model predicting
-   * price given the number of bedrooms.
+   * Prepares the training DataFrame for modeling by
+   * assembling the feature(s) into a feature vector.
    *
-   * Linear regression (like many other algorithms in Spark) requires that
-   * all the input features are contained within a single vector in your
-   * DataFrame.
+   * Linear regression (like many other algorithms in Spark) requires that all input
+   * features are contained within a single vector column.
    *
-   * Thus, we need to transform our data.
+   * This function uses VectorAssembler to combine the feature columns
+   * into a single 'features' column.
+   *
+   * @param trainDF The training DataFrame.
+   * @return A tuple containing the VectorAssembler and the
+   *         transformed DataFrame with a 'features' column.
    */
-  def prepareFeatures(trainDF: DataFrame
-                     ): (VectorAssembler, DataFrame) = {
+  def prepareFeatures(trainDF: DataFrame): (VectorAssembler, DataFrame) = {
 
-    // putting all of our features into a single vector
-    // this only has "bedrooms" for now
+    // Putting all of our features into a single vector (only "bedrooms" for now)
     val vecAssembler = new VectorAssembler()
       .setInputCols(Array("bedrooms"))
       .setOutputCol("features")
 
-    // calling the transform method!
-    val vecTrainDF = vecAssembler
-      .transform(trainDF)
+    // Transforming the training DataFrame
+    val vecTrainDF = vecAssembler.transform(trainDF)
 
-    // let's see the effect! we now have a features column!
-    println("With a VectorAssembler, now we have a features column " +
-      "which is a Vector type!\n")
+    // Show the effect: now we have a 'features' column
+    println("With a VectorAssembler, now we have a features " +
+      "column which is a Vector type!\n")
     vecTrainDF
       .select("bedrooms", "features", "price")
       .show(10)
 
-    // see the schema
-    // it will have:
-    // |-- features: vector (nullable = true)
+    // Display the schema
     println("You can see it in the schema too!\n")
     vecTrainDF.printSchema()
 
-    // return the VectorAssembler and the
-    // Dataframe that has feature column
+    // Return the VectorAssembler and the transformed DataFrame
     (vecAssembler, vecTrainDF)
   }
 
@@ -116,42 +114,38 @@ object AirbnbPricePredictionSimple {
    * In Spark, LinearRegression is a type of estimator — it takes
    * in a DataFrame and returns a Model.
    *
-   * Estimators learn parameters from your data, have
-   * an estimator_name.fit() method, and are eagerly
-   * evaluated (i.e., kick off Spark jobs),
-   * whereas transformers are lazily evaluated.
+   * Initializes a Linear Regression estimator and fits it to the data.
    *
-   * Some other examples of estimators include
-   * Imputer, DecisionTreeClassifier, and RandomForestRegressor.
+   * The function creates a LinearRegression estimator, fits it to
+   * the input DataFrame, and prints the regression coefficients.
    *
-   * @param spark
+   * @param dfWithVector DataFrame containing the 'features' vector
+   *                     column and the label column.
+   * @return The LinearRegression estimator.
    */
-  def buildModelWithEstimators(dfWithVector: DataFrame
-                              ): (LinearRegression, LinearRegressionModel) = {
+  def buildModelWithEstimators(dfWithVector: DataFrame): LinearRegression = {
 
-    // our estimator is LinearRegression
+    // Initialize the LinearRegression estimator
     val lr = new LinearRegression()
       .setFeaturesCol("features")
       .setLabelCol("price")
-      // Set regParam to a non-zero value to
-      // avoid overfitting & instability
+      // Set regParam to a non-zero value to avoid overfitting & instability
       // if we dont, we will get the warning:
       // regParam is zero, which might cause numerical instability and overfitting.
       .setRegParam(0.001)
 
-    val lrModel = lr
-      .fit(dfWithVector)
+    // Fit the model to the data
+    val lrModel = lr.fit(dfWithVector)
 
-    // once the estimator learned the parameters
-    // the transformer can apply these parameters to new data points!
+    // Extract and print the coefficients
     val m = lrModel.coefficients(0)
     val b = lrModel.intercept
     println(
-      f""" The formula for the linear regression line is
-         |  'price = $m%1.2f*bedrooms + $b%1.2f'\n""".stripMargin)
+      f"""The formula for the linear regression line is
+         |  'price = $m%1.2f * bedrooms + $b%1.2f'\n""".stripMargin)
 
-    // return the estimator and the model
-    (lr, lrModel)
+    // Return the estimator
+    lr
   }
 
   /**
@@ -162,46 +156,51 @@ object AirbnbPricePredictionSimple {
    * With the Pipeline API: we specify the stages we want our data to
    * pass through, in order, and Spark takes care of the processing.
    *
-   * In Spark, Pipelines are estimators, whereas
-   * PipelineModels (fitted Pipelines) are transformers.
+   * Builds and fits a Pipeline consisting of feature
+   * transformation and the Linear Regression model.
    *
-   * Another advantage of using the Pipeline API is that it
-   * determines which stages are estimators/transformers for us, so
-   * we don’t have to worry about specifying name.fit() versus
-   * name.transform() for each of the stages.
+   * This function makes a Pipeline with the provided VectorAssembler
+   * and LinearRegression estimator, fits it to the training data, and
+   * returns the fitted PipelineModel.
    *
+   * @param trainDF Training DataFrame.
+   * @param vecAssembler VectorAssembler for transforming features.
+   * @param lr LinearRegression estimator.
+   * @return The fitted PipelineModel.
    */
   def inferencePipeline(trainDF: DataFrame,
                         vecAssembler: VectorAssembler,
-                        lr: LinearRegression) = {
+                        lr: LinearRegression): PipelineModel = {
 
-    // we can make a pipeline!
+    // Create the pipeline with the stages
     val pipeline = new Pipeline()
       .setStages(Array(vecAssembler, lr))
 
-    // and fit the pipeline itself!
-    val pipelineModel = pipeline
-      .fit(trainDF)
+    // Fit the pipeline to the training data
+    val pipelineModel = pipeline.fit(trainDF)
 
     pipelineModel
   }
 
   /**
-   * Since pipelineModel is a transformer, it is straightforward
-   * to apply it to our test dataset.
+   * Applies the trained PipelineModel to the test
+   * DataFrame for predictions.
    *
-   * @param testDF: test Dataframe
-   * @param pipelineModel: Pipeline Model for inference
+   * This function uses the PipelineModel to transform
+   * the test data, producing predictions, and prints the results.
+   *
+   * @param testDF Test DataFrame.
+   * @param pipelineModel The trained PipelineModel for inference.
    */
   def applyTestDataToPipeline(testDF: DataFrame,
                               pipelineModel: PipelineModel): Unit = {
 
-    println("After we train the pipeline on train data, we " +
-      "can use it for inference! \n")
-    //
-    val predDF = pipelineModel
-      .transform(testDF)
+    println("After we train the pipeline on train data, we can use it for inference!\n")
 
+    // Transform the test DataFrame using the pipeline model
+    val predDF = pipelineModel.transform(testDF)
+
+    // Show the prediction results
     println("Here are the result predictions from our pipeline model!\n")
     predDF
       .select("bedrooms", "features", "price", "prediction")
