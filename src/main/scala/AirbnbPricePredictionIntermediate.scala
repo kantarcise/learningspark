@@ -37,7 +37,7 @@ object AirbnbPricePredictionIntermediate {
       .parquet(airbnbFilePath)
 
     // let's make the train/test splits
-    val (testDF, trainDF) = trainTestSplit(airbnbDF)
+    val (trainDF, testDF) = trainTestSplit(airbnbDF)
 
     // Model with one-hot encoding
     val firstModel = modelWithOneHotEncoding(testDF, trainDF)
@@ -66,7 +66,7 @@ object AirbnbPricePredictionIntermediate {
     println(
       f"""\nThere are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
-    (testDF, trainDF)
+    (trainDF, testDF)
   }
 
   /**
