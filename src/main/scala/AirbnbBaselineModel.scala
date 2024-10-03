@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions._
  * When we evaluated the Linear Regression model with
  * one-hot encoding, we got an RMSE of 220.6.
  *
- * Is this good?
+ * Is this a good value?
  *
  * Here is a baseline to answer that question.
  */
