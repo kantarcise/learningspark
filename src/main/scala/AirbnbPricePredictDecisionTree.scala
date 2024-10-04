@@ -22,19 +22,12 @@ object AirbnbPricePredictDecisionTree {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // Define the data path as a val
-    val airbnbFilePath: String = {
-      val projectDir = System.getProperty("user.dir")
-      s"$projectDir/data/sf-airbnb-clean.parquet"
-    }
+    val airbnbDF = loadDataframeFromFileSystem(spark)
 
-    val airbnbDF = spark
-      .read
-      .parquet(airbnbFilePath)
-
-    val (testDF, trainDF) = trainTestSplit(airbnbDF)
+    val (trainDF, testDF) = trainTestSplit(airbnbDF)
 
     val pipelineModel = buildAndTrainModel(trainDF)
+
     visualizeDecisionTree(spark, pipelineModel)
 
     val predDF = applyModel(pipelineModel, testDF)
@@ -46,10 +39,32 @@ object AirbnbPricePredictDecisionTree {
   }
 
   /**
+   * Load the cleaned data from the
+   * parquet file.
+   *
+   * @param spark: The SparkSession
+   * @return df: The Dataframe
+   */
+  def loadDataframeFromFileSystem(spark: SparkSession): DataFrame = {
+    // Define the data path as a val
+    val airbnbFilePath: String = {
+      val projectDir = System.getProperty("user.dir")
+      s"$projectDir/data/sf-airbnb-clean.parquet"
+    }
+
+    val airbnbDF = spark
+      .read
+      .parquet(airbnbFilePath)
+
+    airbnbDF
+  }
+
+  /**
    * Generate the train-test split from the original DataFrame.
    *
    * @param df Input DataFrame.
-   * @return A tuple containing the testing and training DataFrames.
+   * @return A tuple containing the training and
+   *         test DataFrames (trainDF, testDF).
    */
   def trainTestSplit(df: DataFrame
                     ): (DataFrame, DataFrame) = {
@@ -58,7 +73,7 @@ object AirbnbPricePredictDecisionTree {
     println(
       f"""\nThere are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
-    (testDF, trainDF)
+    (trainDF, testDF)
   }
 
   /**
@@ -70,7 +85,9 @@ object AirbnbPricePredictDecisionTree {
    * @param trainDF Training DataFrame.
    * @return PipelineModel
    */
-  def buildAndTrainModel(trainDF: DataFrame): PipelineModel = {
+  def buildAndTrainModel(trainDF: DataFrame,
+                         maxBins: Int = 40,
+                         maxDepth: Int = 5): PipelineModel = {
     val categoricalCols = trainDF
       .dtypes
       .filter(_._2 == "StringType")
@@ -118,7 +135,8 @@ object AirbnbPricePredictDecisionTree {
       //  features, that would double the number
       //  of possible splits for continuous variables, greatly
       //  increasing our computation time.
-      .setMaxBins(40)
+      .setMaxBins(maxBins)
+      // .setMaxDepth(maxDepth)
 
     val stages = Array(stringIndexer, vecAssembler, dt)
     val pipeline = new Pipeline()
@@ -218,7 +236,7 @@ object AirbnbPricePredictDecisionTree {
       .evaluate(predDF)
 
     println(s"RMSE is $rmse")
-    println(s"R2 is $r2")
+    println(s"R2 is $r2\n")
     println("*-"*80)
   }
 }
