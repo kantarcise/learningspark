@@ -305,7 +305,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - So far we've worked with, *Linear Regression*. We could do more hyperparameter tuning with the linear regression model, but let's try tree based methods and see if our performance improves. We used `OHE` for categorical features in `LinearRegression`. However, for decision trees, and in particular, ***random forests***, we shouldn't `OHE` our variables. [AirbnbPricePredictDecisionTree](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) is the example where we attempt to use `DecisionTreeRegressor`.
 
-- To understand the basics of *Hyperparameter Tuning*, we will discover more about tree based models in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala). In which we will use a `CrossValidator` and `ParamGridBuilder`. We will also see how we can do some simple visualization for CrossValidatorModels as well as PipelineModels in `visualizeModel()` and `visualizePipelineModel()`.
+- To understand the basics of *Hyperparameter Tuning*, we'll discover more about tree based models in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala). We are going to use a `CrossValidator` and `ParamGridBuilder`. Also seeing how we can do some simple visualization for CrossValidatorModels as well as PipelineModels in `visualizeModel()` and `visualizePipelineModel()` might be useful too. 😌
 
 #### Chapter 11 - Managing, Deploying, and Scaling Machine Learning Pipelines with Apache Spark 🎷
 
