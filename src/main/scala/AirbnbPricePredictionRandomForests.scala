@@ -10,8 +10,9 @@ import org.apache.spark.ml.regression.RandomForestRegressor
 import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGridBuilder}
 
 /**
- * Demonstrates using Random Forests for
- * predicting Airbnb prices.
+ * Demonstrates using Random Forests for predicting Airbnb prices.
+ *
+ * TODO: We can make a Utils object for common logic in our methods.
  */
 object AirbnbPricePredictionRandomForests {
 
@@ -24,17 +25,9 @@ object AirbnbPricePredictionRandomForests {
 
     spark.sparkContext.setLogLevel("WARN")
 
-    // Define the data path as a val
-    val airbnbFilePath: String = {
-      val projectDir = System.getProperty("user.dir")
-      s"$projectDir/data/sf-airbnb-clean.parquet"
-    }
+    val airbnbDF = loadDataframeFromFileSystem(spark)
 
-    val airbnbDF = spark
-      .read
-      .parquet(airbnbFilePath)
-
-    val (testDF, trainDF) = trainTestSplit(airbnbDF)
+    val (trainDF, testDF) = trainTestSplit(airbnbDF)
 
     val (stringIndexer, vecAssembler, rf,
       pipelineWithRandomForest, paramGrid, evaluator) = prepareStages(trainDF)
@@ -60,18 +53,40 @@ object AirbnbPricePredictionRandomForests {
   }
 
   /**
+   * Load the cleaned data from the
+   * parquet file.
+   *
+   * @param spark: The SparkSession
+   * @return df: The Dataframe
+   */
+  def loadDataframeFromFileSystem(spark: SparkSession): DataFrame = {
+    // Define the data path as a val
+    val airbnbFilePath: String = {
+      val projectDir = System.getProperty("user.dir")
+      s"$projectDir/data/sf-airbnb-clean.parquet"
+    }
+
+    val airbnbDF = spark
+      .read
+      .parquet(airbnbFilePath)
+
+    airbnbDF
+  }
+
+  /**
    * Generate the train-test split from the original DataFrame.
    *
    * @param df Input DataFrame.
-   * @return A tuple containing the testing and training DataFrames.
+   * @return A tuple containing the training and
+   *         test DataFrames (trainDF, testDF).
    */
-  def trainTestSplit(df: DataFrame): (DataFrame, DataFrame) = {
-    val Array(trainDF, testDF) = df
-      .randomSplit(Array(.8, .2), seed = 42)
+  def trainTestSplit(df: DataFrame
+                    ): (DataFrame, DataFrame) = {
+    val Array(trainDF, testDF) = df.randomSplit(Array(.8, .2), seed=42)
     println(
       f"""\nThere are ${trainDF.count} rows in the training set,
          |and ${testDF.count} in the test set.\n""".stripMargin)
-    (testDF, trainDF)
+    (trainDF, testDF)
   }
 
   /**
@@ -182,8 +197,8 @@ object AirbnbPricePredictionRandomForests {
                              evaluator: RegressionEvaluator,
                              paramGrid: Array[ParamMap]): PipelineModel = {
 
-    // Should we put the pipeline in the cross
-    // validator, or the cross validator in the pipeline?
+    // Should we put the pipeline in cross validator, or
+    // the cross validator in the pipeline?
     // https://kb.databricks.com/machine-learning/speed-up-cross-validation
     val cvWithRandomForest = new CrossValidator()
       .setEstimator(rf)
@@ -202,7 +217,6 @@ object AirbnbPricePredictionRandomForests {
 
     pipelineModel
   }
-
 
   /**
    * Visualize the trained model and its parameters.
@@ -246,16 +260,16 @@ object AirbnbPricePredictionRandomForests {
       }
     }
 
-    // If the last stage is a RandomForestRegressionModel, print feature importances
+    // If the last stage is a RandomForestRegressionModel, print feature importance
     pipelineModel.stages.last match {
       case rfModel: org.apache.spark.ml.regression.RandomForestRegressionModel =>
-        println("\nFeature Importances:")
+        println("\nFeature Importance:")
         rfModel.featureImportances.toArray.zipWithIndex.foreach {
           case (importance, idx) => println(s"Feature $idx: $importance")
         }
       case _ =>
         println("\nThe last stage is not a RandomForestRegressionModel. " +
-          "No feature importances to display.\n")
+          "No feature importance to display.\n")
     }
   }
 
@@ -336,13 +350,13 @@ object AirbnbPricePredictionRandomForests {
    */
   def getCategoricalAndNumericCols(df: DataFrame
                                   ): (Array[String], Array[String]) = {
-    // the categorical columns
+    // Extract the names of categorical columns from the DataFrame.
     val categoricalCols = df
       .dtypes
       .filter(_._2 == "StringType")
       .map(_._1)
 
-    // numeric columns
+    // Extract the numeric columns too
     val numericCols = df
       .dtypes
       .filter { case (field, dataType) =>
