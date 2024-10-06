@@ -313,7 +313,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - To be able to run the following applications, you can use a docker container! 🐤 For details and step by step tutorial, see [the readme](https://github.com/kantarcise/learningspark/blob/main/docker/localSparkDockerMlflow/readme.md)
 
-- With [MlflowSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowSimple.scala) we'll discover how we can use MLFlow to track and monitor our deployments for our ML Applications in Spark.
+- With [MlflowSimple](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowSimple.scala) we'll discover how we can use MLFlow to track and monitor our deployments for our ML Applications in Spark. We are only focused on a quickstart for MLFlow here, so repeatedly submitting the application is a good idea to see the new experiments in UI. 🥰
 
 - With [MlflowWithContext](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MlflowWithContext.scala) we can log tags, metrics and artifacts with using the `ActiveRun` only! Also, we will keep using the same experiment (`random-forest-experiment`) and submit new runs as we rerun the application!
 
