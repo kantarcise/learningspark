@@ -141,7 +141,8 @@ object MlflowSimple {
 
     // Identify numeric columns
     val numericCols = trainDF.schema.fields.collect {
-      case field if field.dataType.typeName == "double" && field.name != "price" => field.name
+      case field
+        if field.dataType.typeName == "double" && field.name != "price" => field.name
     }
     val assemblerInputs = indexOutputCols ++ numericCols
 
