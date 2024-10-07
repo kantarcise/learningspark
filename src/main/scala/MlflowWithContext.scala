@@ -15,6 +15,7 @@ import java.nio.file.Paths
  * https://www.mlflow.org/docs/latest/java_api/org/mlflow/tracking/MlflowContext.html
  *
  * In this example we can have multiple runs on the same experiment.
+ * Please run it with spark-submit, as a jar.
  *
  * Here is another useful resource:
  * https://docs.databricks.com/en/mlflow/quick-start-java-scala.html
@@ -150,8 +151,14 @@ object MlflowWithContext {
    * Just like the pipeline we had in Chapter 10,
    * set up all necessary stages for a pipeline!
    *
+   * Sets up all necessary stages for the ML pipeline:
+   * - StringIndexer for categorical features
+   * - VectorAssembler for feature vectors
+   * - RandomForestRegressor for regression modeling
+   *
    * @param trainDF: Dataframe to be trained on
-   * @return
+   * @return A tuple containing VectorAssembler,
+   *         RandomForestRegressor, and Pipeline
    */
   def makeAssemblerRegressorAndPipeline(trainDF: DataFrame
                                        ): (VectorAssembler, RandomForestRegressor, Pipeline) = {
