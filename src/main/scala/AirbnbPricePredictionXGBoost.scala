@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions.{log, exp, col}
 import ml.dmlc.xgboost4j.scala.spark.{XGBoostRegressor, XGBoostRegressionModel}
 
 /**
- * Let's try out XGBoost too
+ * Let's try out XGBoost too, for our Price Prediction problem.
  *
  * The API Docs:
  * https://xgboost.readthedocs.io/en/release_1.1.0/jvm/scaladocs/xgboost4j-spark/ml/dmlc/xgboost4j/scala/spark/index.html
@@ -18,6 +18,7 @@ import ml.dmlc.xgboost4j.scala.spark.{XGBoostRegressor, XGBoostRegressionModel}
  */
 object AirbnbPricePredictionXGBoost {
   def main(args: Array[String]): Unit = {
+
     // Initialize Spark session
     val spark = SparkSession
       .builder()
@@ -41,7 +42,8 @@ object AirbnbPricePredictionXGBoost {
 
     // Split the data into training and test sets
     val Array(trainDF, testDF) = airbnbDF
-      .withColumn("label", log(col("price"))).randomSplit(Array(0.8, 0.2), seed = 42)
+      .withColumn("label", log(col("price")))
+      .randomSplit(Array(0.8, 0.2), seed = 42)
 
     // Identify categorical columns
     // val categoricalCols = trainDF.dtypes.collect {
@@ -49,8 +51,11 @@ object AirbnbPricePredictionXGBoost {
     // }
     // or
     val categoricalCols = trainDF
+      // this returns name: type.
       .dtypes
+      // filter types
       .filter(_._2 == "StringType")
+      // use only the column names
       .map(_._1)
 
     val indexOutputCols = categoricalCols.map(_ + "Index")
@@ -71,6 +76,7 @@ object AirbnbPricePredictionXGBoost {
     // or
     val numericCols = trainDF
       .dtypes
+      // we can use case inside a filter! Pretty cool.
       .filter{ case (field, dataType) =>
         dataType == "DoubleType" &&
           field != "price" &&
@@ -85,8 +91,7 @@ object AirbnbPricePredictionXGBoost {
       .setOutputCol("features")
 
     // Parameters for XGBoost
-    // with these parameters:
-    //
+    // With these parameters:
     // RMSE is 242.16837012816012
     // R2 is -0.012101191586648241
     val paramMap = Map(
@@ -97,8 +102,8 @@ object AirbnbPricePredictionXGBoost {
       "missing" -> 0
     )
 
-    // another set!
-    // with these parameters
+    // Another set of parameters!
+    // With these parameters:
     // RMSE is 204.44626294666136
     // R2 is 0.27864764900598715
     val paramMapSecond = List(
@@ -108,9 +113,8 @@ object AirbnbPricePredictionXGBoost {
       "seed" -> 42,
       "missing" -> 0).toMap
 
-    // another set of parameters to try!
-    // with these parameters:
-
+    // And another set of parameters!
+    // With these parameters:
     // RMSE is 203.1644080496388
     // R2 is 0.2876648865457073
     val xgbParam = Map("eta" -> 0.3,
@@ -125,7 +129,7 @@ object AirbnbPricePredictionXGBoost {
       .setLabelCol("label")
       .setFeaturesCol("features")
 
-    // Build pipeline
+    // Build the pipeline
     val pipeline = new Pipeline()
       .setStages(Array(stringIndexer, vecAssembler, xgboost))
 
