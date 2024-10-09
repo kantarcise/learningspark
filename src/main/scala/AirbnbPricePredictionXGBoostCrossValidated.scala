@@ -18,11 +18,9 @@ object AirbnbPricePredictionXGBoostCrossValidated {
     // Initialize Spark session
     val spark = SparkSession
       .builder
-      .appName("Spark ML Pipeline with XGBoost")
+      .appName("Spark ML Pipeline with XGBoost, Cross Validated")
       .master("local[*]")
       .getOrCreate()
-
-    import spark.implicits._
 
     spark.sparkContext.setLogLevel("WARN")
 
@@ -42,9 +40,14 @@ object AirbnbPricePredictionXGBoostCrossValidated {
       .randomSplit(Array(0.8, 0.2), seed = 42)
 
     // Identify categorical columns
-    val categoricalCols = trainDF.dtypes.collect {
-      case (field, dataType) if dataType == "StringType" => field
-    }
+    val categoricalCols = trainDF
+      // this returns name: type.
+      .dtypes
+      // filter types
+      .filter(_._2 == "StringType")
+      // use only the column names
+      .map(_._1)
+
     val indexOutputCols = categoricalCols.map(_ + "Index")
 
     // StringIndexer for categorical columns
@@ -54,11 +57,15 @@ object AirbnbPricePredictionXGBoostCrossValidated {
       .setHandleInvalid("skip")
 
     // Identify numeric columns
-    val numericCols = trainDF.dtypes.collect {
-      case (field, dataType) if dataType == "DoubleType" &&
-        field != "price" &&
-        field != "label" => field
-    }
+    val numericCols = trainDF
+      .dtypes
+      // we can use case inside a filter! Pretty cool.
+      .filter{ case (field, dataType) =>
+        dataType == "DoubleType" &&
+          field != "price" &&
+          field != "label"}
+      .map(_._1)
+
     val assemblerInputs = indexOutputCols ++ numericCols
 
     // VectorAssembler to create feature vectors
