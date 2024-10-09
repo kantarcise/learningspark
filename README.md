@@ -319,7 +319,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - **You found another gift! XGBoost 🥳:** An extra example that is not in the book but in the [dbc, Chapter 11](https://github.com/databricks/LearningSparkV2/tree/master/notebooks) (To open the dbc, make a Databricks Community Edition Account and import the dbc into your workspace.) shows us how we can use `XGBoost` with Spark! In [AirbnbPricePredictionXGBoost](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoost.scala) we will simply make a pipeline with `XGBoostRegressor` from `import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressor`. We need an addition in our `build.sbt` for this external library!
 
-- Also, why not use a `CrossValidator` to find a better performing model? [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model! 
+- Also, why not use a `CrossValidator` to find a better performing model? 📏 [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model with the help of hyperparameter tuning! 
 
 - **Model Deployment Options with MLlib**: Deploying machine learning models means something different for every organization and use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate which mode of model deployment is suitable for the task at hand—be it batch, streaming, real-time:
 
