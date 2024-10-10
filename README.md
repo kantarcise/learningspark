@@ -321,7 +321,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Also, why not use a `CrossValidator` to find a better performing model? 📏 [AirbnbPricePredictionXGBoostCrossValidated](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionXGBoostCrossValidated.scala) will help us perform cross validation and save the best model with the help of hyperparameter tuning! 
 
-- **Model Deployment Options with MLlib**: Deploying machine learning models means something different for every organization and use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate which mode of model deployment is suitable for the task at hand—be it batch, streaming, real-time:
+- **Model Deployment Options with MLlib**: Deploying ML models means something different for every organization & use case. Business constraints will impose different requirements for latency, throughput, cost, etc., which dictate the mode of model deployment is suitable for the task at hand; batch, streaming or real-time:
 
 |                         | Throughput | Latency Usage               | Example application       | 
 |-------------------------|------------|-----------------------------|---------------------------| 
@@ -329,9 +329,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 | Streaming               | Medium     | Medium (seconds to minutes) | Dynamic pricing           |
 | Real Time               | Low        | Low (milliseconds)          | Online ad bidding         | 
 
-- Maybe we can add the image here!
-
-- **Batch**: We have already seen this in Chapter 10! Batch deployments represent the majority of use cases for deploying machine learning models, and this is arguably the easiest option to implement. You will run a regular job to generate predictions, and save the results to a table, database, data lake, etc. for downstream consumption. 3 important questions:
+- **Batch**: We've already seen this in Chapter 10! Batch deployments represent the majority of use cases for deploying ML models, and this is arguably the easiest option to implement. We will run a regular job to generate predictions, and save the results to a storage (table, database, data lake, etc.) for downstream consumption. There are 3 important questions here: 🤔
 
     - **How frequently will you generate predictions?**: There is a trade-off between latency and throughput. You will get higher throughput batching many predictions together, but then the time it takes to receive any individual predictions will be much longer, delaying your ability to  act on these predictions.
 
