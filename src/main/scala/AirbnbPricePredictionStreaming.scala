@@ -9,7 +9,9 @@ import org.apache.spark.sql.streaming.StreamingQuery
  * Spark streaming application!
  *
  * Run the AirbnbPricePredictionRandomForests before this one!
- * To train and save the model that will be used here.
+ * 
+ * Because the model will be trained and saved in that Application, 
+ * which will be used here.
  */
 object AirbnbPricePredictionStreaming {
 
@@ -41,7 +43,7 @@ object AirbnbPricePredictionStreaming {
 
     val streamingData = spark
       .readStream
-      // Can set the schema this way
+      // We can set the schema this way
       .schema(schema)
       .option("maxFilesPerTrigger", 1)
       .parquet(repartitionedPath)
@@ -53,6 +55,7 @@ object AirbnbPricePredictionStreaming {
     // Write the predictions to the console
     val query: StreamingQuery = streamPredictions
       .writeStream
+      .queryName("Stream Predictions to Console")
       .outputMode("append")
       .format("console")
       .start()
