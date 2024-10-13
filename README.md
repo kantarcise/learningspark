@@ -341,11 +341,11 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - In [AirbnbPricePredictionStreaming](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictionStreaming.scala) we'll simulate a streaming data streaming in a directory of Parquet files. We'll use a model that we saved in [AirbnbPricePredictionRandomForests](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/AirbnbPricePredictDecisionTree.scala) and see how our model performs in a Streaming Application! It might be a good opportunity to check out Spark Web UI to see how Streaming Query is doing! 🐴
 
-- **Near Real-Time**: If your use case requires predictions on the order of hundreds of milliseconds to seconds, you could build a prediction server that uses MLlib to generate the predictions. While this is not an ideal use case for Spark because you are processing very small  amounts of data, you’ll get lower latency than with streaming or batch solutions.
+- **Near Real-Time**: If the use case requires predictions on the order of hundreds of milliseconds to seconds, we could build a prediction server that uses MLlib to generate the predictions. While this is not an ideal use case for Spark because we'll be processing very small amounts of data, we'll get lower latency than with streaming or batch solutions.
 
-- **Real Time**: There are some domains where real-time inference is required, including fraud detection, ad recommendation, and the like. While making predictions with a small number of records may achieve the low latency required for real-time inference, you will need to contend with load balancing (handling many concurrent requests) as well as geolocation in latency-critical tasks.
+- **Real Time**: There are some domains where real-time inference is required, including fraud detection, and ad recommendation. While making predictions with a small number of records may achieve the low latency required for real-time inference, we will need to contend with load balancing (handling many concurrent requests) as well as geolocation in latency-critical tasks.
 
-- There are a few open source libraries, such as MLeap and ONNX, that can help you automatically export a supported subset of the MLlib models to remove their dependency on Spark.
+- There are a few open source libraries, such as [MLeap](https://github.com/combust/mleap) and ONNX, that can help you automatically export a supported subset of the MLlib models to remove their dependency on Spark.
 
 - [ONNX](https://onnx.ai/) and [SynapseML](https://microsoft.github.io/SynapseML/) is good resources to read about here.
 
