@@ -347,9 +347,9 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - There are a few open source libraries, such as [MLeap](https://github.com/combust/mleap) and ONNX, that can help you automatically export a supported subset of the MLlib models to remove their dependency on Spark.
 
-- [ONNX](https://onnx.ai/) and [SynapseML](https://microsoft.github.io/SynapseML/) is good resources to read about here.
+- [ONNX](https://onnx.ai/) and [SynapseML](https://microsoft.github.io/SynapseML/) are good resources to read about. 📚
 
-- Instead of exporting MLlib models, there are other third-party libraries that integrate with Spark that are convenient to deploy in real-time scenarios, such as XGBoost and H2O.ai’s Sparkling Water (whose name is derived from a combination of H2O and Spark)
+- Instead of exporting MLLib models, there are other third-party libraries that integrate with Spark that are convenient to deploy in real-time scenarios, such as XGBoost and H2O.ai’s Sparkling Water (whose name is derived from a combination of H2O and Spark). 🥳
 
 - Although XGBoost is not technically part of MLlib, the [XGBoost4J-Spark library](https://xgboost.readthedocs.io/en/latest/jvm/xgboost4j_spark_tutorial.html) allows you to integrate distributed XGBoost into your MLlib pipelines. A benefit of XGBoost is the ease of deployment: after you train your MLlib pipeline, you can extract the XGBoost model and save it as a non-Spark model for serving in Python.
 
