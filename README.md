@@ -353,11 +353,11 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - Although XGBoost is not technically part of MLlib, the [XGBoost4J-Spark library](https://xgboost.readthedocs.io/en/latest/jvm/xgboost4j_spark_tutorial.html) allows us to integrate distributed XGBoost in our MLlib pipelines. A benefit of XGBoost is the ease of deployment: after training the MLlib pipeline, we can extract the XGBoost model and save it as a non-Spark model for serving in Python. ✨
 
-- **How can we leverage Spark for non-MLlib models?**: A common use case is to build a scikit-learn or TensorFlow model on a single machine, perhaps on a subset of your data, but perform distributed inference on the entire data set using Spark.
+- **How can we leverage Spark for non-MLlib models?**: A common use case is to build a **scikit-learn** or **TensorFlow** model on a single machine, perhaps on a subset of data, but perform distributed inference on the entire data set using Spark.
 
-    - **TIP**: If the workers cached the model weights after loading it for the first time, subsequent calls of the same UDF with the same model loading will become significantly faster. For more information, check page 337.
+    - **TIP:** If the workers cached the model weights after loading it for the first time, subsequent calls of the same UDF with the same model loading will become significantly faster. For more information, check page 337.
 
-- **Distributed Hyperparameter Tuning**: Even if you do not intend to do distributed inference or do not need MLlib’s distributed training capabilities, you can still leverage Spark for distributed hyperparameter tuning. `joblib` and `Hyperopt`, check out page 338.
+- **Distributed Hyperparameter Tuning**: Even if we do not intend to do distributed inference or do not need MLlib’s distributed training capabilities, we can still leverage Spark for distributed hyperparameter tuning. For more, see `joblib` and `Hyperopt`, check out page 338.
 
 - TODO: As an extra, we implemented an example [TaxiFarePredictionXGBoostGPU]() inspired from [gpu-accelerated-xgboost](https://www.nvidia.com/en-us/ai-data-science/spark-ebook/tutorial-gpu-accelerated-xgboost/). 
 
@@ -387,21 +387,21 @@ If you simply want to use this repository as a template, here is the fastest way
 
 2) How can I understand Spark's capability on Column processing ? - Solution: Here is [the link for documentation](https://spark.apache.org/docs/latest/api/scala/org/apache/spark/sql/Column.html), This is where the magic happens.
 
-3) Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for , I think you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
+3) Is using [`expr()`](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.expr.html) bad? - Solution - If Dataframe API has what you are looking for , you should use that instead. Here is [an opinion.](https://stackoverflow.com/a/73645401)
 
 4) Is there a better way to mock data? - Solution: Sure, there are [better alternatives](https://www.mockaroo.com/) than manually writing data.
 
-5) Can we clean up the code written in Dataframe API, using the Dataset API? - Solution: Yes! Depending on your definition of cleaning up, Dataset API can be pretty neat. Take a look at [EXAMPLE HERE]
+5) Can we clean up the code written in Dataframe API, using the Dataset API? - Solution: Yes! Depending on your definition of cleaning up, Dataset API can be pretty neat. Take a look at these two, [FireCallsTrainingQuestions](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTrainingQuestions.scala) and [FireCallsTrainingQuestionsDataset](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/FireCallsTrainingQuestionsDataset.scala).
 
 6) Is there a simple source that explains Repartition & Coalesce in Spark ? - Solution: This is an [attempt.](https://medium.com/@amitjoshi7/repartition-coalesce-in-apache-spark-76eb6203c316#:~:text=Use%20Coalesce%20when%20decreasing%20the%20number%20of%20partitions%20to%20reduce%20computational%20overhead.)
 
-7) How about Data Partitioning? - Solution: Here is another [link.](https://medium.com/@dipayandev/everything-you-need-to-understand-data-partitioning-in-spark-487d4be63b9c)
+7) How about Data Partitioning? - Solution: Here is another [link to discover about partitioning.](https://medium.com/@dipayandev/everything-you-need-to-understand-data-partitioning-in-spark-487d4be63b9c)
 
-8) How to submit applications ? - Solution - Official [docs are helpful.](https://spark.apache.org/docs/latest/submitting-applications.html)
+8) We wrote all of these code. How do we submit applications ? - Solution - Official [docs are helpful.](https://spark.apache.org/docs/latest/submitting-applications.html)
 
-9) How to submit a Spark job, written in Scala - Solution: Although a different deployment, this is a [useful link.](https://guide.ncloud-docs.com/docs/en/hadoop-vpc-16)
+9) How to submit a Spark job, written in Scala?- Solution: Although a different deployment, this is a [useful link.](https://guide.ncloud-docs.com/docs/en/hadoop-vpc-16)
 
-10) Can I get a Docker compose example - Solution  - Here [is one](https://github.com/bitnami/containers/blob/main/bitnami/spark/docker-compose.yml)
+10) Can I get a Docker compose example that demonstrates a Spark Cluster? - Solution  - Here [is one from bitnami](https://github.com/bitnami/containers/blob/main/bitnami/spark/docker-compose.yml).
 
 11) Deploy mode - Client vs Cluster ? - Solution - An [explaination](https://stackoverflow.com/a/28808269)
 
