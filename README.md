@@ -369,7 +369,7 @@ Here is all the code in this repository, explained in detail. After you cloned t
 
 - **Really simply, what is AQE?**: Adaptive Query Execution (AQE) is query re-optimization that occurs during query execution based on runtime statistics. AQE in Spark 3.0 includes 3 main features: Dynamically coalescing shuffle partitions, Dynamically switching join strategies, Dynamically optimizing skew joins.
 
-- TODO: To see how `Dataframe.explain()` method works from Spark 3.0 onwards, you can check out [DataframeExplainModes](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/DataframeExplainModes.scala).
+- TODO: To see how `Dataframe.explain()` method works from Spark 3.0 onwards, you can check out [DataframeExplainModes]().
 
 - ### Use as Template 💭
 
@@ -403,15 +403,15 @@ If you simply want to use this repository as a template, here is the fastest way
 
 10) Can I get a Docker compose example that demonstrates a Spark Cluster? - Solution  - Here [is one from bitnami](https://github.com/bitnami/containers/blob/main/bitnami/spark/docker-compose.yml).
 
-11) Deploy mode - Client vs Cluster ? - Solution - An [explaination](https://stackoverflow.com/a/28808269)
+11) Deploy mode - Client vs Cluster ? - Solution - An [explanation](https://stackoverflow.com/a/28808269).
 
 12) Can I get an overview about cluster mode ? - Solution - Yes for sure, [here](https://spark.apache.org/docs/latest/cluster-overview.html)
 
-13) How does `--master` selection work when submitting or writing Spark applications, is there a hierachy? - Solution - Yes there is. Apllication overrides console, console overrides `conf` - [Link from Stack Overflow](https://stackoverflow.com/a/54599477)
+13) How does `--master` selection work when submitting or writing Spark applications, is there a hierachy? - Solution - Yes there is. Application overrides console, console overrides `conf` - [Link from Stack Overflow](https://stackoverflow.com/a/54599477).
 
-14) What should I do If I wanted to use `sbt assembly` ? - Solution : Just use plugins.sbt to setup for assembly - [PROJECT STRUCTURE](https://stackoverflow.com/a/36186315) - add assembly to plugins.
+14) What should I do If I wanted to use `sbt assembly` ? - Solution : Just use `plugins.sbt` to setup for assembly (add assembly to plugins). You can also use [build.sbt](https://stackoverflow.com/a/36186315).
 
-15) What if there is a merging error when I try to run `sbt clean assembly`? - Solution: Here is the assembly [merge strategy](https://stackoverflow.com/a/39058507)
+15) What if there is a merging error when I try to run `sbt clean assembly`? - Solution: Here is the assembly [merge strategy](https://stackoverflow.com/a/39058507).
 
 16) There are 3 output modes Structured Streaming Provides (page 212 in the book):
 
