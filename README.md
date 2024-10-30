@@ -421,7 +421,7 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **Update Mode**: Only the rows that were updated in the result table since the last trigger will be changed in the external storage. This mode works for output sinks that can be updated in place, such as a MySQL table.
 
-17) Here are 3 output modes of Structured Streaming, in detail (page 216 in the book):
+17) And here are those 3 output modes of Structured Streaming, in detail (page 216 in the book):
 
     - **Append Mode**:  This is the default mode, where only the new rows added to the result table/DataFrame (for example, the counts table) since the last trigger will be output to the sink. Semantically, this mode guarantees that any row that is output is never going to be changed or updated by the query in the future. Hence, append mode is supported by only those queries (e.g., stateless queries) that will never modify previously output data. In contrast, our [word count query](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/WordCount.scala) can update previously generated counts; therefore, it does not support append mode.
 
@@ -441,7 +441,7 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **Append mode**:  This mode can be used only with aggregations on event-time windows and with watermarking enabled. Recall that append mode *does not allow previously output results to change*. For any aggregation without watermarks, every aggregate may be updated with any future data, and hence these cannot be output in append mode. Only when watermarking is enabled on aggregations on event-time windows does the query know when an aggregate is not going to update any further. Hence, instead of outputting the updated rows, append mode outputs each key and its final aggregate value only when the watermark ensures that the aggregate is not going to be updated again. **The advantage of this mode** is that it allows you to write aggregates to **append-only streaming sinks** (e.g., files). ⛵ The disadvantage is that the output will be delayed by the watermark duration—the query has to wait for the trailing watermark to exceed the time window of a key before its aggregate can be finalized.
 
-20) What is the difference between `.format("csv").load(filePath)` and `.csv(filePath)` ? 🤔 - Both methods achieve the same result but in slightly different ways. `.format("csv").load(filePath)` uses the `DataFrameReader` API with more explicit control over the data source format. It allows for more customization and can be more flexible in certain contexts. `.csv(filePath)` is a shorthand provided by the `DataFrameReader` API specifically for reading CSV files. It is more concise and generally preferred for simplicity.
+20) What is the difference between `.format("csv").load(filePath)` and `.csv(filePath)` ? 🤔 - Both methods achieve the same result but in slightly different ways. `.format("csv").load(filePath)` uses the `DataFrameReader` API with more explicit control over the data source format. It allows for more customization and can be more flexible in certain contexts. `.csv(filePath)` is a shorthand provided by the `DataFrameReader` API specifically for reading CSV files. It is more concise and generally preferred for simplicity. 🥳
 
 21) Notes about Stream - Static Joins:
 
@@ -457,9 +457,9 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - Similar to the guarantees provided by watermarking on aggregations, a watermark delay of two hours guarantees that the engine will never drop or not match any data that is less than two hours delayed, but data delayed by more than two hours may or may not get processed.
 
-23) However, there are a few additional points to note about **outer joins**:
+23) Also a few points to note about **outer joins**:
 
-    - **Watermark and Event Time Constraint is a Must**: Unlike with inner joins, the watermark delay and event-time constraints are not optional for outer joins. This is because for generating the NULL results, the engine must know when an event is not going to match with anything else in the future. For correct outer join results and state cleanup, the watermarking and event-time constraints must be specified.
+    - **Watermark and Event Time Constraint is a Must**: Unlike with inner joins, the watermark delay and event-time constraints are not optional for outer joins. This is because for generating the NULL results, the engine **must** know when an event is not going to match with anything else in the future. For correct outer join results and state cleanup, the watermarking and event-time constraints must be specified.
 
     - **There will be delays!** Consequently, the outer NULL results will be generated with a delay as the engine has to wait for a while to ensure that there neither were nor would be any matches. This delay is the maximum buffering time (with respect to event time) calculated by the engine for each event as discussed in the previous section (in our example, 25 minutes hours for impressions and 10 minutes for clicks).
 
