@@ -480,11 +480,11 @@ If you simply want to use this repository as a template, here is the fastest way
 
     - **I too like to live dangerously**: While processing-time timeouts are simple to reason about, they are not robust to slowdowns and downtimes. If the streaming query suffers a downtime of **more than one hour**, then after restart, **all the keys in the state will be timed out,** because more than one hour has passed since each key received data. Similar wide-scale timeouts can occur if the query processes data slower than it is arriving at the source (e.g., if data is arriving and getting buffered in Kafka). For example, if the timeout is five minutes, then a sudden drop in processing rate (or spike in data arrival rate) that causes a five-minute lag could produce spurious timeouts. To avoid such issues we can use an event-time timeout.
 
-26) Here are a few points to note about **Event Time Timeouts** (page 260):
+26) Here are a few points to consider about **Event Time Timeouts** (page 260):
 
-    - **Why `GroupState.setTimeoutTimestamp()` ?**: Unlike in the previous example with processing-time timeouts, we have used `GroupState.setTimeoutTimestamp()` instead of `GroupState.setTimeoutDuration()`. This is because with processing-time timeouts the duration is sufficient to calculate the exact future timestamp (i.e., current system time + specified duration) when the timeout would occur, but this is not the case for event-time timeouts. Different applications may want to use different strategies to calculate the threshold timestamp. In this example we simply calculate it based on the current watermark, but a different application may instead choose to calculate a key’s timeout timestamp based on the maximum event-time timestamp seen for that key (tracked and saved as part of the state).
+    - **Why `GroupState.setTimeoutTimestamp()` ?**: Unlike in the previous example with processing-time timeouts, we have used `GroupState.setTimeoutTimestamp()` instead of `GroupState.setTimeoutDuration()`. This is because with processing-time timeouts the duration is sufficient to calculate the exact future timestamp (i.e., current system time + specified duration) when the timeout would occur, but this is not the case for event-time timeouts. Different applications may want to use different strategies to calculate the threshold timestamp. In this example we simply calculate it based on the current watermark, but a different application may instead choose to calculate a key’s timeout timestamp based on the ***maximum event-time timestamp seen*** for that key (tracked and saved as part of the state).
 
-    - **Timeout Should Be Set Relative**: The timeout timestamp must be set to a value larger than the current watermark. This is because the timeout is expected to happen when the timestamp crosses the watermark, so it’s illogical to set the timestamp to a value already larger than the current watermark. (In our example, we did set the timeout timestamp as relative to the current watermark plus 1 hour (3600000 ms))
+    - **Timeout Should Be Set Relative**: The timeout timestamp must be set to a value larger than the current watermark. This is because the timeout is expected to happen when the timestamp crosses the watermark, so it’s **illogical** to set the timestamp to a value already larger than the current watermark (In our example, we did set the timeout timestamp as relative to the current watermark plus 1 hour (3600000 ms)).
 
 
 27) You can generate things other than fixed-duration timeouts. For example, you can implement an approximately periodic task (say, every hour) on the state by saving the last task execution timestamp in the state and using that to set the processing-time timeout duration, as shown in this code snippet:
@@ -495,13 +495,13 @@ timeoutDurationMs = lastTaskTimstampMs + periodIntervalMs -
     groupState.getCurrentProcessingTimeMs()
 ```
 
-28) Generalization with `flatMapGroupsWithState()`. There are two key limitations with `mapGroupsWithState()` that may limit the flexibility that we want to implement more complex use cases (e.g., chained sessionizations):
+28) - Generalization with `flatMapGroupsWithState()` -> There are two key limitations with `mapGroupsWithState()` that may limit the flexibility that we want to implement more complex use cases (e.g., chained sessionizations):
 
-    - **One Record At A Time 😕**: Every time `mapGroupsWithState()` is called, you have to return one and only one record. For some applications, in some triggers, you may not want to output anything at all.
+    - **One Record At A Time 😕**: Every time `mapGroupsWithState()` is called, you have to return **one and only one** record. For some applications, in some triggers, you may not want to output anything at all.
 
     - **Engine Assumptions 😕**: With `mapGroupsWithState()`, due to the lack of more information about the opaque state update function, the engine assumes that generated records are updated key/value data pairs. Accordingly, it reasons about downstream operations and allows or disallows some of them. For example, the DataFrame generated using `mapGroupsWithState()` cannot be written out in append mode to files. However, some applications may want to generate records that can be considered as appends.
     
-    - `flatMapGroupsWithState()` overcomes these limitations, at the cost of slightly more complex syntax. It has two differences from `mapGroupsWithState()`:
+    - `flatMapGroupsWithState()` overcomes these limitations, at the cost of slightly more complex syntax. 🥳 It has two differences from `mapGroupsWithState()`:
 
     - **An Iterator Instead of Object 🌠**: The return type is an iterator, instead of a single object. This allows the function to return any number of records, or, if needed, no records at all.
 
@@ -511,17 +511,17 @@ timeoutDurationMs = lastTaskTimstampMs + periodIntervalMs -
 
     - Unlike batch jobs that may process gigabytes to terabytes of data, micro-batch jobs usually process **much smaller volumes** of data. Hence, a Spark cluster running streaming queries usually needs to be tuned slightly differently. Here are a few considerations to keep in mind:
 
-        -  **Cluster resource provisioning 🔎**:  Since Spark clusters running streaming queries are going to run 24/7, it is important to provision resources appropriately. Underprovisoning the resources can cause the streaming queries to fall behind (with micro-batches taking longer and longer), while overprovisioning (e.g., allocated but unused cores) can cause unnecessary costs. Furthermore, allocation should be done based on the nature of the streaming queries: **stateless queries usually need more cores, and stateful queries usually need more memory**.
+        -  **Cluster resource provisioning 🔎**:  Since Spark clusters running streaming queries are going to run **24/7**, it is important to provision resources appropriately. Underprovisoning the resources can cause the streaming queries to fall behind (with micro-batches taking longer and longer), while overprovisioning (e.g., allocated but unused cores) can cause unnecessary costs. Furthermore, allocation should be done based on the nature of the streaming queries: **stateless queries usually need more cores, and stateful queries usually need more memory**.
 
-        - **Number of partitions for shuffles** : For Structured Streaming queries, the number of shuffle partitions usually needs to be set **much lower** than for most batch queries—dividing the computation too much increases overheads and reduces throughput. Furthermore, shuffles due to stateful operations have significantly higher task overheads due to checkpointing. Hence, for **streaming queries with stateful operations** and trigger intervals of a few seconds to minutes, it is recommended to tune the **number of shuffle partitions** from the default value of **200** to at most **two to three times the number of allocated cores.**
+        - **Number of partitions for shuffles** : For Structured Streaming queries, the number of shuffle partitions usually needs to be set **much lower** than for most batch queries—dividing the computation too much increases overheads and reduces throughput. Furthermore, shuffles due to stateful operations have significantly higher task overheads due to checkpointing. Hence, for **streaming queries with stateful operations** and trigger intervals of a few seconds to minutes, it is recommended to tune the **number of shuffle partitions** from the default value of **200** to at most **two to three times the number of allocated cores.** 💕
 
-        - **Setting source rate limits for stability 🪟**: After the allocated resources and configurations have been optimized for a query’s expected input data rates, it’s possible that sudden surges in data rates can generate unexpectedly large jobs and subsequent instability. Besides the costly approach of overprovisioning, you can safeguard against instability using source rate limits. Setting limits in supported sources (e.g., Kafka and files) prevents a query from consuming too much data in a single micro-batch. The surge data will stay buffered in the source, and the query will eventually catch up. However, note the following:
-            - • Setting the limit too low can cause the query to underutilize allocated resources and fall behind the input rate.
-            - • Limits do not effectively guard against sustained increases in input rate. While stability is maintained, the volume of buffered, unprocessed data will grow indefinitely at the source and so will the end-to-end latencies.
+        - **Setting source rate limits for stability 🪟**: After the allocated resources and configurations have been optimized for a query’s expected input data rates, it’s possible that sudden surges in data rates can generate unexpectedly large jobs and subsequent instability. Besides the costly approach of overprovisioning, you can safeguard against instability using **source rate limits**. Setting limits in supported sources (e.g., Kafka and files) prevents a query from consuming too much data in a single micro-batch. The surge data will stay buffered in the source, and the query will eventually catch up. However, note the following:
+            - Setting the limit too low can cause the query to underutilize allocated resources and fall behind the input rate.
+            - Limits do not effectively guard against sustained increases in input rate. While stability is maintained, the volume of buffered, unprocessed data will grow indefinitely at the source and so will the end-to-end latencies.
 
-        - **Multiple streaming queries in the same Spark application**: Running multiple streaming queries in the same SparkContext or SparkSession can lead to fine-grained resource sharing. However:
-            - • Executing each query continuously uses resources in the Spark driver (i.e., the JVM where it is running). This limits the number of queries that the driver can execute simultaneously. Hitting those limits can either bottleneck the task scheduling (i.e., underutilizing the executors) or exceed memory limits.
-            - • You can ensure fairer resource allocation between queries in the same context by setting them to run in separate scheduler pools. Set the SparkContext’s thread-local property `spark.scheduler.pool` to a different string value for each stream:
+        - **Multiple streaming queries in the same Spark application**: Running multiple streaming queries in the same `SparkContext` or `SparkSession` can lead to fine-grained resource sharing. However:
+            - Executing each query continuously uses resources in the Spark driver (i.e., the JVM where it is running). This limits the number of queries that the driver can execute simultaneously. Hitting those limits can either bottleneck the task scheduling (i.e., underutilizing the executors) or exceed memory limits.
+            - You can ensure fairer resource allocation between queries in the same context by setting them to run in separate scheduler pools. Set the SparkContext’s thread-local property `spark.scheduler.pool` to a different string value for each stream:
 
 ```scala
 // In Scala
@@ -535,7 +535,7 @@ spark.sparkContext.setLocalProperty("spark.scheduler.pool", "pool2")
 df.writeStream.queryName("query2").format("parquet").start(path2)
 ```
 
-30) **Delta Lake Enforce / Merge:** The Delta Lake format records the schema as table-level metadata. Hence, all writes to a Delta Lake table can verify whether the data being written has a schema compatible with that of the table. If it is not compatible, Spark will throw an error before any data is written and committed to the table, thus preventing such accidental data corruption.
+30) **Delta Lake Enforce / Merge:** The Delta Lake format records the schema as table-level metadata. Hence, all writes to a Delta Lake table can verify whether the data being written has a schema compatible with that of the table. If it is not compatible, Spark will throw an error before any data is written and committed to the table, thus preventing such accidental data corruption. 😍
 
 
 31) **Delta Lake Extended Merge Syntax:** A common use case when managing data is fixing errors in the data. Suppose, upon reviewing some data (that we work on, about Loans), we realized that all of the loans assigned to `addr_state = 'OR'` should have been assigned to `addr_state = 'WA'`. If the loan table were a Parquet table, then to do such an update we would need to:
@@ -560,7 +560,7 @@ There are even more complex use cases, like CDC with deletes and SCD tables, tha
     
     - Rolling back incorrect changes by reading a previous snapshot as a DataFrame and overwriting the table with it.
 
-33) **What did we learn about DeltaLake? 🤔:** Databases have solved data problems for a long time, but they fail to fulfill the diverse requirements of modern use cases and workloads. Data lakes were built to alleviate some of the limitations of databases, and Apache Spark is one of the best tools to build them with. However, data lakes still lack some of the key features provided by databases (e.g., ACID guarantees). Lakehouses are the next generation of data solutions, which aim to provide the best features of databases and data lakes and meet all the requirements of diverse use cases and workloads.
+33) **What did we learn about DeltaLake? 🤔:** Databases have solved data problems for a long time, but they fail to fulfill the diverse requirements of modern use cases and workloads. Data lakes were built to alleviate some of the limitations of databases, and Apache Spark is one of the best tools to build them with. However, data lakes still lack some of the key features provided by databases (e.g., **ACID guarantees**). Lakehouses are the next generation of data solutions, which aim to provide the best features of databases and data lakes and meet all the requirements of diverse use cases and workloads.
 
 Lakehouses (Deltalake in our case) provide:
 
@@ -577,7 +577,7 @@ Lakehouses (Deltalake in our case) provide:
 
 34) **Machine Learning with MLlib**:  Up until this point, we have focused on data engineering workloads with Apache Spark. Data engineering is often a precursory step to preparing your data for machine learning (ML) tasks. Chances are that whether we realize it or not, every day we come into contact with ML models for purposes such as online shopping recommendations and advertisements, fraud detection, classification, image recognition, pattern matching, and more. 
 
-Building a model that performs well can make or break companies.
+Building a model that performs well can make or break companies. 🎱
 
 35) **What is Machine Learning, exactly?**: Machine learning is a process for extracting patterns from your data, using statistics, linear algebra, and numerical optimization. There are a few types of machine learning, including *supervised*, *semi supervised*, *unsupervised*, and *reinforcement learning*.
 
@@ -597,13 +597,13 @@ In supervised learning, the training data is labeled and the goal is to predict 
 
 To learn more, check out [Machine Learning Guide](https://spark.apache.org/docs/latest/ml-guide.html) from Spark. 
 
-37) **Unsupervised Learning? What is unsupervised about it?**: Obtaining the labeled data required by supervised machine learning can be very expensive and/or infeasible. This is where unsupervised machine learning comes into play. Instead of predicting a label, unsupervised ML helps you to better understand the structure of your data. Unsupervised machine learning can be used for outlier detection or as a preprocessing step for supervised machine learning—for example, to reduce the dimensionality. Some unsupervised machine learning algorithms in MLlib include k-means, Latent Dirichlet Allocation (LDA), and Gaussian mixture models.
+37) **Unsupervised Learning? What is unsupervised about it?**: Obtaining the labeled data required by supervised machine learning can be very expensive and/or infeasible. This is where unsupervised machine learning comes into play. Instead of predicting a label, unsupervised ML helps you to better **understand the structure of your data**. Unsupervised machine learning can be used for *outlier detection* or as a preprocessing step for supervised machine learning—for example, *to reduce the dimensionality*. Some unsupervised machine learning algorithms in MLlib include ***k-means***, ***Latent Dirichlet Allocation (LDA)***, and ***Gaussian mixture models***.
 
-38) **PCA**: Here is [the video](https://www.youtube.com/watch?v=FgakZw6K1QQ) for more information. Which variable is the most valuable to clustering the data? When we get 4 variables we can no longer graph it to see resemblence between instances. For each variable we can acualte the averages, and shith the data so that this center is the origin in the graph (this did not change relative distances). We are looking for a line that crosses origin which seperates the the data best. We find the line with sum of squared distances to this candidate line, minimized. Depending on the slope of your axis, you can measure how data is spread out. (0.25, mostly spread on Math (x axis) a little spread out on Chemistry (y axis)).
+38) **PCA**: Here is [the video](https://www.youtube.com/watch?v=FgakZw6K1QQ) for more information. The question we are trying to answer is: *"Which variable is the most valuable to clustering the data?"*. When we get 4 variables we can no longer graph it to see resemblence between instances. For each variable we can calculate the averages, and shift the data so that this center is the origin in the graph (this did not change relative distances). We are looking for a line that crosses origin which seperates the the data best. We find the line with sum of squared distances to this candidate line, minimized. Depending on the slope of your axis, you can measure how data is spread out. (0.25, mostly spread on Math (x axis) a little spread out on Chemistry (y axis)).
 
-In Spark PCA is RDD based so it is part of `spark.mllib`!
+In Spark, PCA is RDD based so it is part of `spark.mllib`!
 
-39) **`spark.ml`, `spark.mllib` ? Why is there 2 libraries?** `spark.mllib` is the original machine learning API, based on the RDD API (which has been in  maintenance mode since Spark 2.0), while spark.ml is the newer API, based on DataFrames. 
+39) **`spark.ml`, `spark.mllib` ? Why is there 2 libraries?** `spark.mllib` is the original machine learning API, based on the RDD API (which has been in  maintenance mode since Spark 2.0), while `spark.ml` is the newer API, based on DataFrames. 
 
 40) **Designing Machine Learning Pipelines:** Pipelines is a way to organize a series of operations to apply to our data! In `MLlib`, the Pipeline API provides a high-level API built on top of DataFrames to organize our machine learning workflow. Here are some common terminology:
 
