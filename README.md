@@ -663,13 +663,13 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 
 49) **Random Forests For Classification/Regression**:  If we build a random forest for classification, it passes the test point through each of the trees in the forest and takes a majority vote among the predictions of the individual trees (By contrast, in regression, the random forest simply averages those predictions.) Even though each of these trees is less performant than any individual decision tree, the collection (or ***ensemble***) actually provides a more robust model. Random forests truly demonstrate the power of distributed machine learning with Spark, as each tree can be built independently of the other trees (e.g., we do not need to build tree 3 before we build tree 10). Furthermore, within each level of the tree, you can parallelize the work to find the optimal splits.
 
-50) **Optimizing Pipelines**: The value of parallelism should be chosen carefully to maximize parallelism without exceeding cluster resources, and larger values may not always lead to improved performance. Generally speaking, a value up to 10 should be sufficient for most clusters.
+50) **Optimizing Pipelines**: The value of parallelism should be chosen carefully to maximize throughput without exceeding cluster resources, because larger values may not always lead to improved performance. Generally speaking, a value up to 10 should be sufficient for most clusters.
 
-51) **Cross Validator Inside Pipeline or Vice Versa ??**:  There’s another trick we can use to speed up model training: putting the cross-validator inside the pipeline (e.g., `Pipeline(stages=[..., cv])`) instead of putting the pipeline inside the cross-validator (e.g., `CrossValidator(estimator=pipeline, ...)`). Every time the cross-validator evaluates the pipeline, it runs through every step of the pipeline for each model, even if some of the steps don’t change, such as the StringIndexer. By reevaluating every step in the pipeline, we are learning the same StringIndexer mapping over and over again, even though it’s not changing. If instead we put our cross-validator inside our pipeline, then we won’t be reevaluating the StringIndexer (or any other estimator) each time we try a different model.
+51) **Cross Validator Inside Pipeline or Vice Versa ??**:  Another trick we can use to speed up ML model training: putting the cross-validator inside the pipeline (e.g., `Pipeline(stages=[..., cv])`) instead of putting the pipeline inside the cross-validator (e.g., `CrossValidator(estimator=pipeline, ...)`). Every time the cross-validator evaluates the pipeline, it runs through every step of the pipeline for each model, even if some of the steps don’t change, such as the `StringIndexer`. By reevaluating every step in the pipeline, we are learning the same `StringIndexer` mapping over and over again, even though it’s not changing. If instead we put our cross-validator inside our pipeline, then we won’t be reevaluating the `StringIndexer` (or any other estimator) each time we try a different model. 🥳
 
 52) **Logging - Configuring Logging Programmatically**: Spark gives us the ability to configure logging as we please. Since Spark 3.3, Spark migrates its log4j dependency from 1.x to 2.x, [here is the link](https://spark.apache.org/docs/latest/core-migration-guide.html#upgrading-from-core-32-to-33). We can configure the `log4j2.properties` file under our spark conf, which is typically at `/usr/local/spark/conf`, but for now, this is confusing for me. Main reason for this is that the `log4j2.properties` file effects all of the Spark. Instead, we can configure logging programmatically! To see an example of this, check out [MnmCandiesDatasetWithLogger](https://github.com/kantarcise/learningspark/blob/main/src/main/scala/MnmCandiesDatasetWithLogger.scala).
 
-53) **Here is the short history of Storage Solutions**:
+53) **Here is the short history of Storage Solutions**: 📚
 
     - **Ideal Storage**: An ideal Storage solution should be scalable and performent, supports ACID transactions, supports diverse data formats, supports diverse workloads and should be open.
 
@@ -679,17 +679,17 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 
     - **Limitations of Databases**: Growth in data size (advent of big data, global trend to measure and collect everything), Growth in the diversity of analytics (a need for deeper insights, ML - DL).
 
-    - **Issues with Databases**: Databases are extremely expensive to scale out and Databases do not support non–SQL based analytics very well.
+    - **Issues with Databases**: Databases are expensive to scale out and Databases do not support non–SQL based analytics very well.
 
     - **Data Lakes**:  In contrast to most databases, a data lake is a distributed storage solution that runs on commodity hardware and easily scales out horizontally. The data lake architecture, unlike that of databases, decouples the distributed storage system from the distributed compute system. This allows each system to scale out as needed by the workload. Furthermore, the data is saved as files with open formats, such that any processing engine can read and write them using standard APIs.
 
-    - **How to build as Datalake?**:  Organizations build their data lakes by independently choosing the following: **Storage system** ([HDFS](https://www.databricks.com/glossary/hadoop-distributed-file-system-hdfs) on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine (Spark, Presto, Apache Hive), a stream processing engine (Spark, Apache Flink), or a machine learning library (e.g., Spark MLlib, scikit-learn, R)).
+    - **How to build as Datalake?**:  Organizations build their data lakes by independently choosing the following: **Storage system** ([HDFS](https://www.databricks.com/glossary/hadoop-distributed-file-system-hdfs) on cluster of machines or S3, Azure Data Lake Storage or GFS), **File format** (Depending on the downstream workloads, the data is stored as files in either structured (e.g., Parquet, ORC), semi-structured (e.g., JSON), or sometimes even unstructured formats (e.g., text, images, audio, video).), **Processing engine**(s) (depending on the workload, batch processing engine ([Spark](https://spark.apache.org/), [Presto](https://prestodb.io/), [Apache Hive](https://hive.apache.org/)), a stream processing engine ([Spark](https://spark.apache.org/), [Apache Flink](https://flink.apache.org/)), or a machine learning library (e.g., [Spark MLlib](https://spark.apache.org/mllib/), [scikit-learn](https://scikit-learn.org/stable/), [R](https://www.r-project.org/))).
 
     - **The advantage of Data Lakes?**: The flexibility (the ability to choose the storage system, open data format, and processing engine that are best suited to the workload at hand) is the biggest advantage of data lakes over databases.
 
     - **Spark is great with Datalakes, why?**: Spark Support for diverse workloads, support for diverse file formats, support for diverse filesystems.
 
-    - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the lack of transactional guarantees: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
+    - **What is the downside of Datalakes?**: Data lakes are not without their share of flaws, the most egregious of which is the *lack of transactional guarantees*: **Atomicity and isolation** Processing engines write data in data lakes as many files in a distributed manner. If the operation fails, there is *no mechanism to roll back* the files already written, thus leaving behind potentially corrupted data (the problem is exacerbated when concurrent workloads modify the data because it is very difficult to provide isolation across files without higher-level mechanisms), **Consistency** Lack of atomicity on failed writes further causes readers to get an inconsistent view of the data.
 
     - **Is there a better way? 🤔**: Attempts to eliminate such practical issues have led to the development of new systems, such as lakehouses.
 
@@ -699,11 +699,11 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 
         - **2️⃣ Schema enforcement and governance**: Lakehouses prevent data with an incorrect schema being inserted into a table, and when needed, the table schema can be explicitly evolved to accommodate ever-changing data.
 
-        - **3️⃣ Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, refine, analyze, and access **all types of data** needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
+        - **3️⃣ Support for diverse data types in open formats**: Unlike databases, but similar to data lakes, lakehouses can store, analyze, and access **all types of data** needed for many new data applications, be it structured, semi-structured, or unstructured. To enable a wide variety of tools to access it directly and efficiently, the data must be stored in open formats with standardized APIs to read and write them.
 
         - **4️⃣ Support for diverse workloads** Powered by the variety of tools reading data using open APIs, lakehouses enable diverse workloads to operate on data in a single repository. Breaking down isolated data silos (i.e., multiple repositories for different categories of data) enables developers to more easily build diverse and complex data solutions, from traditional SQL and streaming analytics to machine learning.
         
-        - **5️⃣ Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and *slowly changing dimension* (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be concurrently deleted and updated with transactional guarantees.
+        - **5️⃣ Support for upserts and deletes**: Complex use cases like *change-data-capture* (CDC) and *slowly changing dimension* (SCD) operations require data in tables to be continuously updated. Lakehouses allow data to be ***concurrently deleted and updated*** with transactional guarantees.
 
         - **6️⃣ Data governance**: Lakehouses provide the tools with which you can reason about **data integrity** and audit all the data changes for policy compliance.
 
@@ -713,7 +713,7 @@ As an example, here are the steps to perform a hyperparameter search in Spark:
 
 Maybe you've never coded in Java/Scala. You tried your luck with PySpark but it never went to being more than a small side project.
 
-Well, with this resource, you will have a window for a [20 seconds of insane courage](https://www.youtube.com/watch?v=OFp2Rn5foIc).
+Well, with this resource, you can have a window for a [20 seconds of insane courage](https://www.youtube.com/watch?v=OFp2Rn5foIc).
 
 After you covered all the material, you'll be confident in your ability to solve problems with this tool.
 
