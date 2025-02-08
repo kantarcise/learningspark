@@ -1,0 +1,8 @@
+site_name: Learning Spark
+theme:
+  name: material
+
+repo_url: https://github.com/kantarcise/learningspark
+
+nav:
+  - Home: index.md
