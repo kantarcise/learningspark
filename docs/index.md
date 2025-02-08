@@ -2,7 +2,7 @@
 
 All the exercises from the book "[Learning Spark](https://pages.databricks.com/rs/094-YMS-629/images/LearningSpark2.0.pdf)", solved with Dataframes and Datasets, no stone unturned.
 
-![learningspark header image](https://github.com/kantarcise/learningspark/blob/main/learning_spark.png)
+![learningspark header image](https://raw.githubusercontent.com/kantarcise/learningspark/refs/heads/main/learning_spark.png)
 
 ## Why ?
 
