@@ -225,10 +225,8 @@ object FireCallsTrainingQuestions {
       worstWeekDF,
       fireCallsAgg)
 
-    // parallel writing version - multiple Dataframes written as parquets
-    // https://stackoverflow.com/a/73413809
+    // multiple Dataframes written as parquets
     SeqOfDataframes
-      .par
       .zipWithIndex
       .foreach(x => x._1
         .write

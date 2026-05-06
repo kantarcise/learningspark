@@ -47,11 +47,44 @@ This repository is tested on
 
 ```
 - Ubuntu 22.04
-- Java 11
-- Scala 2.12.18
-- Spark 3.5.0
+- Java 11 for Spark 3.5.0, Java 17 for Spark 4.0.0
+- Scala 2.12.18 for Spark 3.5.0, Scala 2.13.16 for Spark 4.0.0
+- Spark 3.5.0 and Spark 4.0.0
 - sbt 1.9.6
 ```
+
+## Spark version profiles
+
+This project keeps Spark 3.5.0 as the default profile and adds an SBT-native Spark 4.0.0 profile. Spark 4.0.0 requires Scala 2.13 and Java 17; Spark 3.5.0 remains on Scala 2.12.18.
+
+Official compatibility references:
+
+- [Apache Spark 4.0.0 release notes](https://spark.apache.org/releases/spark-release-4-0-0.html): Spark 4.0.0 drops Scala 2.12 and JDK 8/11, making Scala 2.13 and JDK 17 the baseline.
+- [Apache Spark 4.0.0 build docs](https://spark.apache.org/docs/4.0.0/building-spark.html): Spark requires Scala 2.13 and Java 17 or 21.
+- [Delta Lake releases](https://docs.delta.io/releases/): Delta Lake 3.2.x supports Spark 3.5.x, and Delta Lake 4.0.x supports Spark 4.0.x.
+
+Use these commands:
+
+```bash
+# Spark 3.5.0, Scala 2.12.18, Delta Lake 3.2.0
+sbt -Dspark.profile=3.5 clean test
+
+# Spark 4.0.0, Scala 2.13.16, Delta Lake 4.0.0
+sbt -Dspark.profile=4.0 clean test
+```
+
+The default is Spark 3.5.0, so `sbt test` is equivalent to `sbt -Dspark.profile=3.5 test`.
+
+| Area | Spark 3.5.0 | Spark 4.0.0 | Notes |
+| --- | --- | --- | --- |
+| Core/DataFrame/Dataset | verified | verified | Covered by the existing unit tests and full project compilation. |
+| Structured Streaming | verified | verified | MemoryStream, stream-static joins, stream-stream joins, word count, and stateful operation tests pass on both profiles. |
+| Delta Lake | verified | verified | Uses `delta-spark` 3.2.0 for Spark 3.5.0 and 4.0.0 for Spark 4.0.0. Delta test paths are isolated per run. |
+| MLlib | compiled | compiled | MLlib examples compile against `spark-mllib` for each Spark profile; there is no MLlib-specific test suite yet. |
+| MLflow | compiled | compiled | MLflow examples compile with the Java `mlflow-client` dependency; no MLflow server integration test is included. |
+| XGBoost | compiled | compiled | `xgboost4j-spark` 2.1.0 has Scala 2.12 and 2.13 artifacts and project examples compile; training examples were not run as integration tests. |
+| Kafka examples | compiled | compiled | Source compiles. Runtime requires matching external package coordinates: `org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0` or `org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0`. |
+| Cassandra/Postgres examples | compiled | Cassandra blocked for Spark 4 runtime, Postgres compiled | Cassandra connector 3.5.x is documented for Spark 3.5 with Scala 2.12/2.13, but no Spark 4 compatible connector was found. Postgres uses the JDBC driver at submit time and source compiles. External Docker integration tests were not run. |
 
 1) You can follow [this video](https://www.youtube.com/watch?v=-AXBg3sk6II) to install Apache Spark.
 

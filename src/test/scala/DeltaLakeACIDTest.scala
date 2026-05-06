@@ -11,6 +11,7 @@ import org.scalatest.time.{Seconds, Span}
 import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import java.nio.file.Files
 
 // Let's define the case class outside of the class
 case class LoanStatus(loan_id: Long,
@@ -42,8 +43,10 @@ class DeltaLakeACIDTest extends AnyFunSuite with Eventually {
   test("Delta Lake ACID guarantees with concurrent writes") {
     spark.sparkContext.setLogLevel("ERROR")
 
-    // Configure Delta Lake path
-    val deltaPath = "/tmp/loans_delta_acid_test"
+    // Configure isolated Delta Lake paths for each test run
+    val testRoot = Files.createTempDirectory("delta-acid-").toFile.getAbsolutePath
+    val deltaPath = s"$testRoot/loans"
+    val checkpointDir = s"$testRoot/checkpoint"
 
     // Set up Delta table
     setupDeltaTable(deltaPath)
@@ -51,26 +54,28 @@ class DeltaLakeACIDTest extends AnyFunSuite with Eventually {
     // Initialize MemoryStream for streaming data
     val loanMemoryStream = initializeMemoryStream()
 
-    // Add sample data to MemoryStream
-    val dataFuture = addDataToMemoryStream(loanMemoryStream, 1.seconds)
-
     // Start streaming query to write data to Delta Lake
-    val streamingQuery = startStreamingQuery(loanMemoryStream, deltaPath)
+    val streamingQuery = startStreamingQuery(loanMemoryStream, deltaPath, checkpointDir)
 
-    // Concurrent batch write to Delta Lake
-    val batchWriteFuture = performConcurrentBatchWrite(deltaPath)
+    try {
+      // Add sample data to MemoryStream
+      val dataFuture = addDataToMemoryStream(loanMemoryStream, 1.seconds)
 
-    // Wait for streaming query and batch write to complete
-    waitForQueries(streamingQuery, batchWriteFuture)
+      // Concurrent batch write to Delta Lake
+      val batchWriteFuture = performConcurrentBatchWrite(deltaPath)
 
-    // Read back the data from Delta Lake and verify ACID properties
-    verifyACIDProperties(deltaPath)
+      // Wait for streaming query and batch write to complete
+      waitForQueries(streamingQuery, dataFuture, batchWriteFuture)
 
-    // Stop the streaming query
-    streamingQuery.stop()
+      // Read back the data from Delta Lake and verify ACID properties
+      verifyACIDProperties(deltaPath)
+    } finally {
+      // Stop the streaming query
+      streamingQuery.stop()
 
-    // Clean up resources
-    spark.stop()
+      // Clean up resources
+      spark.stop()
+    }
   }
 
   /**
@@ -141,10 +146,10 @@ class DeltaLakeACIDTest extends AnyFunSuite with Eventually {
    * @return StreamingQuery
    */
   def startStreamingQuery(memoryStream: MemoryStream[LoanStatus],
-                          deltaPath: String): StreamingQuery = {
+                          deltaPath: String,
+                          checkpointDir: String): StreamingQuery = {
     val loansStreamDS: Dataset[LoanStatus] = memoryStream.toDS()
 
-    val checkpointDir = "/tmp/loanCheckpoint_acid"
     loansStreamDS
       .writeStream
       .queryName("Loan Stream to Delta Testing ACID")
@@ -181,9 +186,11 @@ class DeltaLakeACIDTest extends AnyFunSuite with Eventually {
    * @param batchWriteFuture  Future representing the batch write.
    */
   def waitForQueries(streamingQuery: StreamingQuery,
+                     dataFuture: Future[Unit],
                      batchWriteFuture: Future[Unit]): Unit = {
-    streamingQuery.awaitTermination(20000)
+    Await.result(dataFuture, Duration.Inf)
     Await.result(batchWriteFuture, Duration.Inf)
+    streamingQuery.processAllAvailable()
   }
 
   /**

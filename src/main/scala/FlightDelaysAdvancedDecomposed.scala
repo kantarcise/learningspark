@@ -195,7 +195,7 @@ object FlightDelaysAdvancedDecomposed {
       $"delay" > 0)
     // .show()
 
-    bar.sqlContext.sql(
+    bar.sparkSession.sql(
       """SELECT *
          FROM bar
          WHERE origin = 'SEA'
@@ -237,7 +237,7 @@ object FlightDelaysAdvancedDecomposed {
 
     // with SQL
     println("Inner join between the airportInfoDf and foo - with SQL")
-    fooDF.sqlContext.sql(
+    fooDF.sparkSession.sql(
       """SELECT a.City, a.State, f.date, f.delay, f.distance, f.destination
          FROM foo f
          JOIN airports_na a
