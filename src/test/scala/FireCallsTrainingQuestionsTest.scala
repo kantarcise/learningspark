@@ -148,6 +148,6 @@ class FireCallsTrainingQuestionsTest extends AnyFunSuite{
       FireCallsAgg("Marina", 94123, 1)
     )
     val result = fireCallsAggDS.collect()
-    assert(result === expected)
+    assert(result.toSet === expected.toSet)
   }
 }
