@@ -22,15 +22,15 @@ class UnmanagedStatefulOperationsTest extends AnyFunSuite with Eventually  {
 
   test("User status should be updated correctly based on actions") {
     // Initialize MemoryStream
-    val userActionMemoryStream = new MemoryStream[UserAction](1,
+    val userActionMemoryStream = new MemoryStream[UnmanagedStatefulOperations.UserAction](1,
       spark.sqlContext)
 
     // Add sample data every second - one by one
     val addDataFuture = UnmanagedStatefulOperations
-      .addDataPeriodicallyToUserActionMemoryStream(userActionMemoryStream,
+      .addDataPeriodically(userActionMemoryStream,
         1.seconds)
 
-    val userActions: Dataset[UserAction] = userActionMemoryStream
+    val userActions: Dataset[UnmanagedStatefulOperations.UserAction] = userActionMemoryStream
       .toDS()
 
     val latestStatuses = userActions
@@ -57,7 +57,7 @@ class UnmanagedStatefulOperationsTest extends AnyFunSuite with Eventually  {
         val statuses = result
           .as[(String, Boolean)]
           .map { case (userId, active) =>
-            (userId, UserStatus(userId, active)) }
+            (userId, UnmanagedStatefulOperations.UserStatus(userId, active)) }
           .collect()
           .toMap
 

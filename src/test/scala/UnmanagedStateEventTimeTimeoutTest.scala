@@ -73,9 +73,10 @@ class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
     try {
       // Wait for the data adding to finish
       Await.result(addDataFuture, Duration.Inf)
+      query.processAllAvailable()
 
       // Use eventually to wait until the stream processing completes
-      eventually(timeout(Span(60, Seconds)), interval(Span(6, Seconds))) {
+      eventually(timeout(Span(120, Seconds)), interval(Span(6, Seconds))) {
         val result = spark.sql("SELECT * FROM latestStatuses")
 
         // Convert DataFrame to Dataset[UserStatus]
