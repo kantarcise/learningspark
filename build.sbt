@@ -6,6 +6,9 @@ lazy val root = (project in file("."))
   .settings(
     name := "learningspark",
     idePackagePrefix := Some("learningSpark"),
+    Test / fork := true,
+    Test / parallelExecution := false,
+    Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat,
     // if you want to change the name of your jar
     // assembly / assemblyJarName := "SparkBasics.jar",
     // After packaging, you can set the main class with:
