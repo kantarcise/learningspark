@@ -8,8 +8,10 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.time.{Seconds, Span}
 import UnmanagedStateEventTimeTimeout.updateUserStatusWithEventTimeTimeout
 
-import scala.concurrent.duration._
+import java.sql.Timestamp
+
 import scala.concurrent.Await
+import scala.concurrent.duration._
 
 // In our tests we can use Matchers instead of simple assertions
 
@@ -73,6 +75,10 @@ class UnmanagedStateEventTimeTimeoutTest extends AnyFunSuite with Eventually {
     try {
       // Wait for the data adding to finish
       Await.result(addDataFuture, Duration.Inf)
+      userActionMemoryStream.addData(
+        UnmanagedStateEventTimeTimeout.UserAction("__watermark__", "move",
+          Timestamp.valueOf("2023-06-09 16:00:00"))
+      )
       query.processAllAvailable()
 
       // Use eventually to wait until the stream processing completes
