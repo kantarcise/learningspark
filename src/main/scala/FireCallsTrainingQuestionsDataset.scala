@@ -277,10 +277,8 @@ object FireCallsTrainingQuestionsDataset {
       fireCallsAggDS
     )
 
-    // parallel writing version - multiple Dataframes written as parquets
-    // https://stackoverflow.com/a/73413809
+    // multiple Datasets written as parquets
     SeqOfDatasets
-      .par
       .zipWithIndex
       .foreach { case (ds, idx) => ds
         .write

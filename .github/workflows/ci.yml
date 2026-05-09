@@ -8,22 +8,30 @@ on:
 
 jobs:
   test:
-    name: Spark 3.5 tests
+    name: Spark ${{ matrix.spark-profile }} tests
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - spark-profile: "3.5"
+            java-version: "11"
+          - spark-profile: "4.0"
+            java-version: "17"
 
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 11
+      - name: Set up Java ${{ matrix.java-version }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "11"
+          java-version: ${{ matrix.java-version }}
           cache: sbt
 
       - name: Set up sbt
         uses: sbt/setup-sbt@v1
 
       - name: Run tests
-        run: sbt clean test
+        run: sbt -Dspark.profile=${{ matrix.spark-profile }} clean test
